@@ -13,7 +13,9 @@ export class AmbienceGenerator {
 	// Synthesized natural elements
 	private oceanNoise: Tone.Noise;
 	private oceanGain: Tone.Gain;
+	private oceanFilter: Tone.Filter;
 	private oceanLFO: Tone.LFO;
+	private oceanFilterLFO: Tone.LFO;
 	private oceanVol: Tone.Volume;
 
 	private windNoise: Tone.Noise;
@@ -46,118 +48,131 @@ export class AmbienceGenerator {
 		this.brownVol = new Tone.Volume(-96).connect(output);
 		this.brownNoise = new Tone.Noise('brown').connect(this.brownVol);
 
-		// 2. Ocean waves: Pink noise modulated by a slow LFO (rolling volume)
+		// 2. Ocean waves: Pink noise modulated by synchronized LFOs (modulating volume and lowpass cutoff in tandem)
 		this.oceanVol = new Tone.Volume(-96).connect(output);
-		this.oceanGain = new Tone.Gain(0).connect(this.oceanVol);
+		this.oceanFilter = new Tone.Filter({
+			type: 'lowpass',
+			frequency: 350,
+			Q: 0.5
+		}).connect(this.oceanVol);
+		this.oceanGain = new Tone.Gain(0).connect(this.oceanFilter);
 		this.oceanNoise = new Tone.Noise('pink').connect(this.oceanGain);
+
 		this.oceanLFO = new Tone.LFO({
-			frequency: 0.07, // ~14s wave cycle
+			frequency: 0.05, // Slow 20s wave cycle
 			min: 0.05,
-			max: 0.8,
+			max: 0.7,
 			type: 'triangle'
 		});
 		this.oceanLFO.connect(this.oceanGain.gain);
 
-		// 3. Whistling Wind: Brown noise passed through high-resonance bandpass filter modulated by LFO
+		this.oceanFilterLFO = new Tone.LFO({
+			frequency: 0.05,
+			min: 220, // Muffled wave retreat
+			max: 680, // Brighter wave rush
+			type: 'triangle'
+		});
+		this.oceanFilterLFO.connect(this.oceanFilter.frequency);
+
+		// 3. Whistling Wind: Subtle, warm whistling wind
 		this.windVol = new Tone.Volume(-96).connect(output);
 		this.windFilter = new Tone.Filter({
 			type: 'bandpass',
-			frequency: 450,
-			Q: 5.0
+			frequency: 380,
+			Q: 3.0 // lower Q for warmer feel
 		}).connect(this.windVol);
 		this.windNoise = new Tone.Noise('brown').connect(this.windFilter);
 		this.windLFO = new Tone.LFO({
-			frequency: 0.04, // Whistle speed
-			min: 250,
-			max: 650,
+			frequency: 0.035, // Slow drifting whistle
+			min: 200,
+			max: 480,
 			type: 'sine'
 		});
 		this.windLFO.connect(this.windFilter.frequency);
 
-		// 4. Rain: Continuous bandpass pink noise + tiny highpass droplet impulses
+		// 4. Rain: Soft lowpass pink noise rumble + gentle droplets
 		this.rainVol = new Tone.Volume(-96).connect(output);
 		this.rainFilter = new Tone.Filter({
-			type: 'bandpass',
-			frequency: 1200,
-			Q: 1.0
+			type: 'lowpass',
+			frequency: 780, // Soft patter frequency
+			Q: 0.7
 		}).connect(this.rainVol);
 		this.rainNoise = new Tone.Noise('pink').connect(this.rainFilter);
 
 		this.rainDropletFilter = new Tone.Filter({
-			type: 'highpass',
-			frequency: 6000,
-			Q: 2.0
+			type: 'bandpass',
+			frequency: 3200,
+			Q: 1.0
 		}).connect(this.rainVol);
 		this.rainDroplets = new Tone.NoiseSynth({
-			noise: { type: 'pink' },
+			noise: { type: 'pink' }, // Pink noise for softer droplets
 			envelope: {
 				attack: 0.001,
-				decay: 0.006,
+				decay: 0.015, // Longer decay to prevent digital clicks
 				sustain: 0
 			}
 		}).connect(this.rainDropletFilter);
 
-		// 5. Vinyl Crackle: Low-frequency dust rumble + sharp random static pops
+		// 5. Vinyl Crackle: Rare, warm, dusty pops
 		this.vinylVol = new Tone.Volume(-96).connect(output);
 		this.vinylFilter = new Tone.Filter({
 			type: 'lowpass',
-			frequency: 150
+			frequency: 120
 		}).connect(this.vinylVol);
 		this.vinylNoise = new Tone.Noise('brown').connect(this.vinylFilter);
 
 		this.vinylCrackleFilter = new Tone.Filter({
 			type: 'bandpass',
-			frequency: 4000,
-			Q: 3.0
+			frequency: 3800,
+			Q: 2.0
 		}).connect(this.vinylVol);
 		this.vinylCrackle = new Tone.NoiseSynth({
-			noise: { type: 'white' },
+			noise: { type: 'pink' },
 			envelope: {
 				attack: 0.001,
-				decay: 0.002,
+				decay: 0.004,
 				sustain: 0
 			}
 		}).connect(this.vinylCrackleFilter);
 
-		// Start raw generators
+		// Start generators
 		this.whiteNoise.start();
 		this.pinkNoise.start();
 		this.brownNoise.start();
 		this.oceanNoise.start();
 		this.oceanLFO.start();
+		this.oceanFilterLFO.start();
 		this.windNoise.start();
 		this.windLFO.start();
 		this.rainNoise.start();
 		this.vinylNoise.start();
 
-		// Schedule droplet & crackle trigger loops in Tone.js transport
+		// Schedule droplet & crackle trigger loops
 		this.startScheduling();
 	}
 
 	private startScheduling() {
-		// Schedule repeating event for rain droplets (runs in Tone.Transport context)
+		// Schedule repeating event for rain droplets
 		this.rainLoopId = Tone.Transport.scheduleRepeat((time) => {
-			// Deterministic trigger pattern based on clock ticks
-			// Use time to compute a pseudo-random trigger index
 			const seed = Math.sin(time * 1000) * 10000;
 			const rnd = seed - Math.floor(seed);
-			if (rnd > 0.4) {
-				this.rainDroplets.triggerAttack(time, rnd * 0.15);
+			if (rnd > 0.45) {
+				this.rainDroplets.triggerAttack(time, rnd * 0.12);
 			}
 		}, '16n');
 
-		// Schedule repeating event for vinyl crackles (fewer, sharp pops)
+		// Schedule repeating event for sparse vinyl crackles (slowed down and gating for dust)
 		this.vinylLoopId = Tone.Transport.scheduleRepeat((time) => {
-			const seed = Math.cos(time * 500) * 10000;
+			const seed = Math.cos(time * 220) * 10000;
 			const rnd = seed - Math.floor(seed);
-			if (rnd > 0.85) {
-				// Trigger a double crackle pop
-				this.vinylCrackle.triggerAttack(time, rnd * 0.3);
-				if (rnd > 0.93) {
-					this.vinylCrackle.triggerAttack(time + 0.015, rnd * 0.2);
+			if (rnd > 0.96) {
+				// Sparse pops
+				this.vinylCrackle.triggerAttack(time, rnd * 0.12);
+				if (rnd > 0.985) {
+					this.vinylCrackle.triggerAttack(time + 0.02, rnd * 0.08);
 				}
 			}
-		}, '8n');
+		}, '4n');
 	}
 
 	updateParams(state: {
@@ -174,14 +189,18 @@ export class AmbienceGenerator {
 			return level === 0 ? -96 : Tone.gainToDb(level) + offset;
 		};
 
-		this.whiteVol.volume.setTargetAtTime(getDb(state.whiteNoise, -18), Tone.now(), 0.1);
-		this.pinkVol.volume.setTargetAtTime(getDb(state.pinkNoise, -18), Tone.now(), 0.1);
-		this.brownVol.volume.setTargetAtTime(getDb(state.brownNoise, -18), Tone.now(), 0.1);
+		// 0.8s time constant transition for smooth volume fades when changing presets
+		const transitionTime = 0.8;
+		const now = Tone.now();
 
-		this.oceanVol.volume.setTargetAtTime(getDb(state.ocean, -8), Tone.now(), 0.1);
-		this.windVol.volume.setTargetAtTime(getDb(state.wind, -10), Tone.now(), 0.1);
-		this.rainVol.volume.setTargetAtTime(getDb(state.rain, -10), Tone.now(), 0.1);
-		this.vinylVol.volume.setTargetAtTime(getDb(state.vinyl, -12), Tone.now(), 0.1);
+		this.whiteVol.volume.setTargetAtTime(getDb(state.whiteNoise, -18), now, transitionTime);
+		this.pinkVol.volume.setTargetAtTime(getDb(state.pinkNoise, -18), now, transitionTime);
+		this.brownVol.volume.setTargetAtTime(getDb(state.brownNoise, -18), now, transitionTime);
+
+		this.oceanVol.volume.setTargetAtTime(getDb(state.ocean, -8), now, transitionTime);
+		this.windVol.volume.setTargetAtTime(getDb(state.wind, -10), now, transitionTime);
+		this.rainVol.volume.setTargetAtTime(getDb(state.rain, -10), now, transitionTime);
+		this.vinylVol.volume.setTargetAtTime(getDb(state.vinyl, -12), now, transitionTime);
 	}
 
 	dispose() {
@@ -203,7 +222,9 @@ export class AmbienceGenerator {
 
 		this.oceanNoise.dispose();
 		this.oceanGain.dispose();
+		this.oceanFilter.dispose();
 		this.oceanLFO.dispose();
+		this.oceanFilterLFO.dispose();
 		this.oceanVol.dispose();
 
 		this.windNoise.dispose();

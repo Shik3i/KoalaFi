@@ -10,12 +10,14 @@
 - Docker & Caddy production setups.
 - Basic test suites for RNG and state encoding.
 
-## v0.2.0 — Enhanced Sound Quality
+## v0.2.0 — Enhanced Sound Quality (Completed)
 
-- Incorporate subtle synth pitch-drifts to emulate tape wow-and-flutter.
-- Add additional drum sound layers (shakers, rims, woodblocks) to expand groove variety.
-- Implement variable swing calculations inside the sequencer.
-- Refine filter envelopes to make chord voicings sound warmer.
+- Incorporated subtle synth pitch-drifts (wow/flutter) and filter cutoff LFO modulation.
+- Spaced keyboard open voicings to prevent chord mid-range muddy builds.
+- Refactored melody phrase generator to use call-and-response rhythm motifs and stepwise conjunct scale movement.
+- Implemented deterministic, BPM-scaled swing micro-timing delays.
+- Implemented pseudo-random deterministic velocity humanization.
+- Softened and lowpassed ambience sounds (rain, vinyl pops, dual-LFO wave swells).
 
 ## v0.3.0 — CC0 Sample Packs
 

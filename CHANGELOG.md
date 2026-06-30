@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-06-30
+
+### Added
+
+- **Tape Saturation**: Added a subtle distortion/saturation node (`Tone.Distortion`) on the music bus before compression to emulate analog tape warmth.
+- **Pitch-Drift LFOs (Wow & Flutter)**: Integrated slow vibrato oscillators into Chords and Melody instruments for organic vintage electric piano drift.
+- **Dynamic Filter Sweeps**: Connected a slow LFO to the Melody instrument's lowpass filter for shifting pluck resonance.
+- **BPM-Scaled Swing**: Built a deterministic, tempo-scaled timing swing delay (maximum 22% of a sixteenth note) mapped to `state.music.jazzy` to swing off-beats.
+- **Deterministic Velocity Humanization**: Created a fast string hash function to apply a subtle, safe volume wobble (±0.04) to note velocities.
+- **Synced Wave Cutoffs**: Connected synced dual LFOs to modulate the ocean sound's volume and filter cutoff in tandem for natural swells.
+- **UI Error Feedback**: Displayed a clear, user-friendly error message if browser autoplay policy blocks the audio context.
+
+### Changed
+
+- **Generator Version 2**: Bumped `generatorVersion` from 1 to 2 across presets, defaults, tests, and migrations.
+- **Harmonic Chord Spacing**: Replaced root-position block chord spellings with wide open keyboard voicings spanning two octaves.
+- **Conjunct Phrasing**: Rewrote the melody generator to use motivic 4-bar rhythm patterns and stepwise scale motion instead of random notes.
+- **Soften Noises**: Swapped white noise for pink noise in hi-hats and rain droplets; lowpassed continuous rain at 780Hz; slowed down vinyl crackle checks for sparse record pops.
+- **Fades & Transitions**: Smoothed preset volume fades by increasing the transition time constant from 0.1s to 0.8s.
+
 ## [0.1.0] - 2026-06-30
 
 ### Added

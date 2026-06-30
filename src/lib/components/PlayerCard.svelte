@@ -3,24 +3,33 @@
 	import { appState } from '../state/stores.svelte';
 	import { audioEngine } from '../audio/koalaFiEngine';
 	import { logVibePlay } from '../storage/recentVibesRepository';
-	import { Play, Pause, Shuffle, ShareNetwork, Heart, Gear } from 'phosphor-svelte';
+	import { Play, Pause, Shuffle, ShareNetwork, Heart, Gear, Sliders, Eye } from 'phosphor-svelte';
 	import ShareDialog from './ShareDialog.svelte';
 	import SavePresetDialog from './SavePresetDialog.svelte';
 
 	// Svelte 5 props
-	let { onOpenSettings, onPresetSaved } = $props<{
+	let {
+		onOpenSettings,
+		onPresetSaved,
+		isDrawerOpen = $bindable(false),
+		isZen = $bindable(false)
+	} = $props<{
 		onOpenSettings: () => void;
 		onPresetSaved: () => void;
+		isDrawerOpen?: boolean;
+		isZen?: boolean;
 	}>();
 
 	let audioInitialized = $state(false);
 	let isPlaying = $derived(appState.state.music.enabled);
+	let errorMessage = $state<string | null>(null);
 
 	let isShareOpen = $state(false);
 	let isSaveOpen = $state(false);
 
 	async function handlePlayToggle() {
 		try {
+			errorMessage = null;
 			if (!audioInitialized) {
 				await audioEngine.initializeAudio();
 				audioInitialized = true;
@@ -47,6 +56,7 @@
 			}
 		} catch (err) {
 			console.error('Audio initialization failure:', err);
+			errorMessage = 'Playback blocked: click play button to allow sound';
 		}
 	}
 
@@ -78,7 +88,7 @@
 	});
 </script>
 
-<div class="player-card glass-panel">
+<div class="player-card glass-panel" class:zen-active={isZen}>
 	<div class="header-vibe">
 		<span class="logo-text">KoalaFi</span>
 		<button class="icon-btn" onclick={onOpenSettings} aria-label="Settings">
@@ -111,15 +121,33 @@
 				<Play size={28} weight="fill" style="margin-left: 4px;" />
 			{/if}
 		</button>
+		{#if errorMessage}
+			<div class="audio-error-msg">{errorMessage}</div>
+		{/if}
 	</div>
 
 	<!-- Bottom toolbar action buttons -->
 	<div class="action-toolbar">
-		<button class="action-btn" onclick={() => (isShareOpen = true)}>
-			<ShareNetwork size={16} /> Share
+		<button class="action-btn" onclick={() => (isShareOpen = true)} title="Share Vibe Link">
+			<ShareNetwork size={16} />
+			<span>Share</span>
 		</button>
-		<button class="action-btn" onclick={() => (isSaveOpen = true)}>
-			<Heart size={16} /> Favorite
+		<button class="action-btn" onclick={() => (isSaveOpen = true)} title="Save Preset">
+			<Heart size={16} />
+			<span>Save</span>
+		</button>
+		<button
+			class="action-btn"
+			class:active={isDrawerOpen}
+			onclick={() => (isDrawerOpen = !isDrawerOpen)}
+			title="Tune controls"
+		>
+			<Sliders size={16} />
+			<span>Tune</span>
+		</button>
+		<button class="action-btn" onclick={() => (isZen = true)} title="Zen mode">
+			<Eye size={16} />
+			<span>Zen</span>
 		</button>
 	</div>
 </div>
@@ -217,9 +245,18 @@
 
 	.playback-controls {
 		display: flex;
+		flex-direction: column;
 		justify-content: center;
 		align-items: center;
+		gap: 0.75rem;
 		margin-bottom: 1.5rem;
+	}
+
+	.audio-error-msg {
+		font-size: var(--font-size-xs);
+		color: var(--color-accent-pink);
+		font-weight: var(--font-weight-medium);
+		text-align: center;
 	}
 
 	.play-btn {
@@ -252,29 +289,37 @@
 
 	.action-toolbar {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.75rem;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 0.5rem;
 		border-top: 1px solid var(--color-border);
 		padding-top: 1.25rem;
 	}
 
 	.action-btn {
 		display: inline-flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 0.4rem;
+		gap: 0.25rem;
 		background: var(--color-bg-input);
 		border: 1px solid var(--color-border);
-		padding: 0.6rem;
+		padding: 0.5rem 0.2rem;
 		border-radius: var(--radius-sm);
-		font-size: var(--font-size-sm);
+		font-size: 10px;
 		font-weight: var(--font-weight-semibold);
 		color: var(--color-text-primary);
 		transition: var(--transition-fast);
+		cursor: pointer;
 	}
 
 	.action-btn:hover {
 		background: var(--color-bg-hover);
 		border-color: rgba(255, 255, 255, 0.15);
+	}
+
+	.action-btn.active {
+		border-color: var(--color-accent-cyan);
+		color: var(--color-accent-cyan);
+		background: rgba(6, 182, 212, 0.05);
 	}
 </style>

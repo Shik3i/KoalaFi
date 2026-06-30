@@ -112,6 +112,9 @@ export class KoalaFiEngine {
 			this.melody.updateParams(state.music.melody, state.music.focus);
 			this.scheduler?.setMelodyComplexity(state.music.melody);
 		}
+		if (this.scheduler) {
+			this.scheduler.setSwing(state.music.jazzy);
+		}
 		if (this.drums) this.drums.updateParams(state.music.drums, state.music.energy);
 
 		// 4. Update ambience volumes

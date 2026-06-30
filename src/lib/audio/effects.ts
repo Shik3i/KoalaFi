@@ -7,6 +7,9 @@ export class MasterEffectsPipeline {
 	limiter: Tone.Limiter;
 	mainVolume: Tone.Volume;
 
+	// Tape emulation saturation
+	saturationNode: Tone.Distortion;
+
 	// Auxiliary spatial effects
 	delayNode: Tone.FeedbackDelay;
 	reverbNode: Tone.Reverb;
@@ -16,7 +19,7 @@ export class MasterEffectsPipeline {
 	ambienceBus: Tone.Volume;
 
 	constructor() {
-		// 1. Core outputs
+		// 1. Core outputs (Default volume safe and comfortable)
 		this.mainVolume = new Tone.Volume(-6).toDestination();
 		this.limiter = new Tone.Limiter(-1).connect(this.mainVolume); // Peak clipper
 
@@ -34,6 +37,12 @@ export class MasterEffectsPipeline {
 			release: 0.08
 		}).connect(this.masterFilter);
 
+		// Subtle saturation/tape warmth node
+		this.saturationNode = new Tone.Distortion({
+			distortion: 0.06, // Very gentle saturation
+			wet: 0.08
+		}).connect(this.compressor);
+
 		// 2. Aux sends
 		this.delayNode = new Tone.FeedbackDelay({
 			delayTime: '8n.',
@@ -47,12 +56,12 @@ export class MasterEffectsPipeline {
 		}).connect(this.compressor);
 
 		// 3. Sub buses
-		// Music bus sends to master comp AND sends to delay/reverb spatial channels
-		this.musicBus = new Tone.Volume(0).connect(this.compressor);
+		// Music bus routes through saturation before compressor
+		this.musicBus = new Tone.Volume(0).connect(this.saturationNode);
 		this.musicBus.connect(this.delayNode);
 		this.musicBus.connect(this.reverbNode);
 
-		// Ambience bus bypasses delay/reverb to avoid muddying, connects straight to master filter
+		// Ambience bus bypasses delay/reverb and saturation to stay clear
 		this.ambienceBus = new Tone.Volume(-2).connect(this.masterFilter);
 	}
 
@@ -76,6 +85,7 @@ export class MasterEffectsPipeline {
 		this.masterFilter.dispose();
 		this.compressor.dispose();
 		this.limiter.dispose();
+		this.saturationNode.dispose();
 		this.mainVolume.dispose();
 		this.delayNode.dispose();
 		this.reverbNode.dispose();

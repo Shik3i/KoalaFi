@@ -93,6 +93,9 @@
 					Aligns playheads to the UTC clock. Friends will hear roughly the same part of the
 					arrangement in real-time.
 				</p>
+				<p class="sync-disclaimer">
+					Note: Aligns playback progress using your system clock (no account or backend required).
+				</p>
 			</div>
 			<div class="copy-box">
 				<input type="text" readonly value={getShareLink('rough-clock')} />
@@ -174,6 +177,13 @@
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		line-height: 1.35;
+	}
+
+	.sync-disclaimer {
+		margin-top: 0.25rem;
+		font-style: italic;
+		color: var(--color-accent-cyan) !important;
+		font-size: 11px !important;
 	}
 
 	.copy-box {

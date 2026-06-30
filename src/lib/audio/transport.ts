@@ -9,8 +9,9 @@ export class AudioScheduler {
 	private drumsPart: Tone.Part | null = null;
 	private melodyPart: Tone.Part | null = null;
 
-	// Track slider complexity thresholds
+	// Track slider complexity thresholds and swing
 	private melodyComplexity = 0.5;
+	private swingIntensity = 0.0;
 
 	constructor(
 		private chordsInst: ChordsInstrument,
@@ -30,7 +31,9 @@ export class AudioScheduler {
 		// 1. Chords Part
 		const flatChords = pattern.chords.flat();
 		this.chordsPart = new Tone.Part((time, event) => {
-			this.chordsInst.trigger([event.note], event.duration, time, event.velocity || 0.5);
+			const delay = this.getSwingDelay(event.time);
+			const vel = this.getHumanizedVelocity(event.velocity || 0.5, event.time, event.note);
+			this.chordsInst.trigger([event.note], event.duration, time + delay, vel);
 		}, flatChords);
 		this.chordsPart.loop = true;
 		this.chordsPart.loopEnd = loopEnd;
@@ -38,7 +41,9 @@ export class AudioScheduler {
 
 		// 2. Bass Part
 		this.bassPart = new Tone.Part((time, event) => {
-			this.bassInst.trigger(event.note, event.duration, time, event.velocity || 0.6);
+			const delay = this.getSwingDelay(event.time);
+			const vel = this.getHumanizedVelocity(event.velocity || 0.6, event.time, event.note);
+			this.bassInst.trigger(event.note, event.duration, time + delay, vel);
 		}, pattern.bassline);
 		this.bassPart.loop = true;
 		this.bassPart.loopEnd = loopEnd;
@@ -46,12 +51,14 @@ export class AudioScheduler {
 
 		// 3. Drums Part
 		this.drumsPart = new Tone.Part((time, event) => {
+			const delay = this.getSwingDelay(event.time);
+			const vel = this.getHumanizedVelocity(event.velocity || 0.8, event.time, event.type);
 			if (event.type === 'kick') {
-				this.drumsInst.triggerKick(time, event.velocity || 0.8);
+				this.drumsInst.triggerKick(time + delay, vel);
 			} else if (event.type === 'snare') {
-				this.drumsInst.triggerSnare(time, event.velocity || 0.8);
+				this.drumsInst.triggerSnare(time + delay, vel);
 			} else if (event.type === 'hihat') {
-				this.drumsInst.triggerHihat(time, event.velocity || 0.4);
+				this.drumsInst.triggerHihat(time + delay, vel);
 			}
 		}, pattern.drums);
 		this.drumsPart.loop = true;
@@ -60,11 +67,10 @@ export class AudioScheduler {
 
 		// 4. Melody Part (procedural density gate)
 		this.melodyPart = new Tone.Part((time, event) => {
-			// event.velocity is mapped as a priority score in range [0, 1]
-			// We only play notes whose priority score is below or equal to our melodyComplexity setting
 			if (event.velocity !== undefined && event.velocity <= this.melodyComplexity) {
-				// Play leadpluck with a standardized velocity
-				this.leadInst.trigger(event.note, event.duration, time, 0.6);
+				const delay = this.getSwingDelay(event.time);
+				const vel = this.getHumanizedVelocity(0.65, event.time, event.note);
+				this.leadInst.trigger(event.note, event.duration, time + delay, vel);
 			}
 		}, pattern.melody);
 		this.melodyPart.loop = true;
@@ -74,6 +80,47 @@ export class AudioScheduler {
 
 	setMelodyComplexity(val: number) {
 		this.melodyComplexity = val;
+	}
+
+	setSwing(val: number) {
+		this.swingIntensity = val;
+	}
+
+	/**
+	 * Safe, BPM-scaled deterministic swing microtime offset
+	 */
+	private getSwingDelay(timeString: string): number {
+		if (this.swingIntensity <= 0) return 0;
+
+		const parts = timeString.split(':');
+		if (parts.length < 3) return 0;
+
+		const beat = parseInt(parts[1], 10);
+		const sixteenth = parseInt(parts[2], 10);
+
+		// Swing off-beat sixteenth positions (1, 3) and off-beat eighths (2)
+		const isOffbeat = sixteenth === 1 || sixteenth === 3 || (sixteenth === 2 && beat % 2 === 0);
+		if (!isOffbeat) return 0;
+
+		const bpm = Tone.Transport.bpm?.value || 120;
+		const sixteenthDuration = 60 / (bpm * 4);
+		// Max swing is clamped at 22% of a sixteenth note to avoid sloppy offsets
+		return this.swingIntensity * 0.22 * sixteenthDuration;
+	}
+
+	/**
+	 * Safe, deterministic hash-based velocity humanizer
+	 */
+	private getHumanizedVelocity(baseVal: number, timeString: string, identity: string): number {
+		let hash = 0;
+		const str = timeString + identity;
+		for (let i = 0; i < str.length; i++) {
+			hash = (hash << 5) - hash + str.charCodeAt(i);
+			hash |= 0; // Convert to 32bit integer
+		}
+		// Subtly wobble velocity by up to ±0.04
+		const wobble = ((Math.abs(hash) % 100) / 100) * 0.08 - 0.04;
+		return Math.max(0.15, Math.min(0.95, baseVal + wobble));
 	}
 
 	/**

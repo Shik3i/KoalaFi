@@ -9,7 +9,7 @@ import type { KoalaFiState } from '../state/koalaFiState';
 
 const TEST_STATE: KoalaFiState = {
 	schemaVersion: 1,
-	generatorVersion: 1,
+	generatorVersion: 2,
 	seed: 'test-vibe-seed',
 	presetId: 'sunset-focus',
 	title: 'Sunset Focus Test',
@@ -112,7 +112,7 @@ describe('State Migration and Validation', () => {
 			const migrated = migrateState(preset.state);
 			expect(migrated.presetId).toBe(preset.id);
 			expect(migrated.schemaVersion).toBe(1);
-			expect(migrated.generatorVersion).toBe(1);
+			expect(migrated.generatorVersion).toBe(2);
 		}
 	});
 

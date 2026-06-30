@@ -49,20 +49,22 @@ export function getDiatonicChord(
 	// Pentatonic scale is 5-note, map to minor for diatonic spelling
 	const actualScale = scaleType === 'pentatonic' ? 'minor' : scaleType;
 
-	// Get notes over 2 octaves to allow stacking
+	// Get notes over 3 octaves to allow beautiful wide voicings
 	const scaleNotesBase = getScaleNotes(key, actualScale, octave);
 	const scaleNotesHigh = getScaleNotes(key, actualScale, octave + 1);
-	const scaleNotes = [...scaleNotesBase, ...scaleNotesHigh];
+	const scaleNotesHigher = getScaleNotes(key, actualScale, octave + 2);
+	const scaleNotes = [...scaleNotesBase, ...scaleNotesHigh, ...scaleNotesHigher];
 
+	// Spaced keyboard voicing: [Root, 5th] in lower octave, and [3rd, 7th, 9th] shifted up one octave
 	const notes = [
 		scaleNotes[degree], // Root
-		scaleNotes[degree + 2], // 3rd
 		scaleNotes[degree + 4], // 5th
-		scaleNotes[degree + 6] // 7th
+		scaleNotes[degree + 2 + 7], // 3rd (octave up)
+		scaleNotes[degree + 6 + 7] // 7th (octave up)
 	];
 
-	if (add9th && scaleNotes[degree + 8]) {
-		notes.push(scaleNotes[degree + 8]); // 9th
+	if (add9th && scaleNotes[degree + 8 + 7]) {
+		notes.push(scaleNotes[degree + 8 + 7]); // 9th (octave up)
 	}
 
 	return notes;

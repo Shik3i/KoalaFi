@@ -11,11 +11,11 @@ export class DrumsInstrument {
 	constructor(output: Tone.InputNode) {
 		this.gain = new Tone.Volume(-12).connect(output);
 
-		// 1. Kick Drum (Deep sub sweep)
+		// 1. Kick Drum (Deep sub sweep, slightly shorter decay for a tighter thud)
 		this.kick = new Tone.MembraneSynth({
 			envelope: {
 				attack: 0.001,
-				decay: 0.28,
+				decay: 0.22,
 				sustain: 0
 			},
 			oscillator: {
@@ -23,11 +23,11 @@ export class DrumsInstrument {
 			}
 		}).connect(this.gain);
 
-		// 2. Snare Drum (Bandpass filtered pink noise burst)
+		// 2. Snare Drum (Bandpass filtered pink noise burst, lower cutoff and Q for a dusty clap)
 		this.snareFilter = new Tone.Filter({
 			type: 'bandpass',
-			frequency: 1000,
-			Q: 1.2
+			frequency: 750,
+			Q: 0.8
 		}).connect(this.gain);
 
 		this.snare = new Tone.NoiseSynth({
@@ -41,16 +41,16 @@ export class DrumsInstrument {
 			}
 		}).connect(this.snareFilter);
 
-		// 3. Hi-hat (Highpass filtered white noise burst)
+		// 3. Hi-hat (Highpass filtered pink noise burst for a softer, less aggressive tick)
 		this.hihatFilter = new Tone.Filter({
 			type: 'highpass',
-			frequency: 8000,
-			Q: 0.8
+			frequency: 6500,
+			Q: 1.0
 		}).connect(this.gain);
 
 		this.hihat = new Tone.NoiseSynth({
 			noise: {
-				type: 'white'
+				type: 'pink'
 			},
 			envelope: {
 				attack: 0.001,
@@ -61,15 +61,15 @@ export class DrumsInstrument {
 	}
 
 	triggerKick(time: number, velocity: number) {
-		this.kick.triggerAttackRelease('C1', '8n', time, velocity * 0.9);
+		this.kick.triggerAttackRelease('C1', '8n', time, velocity * 0.85);
 	}
 
 	triggerSnare(time: number, velocity: number) {
-		this.snare.triggerAttack(time, velocity * 0.7);
+		this.snare.triggerAttack(time, velocity * 0.55);
 	}
 
 	triggerHihat(time: number, velocity: number) {
-		this.hihat.triggerAttack(time, velocity * 0.4);
+		this.hihat.triggerAttack(time, velocity * 0.25);
 	}
 
 	updateParams(drumsLevel: number, energyLevel: number) {

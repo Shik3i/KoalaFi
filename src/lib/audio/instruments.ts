@@ -4,6 +4,7 @@ export class ChordsInstrument {
 	synth: Tone.PolySynth;
 	filter: Tone.Filter;
 	gain: Tone.Volume;
+	private vibrato: Tone.Vibrato;
 
 	constructor(output: Tone.InputNode) {
 		this.gain = new Tone.Volume(-12).connect(output);
@@ -18,12 +19,21 @@ export class ChordsInstrument {
 				type: 'sine' // Soft rhodes keys tone
 			},
 			envelope: {
-				attack: 0.12,
-				decay: 0.8,
-				sustain: 0.6,
-				release: 1.5
+				attack: 0.15, // Softer attack
+				decay: 1.2, // Longer decay
+				sustain: 0.5,
+				release: 1.8 // Longer release for warm sustain
 			}
-		}).connect(this.filter);
+		});
+
+		// Subtle tape wow and flutter vibrato
+		this.vibrato = new Tone.Vibrato({
+			frequency: 0.15, // Slow drift
+			depth: 0.12 // Gentle pitch drift depth
+		});
+
+		this.synth.connect(this.vibrato);
+		this.vibrato.connect(this.filter);
 	}
 
 	trigger(notes: string[], duration: string, time: number, velocity: number) {
@@ -32,7 +42,7 @@ export class ChordsInstrument {
 
 	updateParams(chordsLevel: number, cozyLevel: number) {
 		// Cozy level makes it warmer by lowering cutoff frequency
-		const cutoff = 400 + (1 - cozyLevel) * 1200;
+		const cutoff = 350 + (1 - cozyLevel) * 1100;
 		this.filter.frequency.setTargetAtTime(cutoff, Tone.now(), 0.1);
 
 		// Scale volume
@@ -41,6 +51,7 @@ export class ChordsInstrument {
 	}
 
 	dispose() {
+		this.vibrato.dispose();
 		this.synth.dispose();
 		this.filter.dispose();
 		this.gain.dispose();
@@ -59,22 +70,22 @@ export class BassInstrument {
 			},
 			filter: {
 				type: 'lowpass',
-				frequency: 120,
-				Q: 1
+				frequency: 90,
+				Q: 0.8
 			},
 			envelope: {
-				attack: 0.05,
-				decay: 0.4,
-				sustain: 0.8,
-				release: 0.8
+				attack: 0.18, // Slower attack for gentle sub swell
+				decay: 0.5,
+				sustain: 0.85,
+				release: 1.0
 			},
 			filterEnvelope: {
-				attack: 0.02,
-				decay: 0.1,
-				sustain: 0.5,
-				release: 0.5,
-				baseFrequency: 100,
-				octaves: 1.5
+				attack: 0.08,
+				decay: 0.15,
+				sustain: 0.6,
+				release: 0.6,
+				baseFrequency: 75,
+				octaves: 1.2
 			}
 		}).connect(this.gain);
 	}
@@ -85,7 +96,7 @@ export class BassInstrument {
 
 	updateParams(bassLevel: number, sleepyLevel: number) {
 		// Sleepy level dampens bass (lower filter frequency)
-		const baseFreq = 80 + (1 - sleepyLevel) * 120;
+		const baseFreq = 70 + (1 - sleepyLevel) * 100;
 		this.synth.filter.frequency.setTargetAtTime(baseFreq, Tone.now(), 0.1);
 
 		// Scale volume
@@ -103,13 +114,15 @@ export class MelodyInstrument {
 	synth: Tone.Synth;
 	filter: Tone.Filter;
 	gain: Tone.Volume;
+	private vibratoLFO: Tone.LFO;
+	private filterLFO: Tone.LFO;
 
 	constructor(output: Tone.InputNode) {
 		this.gain = new Tone.Volume(-14).connect(output);
 		this.filter = new Tone.Filter({
 			type: 'lowpass',
-			frequency: 1000,
-			Q: 1
+			frequency: 850,
+			Q: 0.8
 		}).connect(this.gain);
 
 		this.synth = new Tone.Synth({
@@ -117,12 +130,32 @@ export class MelodyInstrument {
 				type: 'triangle' // Gentle plucks
 			},
 			envelope: {
-				attack: 0.05,
-				decay: 0.25,
-				sustain: 0.3,
-				release: 0.8
+				attack: 0.08, // Softer attack
+				decay: 0.35, // Longer decay
+				sustain: 0.2,
+				release: 1.2 // Dreamy release trail
 			}
 		}).connect(this.filter);
+
+		// Subtle pitch drift LFO
+		this.vibratoLFO = new Tone.LFO({
+			frequency: 0.18, // Slow drift
+			min: -8, // -8 cents detune
+			max: 8, // +8 cents detune
+			type: 'sine'
+		});
+		this.vibratoLFO.connect(this.synth.detune);
+		this.vibratoLFO.start();
+
+		// Gentle filter cutoff modulation
+		this.filterLFO = new Tone.LFO({
+			frequency: 0.07, // Slow movement
+			min: -150,
+			max: 150,
+			type: 'sine'
+		});
+		this.filterLFO.connect(this.filter.frequency);
+		this.filterLFO.start();
 	}
 
 	trigger(note: string, duration: string, time: number, velocity: number) {
@@ -131,7 +164,7 @@ export class MelodyInstrument {
 
 	updateParams(melodyLevel: number, focusLevel: number) {
 		// Focus level increases plucky brightness
-		const cutoff = 600 + focusLevel * 1600;
+		const cutoff = 500 + focusLevel * 1400;
 		this.filter.frequency.setTargetAtTime(cutoff, Tone.now(), 0.1);
 
 		// Scale volume
@@ -140,6 +173,8 @@ export class MelodyInstrument {
 	}
 
 	dispose() {
+		this.vibratoLFO.dispose();
+		this.filterLFO.dispose();
 		this.synth.dispose();
 		this.filter.dispose();
 		this.gain.dispose();
