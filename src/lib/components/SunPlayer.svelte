@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import {
 		Eye,
 		Gear,
@@ -29,7 +28,6 @@
 		isZen?: boolean;
 	}>();
 
-	let audioInitialized = $state(false);
 	let errorMessage = $state<string | null>(null);
 	let isShareOpen = $state(false);
 	let isSaveOpen = $state(false);
@@ -39,9 +37,8 @@
 	async function handlePlayToggle() {
 		try {
 			errorMessage = null;
-			if (!audioInitialized) {
+			if (!audioEngine.isInitialized) {
 				await audioEngine.initializeAudio();
-				audioInitialized = true;
 				if (appState.state.sync.mode === 'rough-clock') {
 					audioEngine.setPlayheadFromRoughSync(appState.state);
 				}
@@ -80,12 +77,6 @@
 			logVibePlay(appState.state);
 		}
 	}
-
-	onMount(() => {
-		appState.updateState((s) => {
-			s.music.enabled = false;
-		});
-	});
 </script>
 
 <section

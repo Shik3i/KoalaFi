@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-06-30
+
+### Fixed
+
+- **UI Slider Controls Reactivity**: Fixed a Svelte 5 dependency-tracking bug in `MusicControls` and `AmbienceControls` by deep-tracking the state objects, making all mix, mood, and texture sliders functional.
+- **Audio Initialization Race Condition**: Added an initialization promise guard to the audio engine to prevent duplicate audio nodes and phasing effects from rapid clicks.
+- **Zen Mode Autoplay**: Fixed Zen Mode play button not initializing audio on clean page load.
+- **State Desynchronization**: Removed redundant state reset in `SunPlayer`'s `onMount` that caused audio and UI to desynchronize when toggling Zen Mode.
+- **Memory Leaks**: Added failure cleanup in `initializeAudio` to dispose of nodes if startup fails mid-way, and deleted the unused/residual `PlayerCard.svelte` component.
+
 ## [0.2.0] - 2026-06-30
 
 ### Added

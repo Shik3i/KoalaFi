@@ -8,11 +8,9 @@
 	}
 
 	$effect(() => {
-		// Reference variables to trigger Svelte 5 dependency tracking
-		const a = appState.state.ambience;
-		if (a.rain !== undefined && a.ocean !== undefined && a.wind !== undefined) {
-			syncEngine();
-		}
+		// Deep track all ambience properties reactively
+		JSON.stringify(appState.state.ambience);
+		syncEngine();
 	});
 </script>
 

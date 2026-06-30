@@ -9,6 +9,7 @@ import { AudioScheduler } from './transport';
 
 export class KoalaFiEngine {
 	private initialized = false;
+	private initializingPromise: Promise<void> | null = null;
 	private seed: string = '';
 	private generatorVersion = 1;
 	private bpm = 75;
@@ -23,34 +24,53 @@ export class KoalaFiEngine {
 	private ambience: AmbienceGenerator | null = null;
 	private scheduler: AudioScheduler | null = null;
 
+	get isInitialized() {
+		return this.initialized;
+	}
+
 	async initializeAudio() {
 		if (this.initialized) return;
+		if (this.initializingPromise) return this.initializingPromise;
 
-		// Start Tone.js Audio Context (browser policy requirement)
-		await withTimeout(Tone.start(), 5000, 'Audio context start timed out.');
+		this.initializingPromise = (async () => {
+			try {
+				// Start Tone.js Audio Context (browser policy requirement)
+				await withTimeout(Tone.start(), 5000, 'Audio context start timed out.');
 
-		// Create effects pipeline
-		this.effects = new MasterEffectsPipeline();
+				// Create effects pipeline
+				this.effects = new MasterEffectsPipeline();
 
-		// Create instruments routed to the music bus
-		this.chords = new ChordsInstrument(this.effects.musicBus);
-		this.bass = new BassInstrument(this.effects.musicBus);
-		this.melody = new MelodyInstrument(this.effects.musicBus);
+				// Create instruments routed to the music bus
+				this.chords = new ChordsInstrument(this.effects.musicBus);
+				this.bass = new BassInstrument(this.effects.musicBus);
+				this.melody = new MelodyInstrument(this.effects.musicBus);
 
-		// Create drums routed to the music bus
-		this.drums = new DrumsInstrument(this.effects.musicBus);
+				// Create drums routed to the music bus
+				this.drums = new DrumsInstrument(this.effects.musicBus);
 
-		// Create ambience generator routed to the ambience bus
-		this.ambience = new AmbienceGenerator(this.effects.ambienceBus);
+				// Create ambience generator routed to the ambience bus
+				this.ambience = new AmbienceGenerator(this.effects.ambienceBus);
 
-		// Create scheduler
-		this.scheduler = new AudioScheduler(this.chords, this.bass, this.melody, this.drums);
+				// Create scheduler
+				this.scheduler = new AudioScheduler(this.chords, this.bass, this.melody, this.drums);
 
-		// Default BPM setting on transport
-		Tone.Transport.bpm.value = this.bpm;
+				// Default BPM setting on transport
+				Tone.Transport.bpm.value = this.bpm;
 
-		this.initialized = true;
-		console.log('KoalaFi audio engine successfully initialized');
+				this.initialized = true;
+				console.log('KoalaFi audio engine successfully initialized');
+			} catch (err) {
+				console.error('Audio initialization failure, disposing nodes:', err);
+				this.dispose();
+				throw err;
+			}
+		})();
+
+		try {
+			await this.initializingPromise;
+		} finally {
+			this.initializingPromise = null;
+		}
 	}
 
 	start() {

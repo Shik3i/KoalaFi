@@ -14,11 +14,9 @@
 
 	// Svelte 5 effect to watch state mutations and apply to Tone.js
 	$effect(() => {
-		// Reference variables to trigger dependency tracking
-		const m = appState.state.music;
-		if (m.enabled !== undefined && m.bpm !== undefined && m.key !== undefined) {
-			syncEngine();
-		}
+		// Deep track all music properties reactively
+		JSON.stringify(appState.state.music);
+		syncEngine();
 	});
 </script>
 

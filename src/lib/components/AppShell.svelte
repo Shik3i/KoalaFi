@@ -45,12 +45,23 @@
 	}
 
 	async function handlePlayToggle() {
-		audioEngine.toggle();
-		const nowPlaying = audioEngine.playbackState === 'started';
-		appState.updateState((s) => {
-			s.music.enabled = nowPlaying;
-		});
-		audioEngine.applyState(appState.state);
+		try {
+			if (!audioEngine.isInitialized) {
+				await audioEngine.initializeAudio();
+				if (appState.state.sync.mode === 'rough-clock') {
+					audioEngine.setPlayheadFromRoughSync(appState.state);
+				}
+			}
+
+			audioEngine.toggle();
+			const nowPlaying = audioEngine.playbackState === 'started';
+			appState.updateState((s) => {
+				s.music.enabled = nowPlaying;
+			});
+			audioEngine.applyState(appState.state);
+		} catch (err) {
+			console.error('Audio initialization failure in Zen mode:', err);
+		}
 	}
 
 	function togglePanel(panel: 'vibes' | 'tune') {
