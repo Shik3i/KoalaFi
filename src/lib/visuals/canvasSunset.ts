@@ -1,5 +1,6 @@
 import type { KoalaFiState } from '../state/koalaFiState';
 import { THEME_PALETTES } from './visualSettings';
+import { SUN_LAYOUT } from './sunLayout';
 
 /**
  * Renders a single frame of the background animation onto the 2D canvas context.
@@ -32,55 +33,9 @@ export function drawFrame(
 	ctx.fillStyle = skyGrad;
 	ctx.fillRect(0, 0, width, height);
 
-	const horizonY = Math.round(height * 0.55);
-
-	// 2. Draw Sun/Moon Disc
-	ctx.save();
+	const horizonY = Math.round(height * SUN_LAYOUT.horizonRatio);
 	const sunX = width / 2;
-	const sunY = horizonY - (theme === 'night-rain' || theme === 'minimal-dark' ? 40 : 20);
-	const sunRadius = Math.min(width, height) * 0.15;
-
-	if (sunRadius > 20) {
-		// Add glow filter if set
-		if (glow > 0.1) {
-			ctx.shadowBlur = Math.round(glow * 40);
-			ctx.shadowColor = colors.sunStart;
-		}
-
-		const sunGrad = ctx.createLinearGradient(0, sunY - sunRadius, 0, sunY + sunRadius);
-		sunGrad.addColorStop(0, colors.sunStart);
-		sunGrad.addColorStop(1, colors.sunEnd);
-		ctx.fillStyle = sunGrad;
-
-		// Draw outrun sliced sun for sunset and neon-coast
-		if (theme === 'sunset' || theme === 'neon-coast') {
-			ctx.beginPath();
-			ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
-			ctx.clip();
-
-			// Slices: draw rectangle bars matching outrun grid
-			ctx.beginPath();
-			ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
-			ctx.fill();
-
-			// Cut out lines increasing in size towards bottom
-			ctx.fillStyle = colors.skyEnd;
-			const numCuts = 6;
-			for (let i = 0; i < numCuts; i++) {
-				const cutY = sunY + sunRadius * (i / numCuts);
-				// Animate cut heights if motion is enabled
-				const drift = motion !== 'off' ? Math.sin(frameTime * 0.5 + i) * 2 : 0;
-				const cutHeight = 3 + i * 2.5 + drift;
-				ctx.fillRect(sunX - sunRadius - 10, cutY, sunRadius * 2 + 20, Math.max(1, cutHeight));
-			}
-		} else {
-			// Normal solid round moon/disc
-			ctx.beginPath();
-			ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
-			ctx.fill();
-		}
-	}
-	ctx.restore();
+	const sunRadius = Math.min(width, height) * SUN_LAYOUT.radiusRatio;
 
 	// 3. Water/Ground Gradient below horizon
 	const waterGrad = ctx.createLinearGradient(0, horizonY, 0, height);

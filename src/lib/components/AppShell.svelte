@@ -1,6 +1,6 @@
 <script lang="ts">
 	import VisualBackground from '../visuals/VisualBackground.svelte';
-	import PlayerCard from './PlayerCard.svelte';
+	import SunPlayer from './SunPlayer.svelte';
 	import PresetPicker from './PresetPicker.svelte';
 	import MusicControls from './MusicControls.svelte';
 	import AmbienceControls from './AmbienceControls.svelte';
@@ -114,10 +114,10 @@
 		</header>
 
 		<div class="sun-stage">
-			<PlayerCard
+			<SunPlayer
 				onOpenSettings={() => (isSettingsOpen = true)}
+				onOpenPanel={togglePanel}
 				onPresetSaved={handlePresetSaved}
-				isDrawerOpen={activePanel === 'tune'}
 				bind:isZen
 			/>
 		</div>
