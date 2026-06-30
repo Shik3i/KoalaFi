@@ -1,0 +1,15 @@
+node_modules
+.svelte-kit
+build
+.git
+.gitignore
+.vscode
+.agents
+.github
+*.log
+test-results
+playwright-report
+docker-compose*.yml
+Dockerfile
+README.md
+docs

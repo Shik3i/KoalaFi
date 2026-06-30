@@ -1,0 +1,54 @@
+:root {
+	/* Colors - Sleek dark mode palette with neon accents */
+	--color-bg-base: #09090b; /* Zinc 950 */
+	--color-bg-card: rgba(18, 18, 24, 0.75);
+	--color-bg-input: #1e1e24;
+	--color-bg-hover: #272730;
+
+	--color-border: rgba(255, 255, 255, 0.08);
+	--color-border-focus: var(--color-accent-cyan);
+
+	--color-text-primary: #f4f4f5; /* Zinc 100 */
+	--color-text-muted: #a1a1aa; /* Zinc 400 */
+	--color-text-dark: #18181b; /* Zinc 900 */
+
+	/* Neons */
+	--color-accent-pink: #ec4899; /* Pink 500 */
+	--color-accent-pink-glow: rgba(236, 72, 153, 0.35);
+	--color-accent-cyan: #06b6d4; /* Cyan 500 */
+	--color-accent-cyan-glow: rgba(6, 182, 212, 0.3);
+	--color-accent-gold: #f59e0b; /* Amber 500 */
+
+	/* Typography - Clean system font stack, NO CDNs */
+	--font-family-sans:
+		-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
+		'Apple Color Emoji', 'Segoe UI Emoji';
+
+	--font-size-xs: 0.75rem;
+	--font-size-sm: 0.875rem;
+	--font-size-base: 1rem;
+	--font-size-lg: 1.125rem;
+	--font-size-xl: 1.25rem;
+	--font-size-2xl: 1.5rem;
+
+	--font-weight-normal: 400;
+	--font-weight-medium: 500;
+	--font-weight-semibold: 600;
+	--font-weight-bold: 700;
+
+	/* Layout and Shapes */
+	--radius-sm: 0.375rem;
+	--radius-md: 0.75rem;
+	--radius-lg: 1rem;
+	--radius-full: 9999px;
+
+	--shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+	--shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+	--shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+	--shadow-neon-cyan: 0 0 15px var(--color-accent-cyan-glow);
+	--shadow-neon-pink: 0 0 15px var(--color-accent-pink-glow);
+
+	/* Transitions */
+	--transition-fast: 0.15s ease;
+	--transition-normal: 0.25s ease;
+}

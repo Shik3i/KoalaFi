@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b" />
+      <stop offset="60%" stop-color="#09090b" />
+    </linearGradient>
+    <linearGradient id="sunsetGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ec4899" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+  </defs>
+
+  <!-- Solid Background extending fully for maskable layout -->
+  <rect width="512" height="512" fill="url(#skyGrad)" />
+
+  <g transform="scale(0.85) translate(45, 45)">
+    <!-- Sunset Glow horizon -->
+    <ellipse cx="256" cy="380" rx="180" ry="80" fill="url(#sunsetGrad)" opacity="0.15" />
+    <line x1="80" y1="380" x2="432" y2="380" stroke="#06b6d4" stroke-width="4" stroke-linecap="round" opacity="0.6" />
+
+    <!-- Stylized Koala with Headphones -->
+    <g transform="translate(0, -20)">
+      <!-- Ears -->
+      <circle cx="160" cy="220" r="48" fill="#a1a1aa" />
+      <circle cx="160" cy="220" r="28" fill="#f4f4f5" />
+      
+      <circle cx="352" cy="220" r="48" fill="#a1a1aa" />
+      <circle cx="352" cy="220" r="28" fill="#f4f4f5" />
+
+      <!-- Head Base -->
+      <ellipse cx="256" cy="260" rx="90" ry="76" fill="#a1a1aa" />
+
+      <!-- Inner Face Highlight -->
+      <ellipse cx="256" cy="270" rx="72" ry="56" fill="#e4e4e7" />
+
+      <!-- Eyes (Relaxed/Closed sleep curves) -->
+      <path d="M 200 256 Q 216 268 232 256" fill="none" stroke="#18181b" stroke-width="4" stroke-linecap="round" />
+      <path d="M 280 256 Q 296 268 312 256" fill="none" stroke="#18181b" stroke-width="4" stroke-linecap="round" />
+
+      <!-- Koala Nose -->
+      <ellipse cx="256" cy="276" rx="22" ry="32" fill="#18181b" />
+
+      <!-- Headphone Band -->
+      <path d="M 166 220 A 96 96 0 0 1 346 220" fill="none" stroke="#ec4899" stroke-width="12" stroke-linecap="round" />
+
+      <!-- Headphone Ear Cups (Neon accents) -->
+      <rect x="136" y="200" width="30" height="60" rx="15" fill="#ec4899" />
+      <rect x="346" y="200" width="30" height="60" rx="15" fill="#ec4899" />
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,38 @@
+# Example Docker Compose configuration for KoalaFi
+version: '3.8'
+
+services:
+  koalafi:
+    image: ghcr.io/shik3i/koalafi:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+    # Secure container options
+    read_only: true
+
+    # Caddy requires write access to /data (certificates) and /config (autosave).
+    # Since we set read_only: true, we map writable tmpfs layers to prevent runtime errors.
+    tmpfs:
+      - /data
+      - /config
+      - /tmp
+
+    security_opt:
+      - no-new-privileges:true
+
+    # Drop all capabilities except those needed to bind to low ports (like 80/443)
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+
+    # Connect to reverse proxy network
+    networks:
+      - caddy_net
+
+networks:
+  caddy_net:
+    external: true
+    name: caddy_net
