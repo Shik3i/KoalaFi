@@ -86,6 +86,13 @@ export class DrumsInstrument {
 		this.gain.volume.setTargetAtTime(vol, Tone.now(), 0.05);
 	}
 
+	releaseAll() {
+		const now = Tone.now();
+		this.kick.triggerRelease(now);
+		this.snare.triggerRelease(now);
+		this.hihat.triggerRelease(now);
+	}
+
 	dispose() {
 		this.kick.dispose();
 		this.snare.dispose();

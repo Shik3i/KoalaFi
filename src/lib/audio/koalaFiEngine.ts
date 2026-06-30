@@ -55,12 +55,19 @@ export class KoalaFiEngine {
 
 	start() {
 		if (!this.initialized) return;
+		this.effects?.resumeOutput();
 		Tone.Transport.start();
 	}
 
 	stop() {
 		if (!this.initialized) return;
 		Tone.Transport.stop();
+		this.effects?.silenceNow();
+		this.chords?.releaseAll();
+		this.bass?.releaseAll();
+		this.melody?.releaseAll();
+		this.drums?.releaseAll();
+		this.ambience?.releaseAll();
 	}
 
 	toggle() {

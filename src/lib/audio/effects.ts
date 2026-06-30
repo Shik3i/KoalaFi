@@ -81,6 +81,18 @@ export class MasterEffectsPipeline {
 		this.masterFilter.frequency.setTargetAtTime(targetFreq, Tone.now(), 0.25);
 	}
 
+	silenceNow() {
+		const now = Tone.now();
+		this.mainVolume.volume.cancelScheduledValues(now);
+		this.mainVolume.volume.setValueAtTime(-96, now);
+	}
+
+	resumeOutput() {
+		const now = Tone.now();
+		this.mainVolume.volume.cancelScheduledValues(now);
+		this.mainVolume.volume.setTargetAtTime(-6, now, 0.015);
+	}
+
 	dispose() {
 		this.masterFilter.dispose();
 		this.compressor.dispose();

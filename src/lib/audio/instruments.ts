@@ -50,6 +50,10 @@ export class ChordsInstrument {
 		this.gain.volume.setTargetAtTime(vol, Tone.now(), 0.05);
 	}
 
+	releaseAll() {
+		this.synth.releaseAll(Tone.now());
+	}
+
 	dispose() {
 		this.vibrato.dispose();
 		this.synth.dispose();
@@ -102,6 +106,10 @@ export class BassInstrument {
 		// Scale volume
 		const vol = bassLevel === 0 ? -96 : Tone.gainToDb(bassLevel) - 8;
 		this.gain.volume.setTargetAtTime(vol, Tone.now(), 0.05);
+	}
+
+	releaseAll() {
+		this.synth.triggerRelease(Tone.now());
 	}
 
 	dispose() {
@@ -170,6 +178,10 @@ export class MelodyInstrument {
 		// Scale volume
 		const vol = melodyLevel === 0 ? -96 : Tone.gainToDb(melodyLevel) - 10;
 		this.gain.volume.setTargetAtTime(vol, Tone.now(), 0.05);
+	}
+
+	releaseAll() {
+		this.synth.triggerRelease(Tone.now());
 	}
 
 	dispose() {

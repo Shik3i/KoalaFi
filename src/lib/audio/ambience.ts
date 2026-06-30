@@ -203,6 +203,12 @@ export class AmbienceGenerator {
 		this.vinylVol.volume.setTargetAtTime(getDb(state.vinyl, -12), now, transitionTime);
 	}
 
+	releaseAll() {
+		const now = Tone.now();
+		this.rainDroplets.triggerRelease(now);
+		this.vinylCrackle.triggerRelease(now);
+	}
+
 	dispose() {
 		if (this.rainLoopId !== null) {
 			Tone.Transport.clear(this.rainLoopId);
