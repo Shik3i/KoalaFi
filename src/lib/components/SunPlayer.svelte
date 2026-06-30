@@ -119,6 +119,7 @@
 		</span>
 	</button>
 
+	<span class="scene-water" aria-hidden="true"></span>
 	<span class="sun-reflection" aria-hidden="true"></span>
 
 	<div class="vibe-copy">
@@ -323,21 +324,61 @@
 		top: calc(var(--scene-sun, 280px) * 0.78);
 		left: 50%;
 		z-index: 1;
-		width: min(76vw, calc(var(--scene-sun, 280px) * 2.15));
-		height: clamp(120px, 25vh, 240px);
+		width: min(58vw, calc(var(--scene-sun, 280px) * 1.72));
+		height: clamp(96px, 18vh, 170px);
 		pointer-events: none;
 		transform: translateX(-50%);
 		background:
-			repeating-linear-gradient(180deg, rgba(255, 230, 128, 0.17) 0 2px, transparent 2px 24px),
+			repeating-linear-gradient(180deg, rgba(255, 230, 128, 0.2) 0 2px, transparent 2px 26px),
 			radial-gradient(
 				ellipse at 50% 0,
-				rgba(255, 213, 111, 0.2),
-				rgba(236, 72, 153, 0.1) 32%,
-				transparent 70%
+				rgba(255, 224, 135, 0.2),
+				rgba(236, 72, 153, 0.1) 34%,
+				transparent 68%
 			);
-		filter: blur(0.2px);
-		mask-image: linear-gradient(180deg, #000 0 18%, rgba(0, 0, 0, 0.6) 46%, transparent 100%);
-		opacity: 0.74;
+		clip-path: ellipse(50% 44% at 50% 4%);
+		filter: blur(0.6px);
+		opacity: 0.7;
+	}
+
+	.scene-water {
+		position: fixed;
+		inset: var(--scene-horizon-y, 56vh) 0 0;
+		z-index: 4;
+		pointer-events: none;
+		background:
+			radial-gradient(
+				ellipse at 50% 0,
+				rgba(255, 224, 135, 0.2),
+				rgba(236, 72, 153, 0.1) 28%,
+				transparent 58%
+			),
+			linear-gradient(
+				180deg,
+				rgba(20, 56, 71, 0.9),
+				rgba(9, 18, 35, 0.94) 44%,
+				rgba(5, 8, 18, 0.98)
+			);
+		box-shadow: 0 -1px 0 rgba(255, 237, 180, 0.22);
+	}
+
+	.scene-water::before {
+		content: '';
+		position: absolute;
+		top: -7px;
+		left: 50%;
+		width: min(72vw, calc(var(--scene-sun, 280px) * 2.5));
+		height: 18px;
+		border-radius: var(--radius-full);
+		background: linear-gradient(
+			90deg,
+			transparent,
+			rgba(255, 238, 170, 0.44),
+			rgba(236, 72, 153, 0.18),
+			transparent
+		);
+		filter: blur(5px);
+		transform: translateX(-50%);
 	}
 
 	.play-glyph :global(svg) {
@@ -350,10 +391,10 @@
 
 	.vibe-copy {
 		position: relative;
-		z-index: 4;
+		z-index: 6;
 		display: grid;
 		gap: 0.45rem;
-		margin-top: clamp(1.9rem, 5.5vh, 3.6rem);
+		margin-top: clamp(4.5rem, 10vh, 6.8rem);
 		text-shadow: 0 2px 18px rgba(0, 0, 0, 0.65);
 	}
 
@@ -399,7 +440,7 @@
 
 	.orbit-actions {
 		position: relative;
-		z-index: 4;
+		z-index: 6;
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: center;
@@ -442,7 +483,7 @@
 		}
 
 		.vibe-copy {
-			margin-top: clamp(1.5rem, 4.5vh, 2.4rem);
+			margin-top: clamp(3.2rem, 7vh, 4.5rem);
 		}
 
 		.orbit-actions {

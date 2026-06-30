@@ -222,7 +222,10 @@
 		--scene-sun: clamp(220px, 24vw, 290px);
 		--scene-sun-y: clamp(280px, 43vh, 390px);
 		--scene-horizon-y: calc(var(--scene-sun-y) + var(--scene-sun) * 0.21);
-		--scene-panel-gap: 26px;
+		--scene-panel-overlap: clamp(30px, 3vw, 44px);
+		--panel-bite: calc(var(--scene-sun) / 2);
+		--panel-bite-offset: calc(var(--panel-bite) - var(--scene-panel-overlap));
+		--panel-notch-gutter: calc(var(--scene-panel-overlap) + 1.25rem);
 		position: fixed;
 		inset: 0;
 		pointer-events: none;
@@ -263,9 +266,9 @@
 
 	.side-panel {
 		position: fixed;
-		top: calc(var(--scene-sun-y) + 56px);
+		top: var(--scene-sun-y);
 		z-index: 3;
-		width: clamp(300px, 27vw, 380px);
+		width: clamp(340px, 30vw, 440px);
 		max-height: min(74vh, 720px);
 		display: flex;
 		flex-direction: column;
@@ -287,19 +290,39 @@
 	}
 
 	.vibes-panel {
-		right: calc(50vw + var(--scene-sun) / 2 + var(--scene-panel-gap));
+		right: calc(50vw + var(--scene-sun) / 2 - var(--scene-panel-overlap));
 		border-radius: var(--radius-lg);
 		box-shadow:
 			28px 0 55px rgba(251, 191, 36, 0.12),
 			var(--shadow-lg);
+		-webkit-mask-image: radial-gradient(
+			circle var(--panel-bite) at calc(100% + var(--panel-bite-offset)) 50%,
+			transparent calc(var(--panel-bite) - 1px),
+			#000 var(--panel-bite)
+		);
+		mask-image: radial-gradient(
+			circle var(--panel-bite) at calc(100% + var(--panel-bite-offset)) 50%,
+			transparent calc(var(--panel-bite) - 1px),
+			#000 var(--panel-bite)
+		);
 	}
 
 	.tune-panel {
-		left: calc(50vw + var(--scene-sun) / 2 + var(--scene-panel-gap));
+		left: calc(50vw + var(--scene-sun) / 2 - var(--scene-panel-overlap));
 		border-radius: var(--radius-lg);
 		box-shadow:
 			-28px 0 55px rgba(251, 191, 36, 0.12),
 			var(--shadow-lg);
+		-webkit-mask-image: radial-gradient(
+			circle var(--panel-bite) at calc(var(--panel-bite-offset) * -1) 50%,
+			transparent calc(var(--panel-bite) - 1px),
+			#000 var(--panel-bite)
+		);
+		mask-image: radial-gradient(
+			circle var(--panel-bite) at calc(var(--panel-bite-offset) * -1) 50%,
+			transparent calc(var(--panel-bite) - 1px),
+			#000 var(--panel-bite)
+		);
 	}
 
 	.vibes-panel::before,
@@ -320,33 +343,6 @@
 	.tune-panel::before {
 		left: 0;
 		background: linear-gradient(90deg, rgba(255, 222, 118, 0.07), transparent);
-	}
-
-	.vibes-panel::after,
-	.tune-panel::after {
-		content: '';
-		position: absolute;
-		top: 50%;
-		width: calc(var(--scene-sun) * 0.52);
-		height: calc(var(--scene-sun) * 0.9);
-		border-radius: var(--radius-full);
-		background: radial-gradient(
-			circle,
-			rgba(255, 229, 120, 0.2),
-			rgba(236, 72, 153, 0.08) 58%,
-			transparent 72%
-		);
-		box-shadow: 0 0 42px rgba(245, 158, 11, 0.16);
-		transform: translateY(-50%);
-		pointer-events: none;
-	}
-
-	.vibes-panel::after {
-		right: calc(var(--scene-sun) * -0.25);
-	}
-
-	.tune-panel::after {
-		left: calc(var(--scene-sun) * -0.25);
 	}
 
 	.panel-header {
@@ -385,6 +381,16 @@
 	.panel-content {
 		padding: 1rem;
 		overflow-y: auto;
+	}
+
+	.vibes-panel .panel-content {
+		padding-right: var(--panel-notch-gutter);
+	}
+
+	.tune-panel .panel-header,
+	.tune-panel .tabs-nav,
+	.tune-panel .tab-content {
+		padding-left: var(--panel-notch-gutter);
 	}
 
 	.side-panel:focus {
@@ -521,6 +527,8 @@
 			width: min(420px, 100%);
 			transform: translate(-50%, calc(-50% + 16px));
 			border-radius: var(--radius-lg);
+			-webkit-mask-image: none;
+			mask-image: none;
 		}
 
 		.side-panel.open {
