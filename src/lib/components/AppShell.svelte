@@ -7,7 +7,7 @@
 	import AmbienceControls from './AmbienceControls.svelte';
 	import VisualControls from './VisualControls.svelte';
 	import SettingsDrawer from './SettingsDrawer.svelte';
-	import { Play, Pause, EyeClosed, X, Sliders, Sparkle } from 'phosphor-svelte';
+	import { Play, Pause, EyeClosed, X } from 'phosphor-svelte';
 
 	import { appState } from '../state/stores.svelte';
 	import { audioEngine } from '../audio/koalaFiEngine';
@@ -118,13 +118,6 @@
 {:else}
 	<!-- Standard UI Layout -->
 	<div class="app-layout">
-		<header class="top-status">
-			<span class="brand-mark">KoalaFi</span>
-			<button class="status-btn" onclick={() => (isSettingsOpen = true)} aria-label="Open settings">
-				Settings
-			</button>
-		</header>
-
 		<div class="sun-stage">
 			<SunPlayer
 				onOpenSettings={() => (isSettingsOpen = true)}
@@ -214,29 +207,6 @@
 				{/if}
 			</div>
 		</aside>
-
-		<div class="bottom-actions glass-panel" aria-label="Primary actions">
-			<button
-				class:active={activePanel === 'vibes'}
-				onclick={() => togglePanel('vibes')}
-				aria-label="Open vibes panel"
-			>
-				<Sparkle size={16} />
-				<span>Vibes</span>
-			</button>
-			<button
-				class:active={activePanel === 'tune'}
-				onclick={() => togglePanel('tune')}
-				aria-label="Open tune controls"
-			>
-				<Sliders size={16} />
-				<span>Tune</span>
-			</button>
-			<button onclick={() => (isZen = true)} aria-label="Enter Zen mode">
-				<EyeClosed size={16} />
-				<span>Zen</span>
-			</button>
-		</div>
 	</div>
 {/if}
 
@@ -253,53 +223,24 @@
 		inset: 0;
 		pointer-events: none;
 		z-index: 10;
-		display: grid;
-		grid-template-columns: minmax(280px, 380px) minmax(300px, 1fr) minmax(300px, 420px);
-		grid-template-rows: auto 1fr auto;
-		gap: 1rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		padding: clamp(1rem, 2.5vw, 2rem);
 	}
 
-	.top-status {
-		grid-column: 1 / -1;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		pointer-events: auto;
-	}
-
-	.brand-mark {
-		color: var(--color-accent-cyan);
-		font-size: var(--font-size-xs);
-		font-weight: var(--font-weight-bold);
-		letter-spacing: 0.16em;
-		text-transform: uppercase;
-	}
-
-	.status-btn {
-		min-height: 36px;
-		padding: 0 0.85rem;
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-full);
-		background: rgba(9, 9, 11, 0.35);
-		color: var(--color-text-muted);
-		font-size: var(--font-size-xs);
-		pointer-events: auto;
-	}
-
 	.sun-stage {
-		grid-column: 2;
-		grid-row: 2;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		pointer-events: auto;
+		transform: translateY(-2vh);
 	}
 
 	.side-panel {
-		grid-row: 2;
-		align-self: center;
-		width: min(100%, 420px);
+		position: fixed;
+		top: 50%;
+		width: clamp(300px, 27vw, 380px);
 		max-height: min(74vh, 720px);
 		display: flex;
 		flex-direction: column;
@@ -307,7 +248,7 @@
 		pointer-events: auto;
 		opacity: 0;
 		visibility: hidden;
-		transform: translateY(16px);
+		transform: translateY(calc(-50% + 16px));
 		transition:
 			opacity var(--transition-normal),
 			transform var(--transition-normal),
@@ -317,17 +258,39 @@
 	.side-panel.open {
 		opacity: 1;
 		visibility: visible;
-		transform: translateY(0);
+		transform: translateY(-50%);
 	}
 
 	.vibes-panel {
-		grid-column: 1;
-		justify-self: end;
+		right: calc(50% + clamp(230px, 21vw, 285px));
+		border-radius: var(--radius-lg) var(--radius-sm) var(--radius-sm) var(--radius-lg);
 	}
 
 	.tune-panel {
-		grid-column: 3;
-		justify-self: start;
+		left: calc(50% + clamp(230px, 21vw, 285px));
+		border-radius: var(--radius-sm) var(--radius-lg) var(--radius-lg) var(--radius-sm);
+	}
+
+	.vibes-panel::after,
+	.tune-panel::after {
+		content: '';
+		position: absolute;
+		top: 50%;
+		width: 44px;
+		height: 44px;
+		border-radius: var(--radius-full);
+		background: radial-gradient(circle, rgba(245, 158, 11, 0.2), rgba(236, 72, 153, 0.05) 70%);
+		box-shadow: 0 0 34px rgba(236, 72, 153, 0.16);
+		transform: translateY(-50%);
+		pointer-events: none;
+	}
+
+	.vibes-panel::after {
+		right: -22px;
+	}
+
+	.tune-panel::after {
+		left: -22px;
 	}
 
 	.panel-header {
@@ -494,49 +457,23 @@
 		color: var(--color-accent-cyan);
 	}
 
-	.bottom-actions {
-		grid-column: 2;
-		grid-row: 3;
-		justify-self: center;
-		display: flex;
-		gap: 0.4rem;
-		padding: 0.35rem;
-		pointer-events: auto;
-	}
-
-	.bottom-actions button {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.35rem;
-		min-height: 38px;
-		padding: 0 0.75rem;
-		border-radius: var(--radius-full);
-		color: var(--color-text-muted);
-		font-size: var(--font-size-xs);
-		font-weight: var(--font-weight-semibold);
-	}
-
-	.bottom-actions button:hover,
-	.bottom-actions button.active {
-		background: var(--color-bg-hover);
-		color: var(--color-text-primary);
-	}
-
 	/* Responsive tweaks */
-	@media (max-width: 1080px) {
-		.app-layout {
-			grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
-		}
-
-		.sun-stage,
-		.bottom-actions {
-			grid-column: 1 / -1;
-		}
-
+	@media (max-width: 1180px) {
 		.side-panel {
-			grid-column: 1 / -1;
-			justify-self: center;
+			left: 50%;
+			right: auto;
 			width: min(420px, 100%);
+			transform: translate(-50%, calc(-50% + 16px));
+			border-radius: var(--radius-lg);
+		}
+
+		.side-panel.open {
+			transform: translate(-50%, -50%);
+		}
+
+		.vibes-panel::after,
+		.tune-panel::after {
+			display: none;
 		}
 	}
 
@@ -544,13 +481,13 @@
 		.app-layout {
 			display: flex;
 			flex-direction: column;
-			justify-content: space-between;
+			justify-content: center;
 			padding: 0.85rem;
 		}
 
 		.sun-stage {
-			flex: 1;
 			min-height: 0;
+			transform: translateY(-4vh);
 		}
 
 		.side-panel {
@@ -558,8 +495,8 @@
 			left: 0.75rem;
 			right: 0.75rem;
 			bottom: 0.75rem;
+			top: auto;
 			width: auto;
-			justify-self: stretch;
 			max-height: min(72vh, 680px);
 			max-width: none;
 			z-index: 100;
@@ -580,12 +517,6 @@
 			border-radius: var(--radius-full);
 			background: rgba(255, 255, 255, 0.2);
 			flex: 0 0 auto;
-		}
-
-		.bottom-actions {
-			align-self: center;
-			width: min(100%, 340px);
-			justify-content: center;
 		}
 	}
 
