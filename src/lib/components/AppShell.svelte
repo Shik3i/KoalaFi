@@ -6,14 +6,14 @@
 	import AmbienceControls from './AmbienceControls.svelte';
 	import VisualControls from './VisualControls.svelte';
 	import SettingsDrawer from './SettingsDrawer.svelte';
-	import { Play, Pause, EyeClosed, X } from 'phosphor-svelte';
+	import { Play, Pause, EyeClosed, X, Sliders, Sparkle } from 'phosphor-svelte';
 
 	import { appState } from '../state/stores.svelte';
 	import { audioEngine } from '../audio/koalaFiEngine';
 	import type { KoalaFiState } from '../state/koalaFiState';
 
 	let isSettingsOpen = $state(false);
-	let isDrawerOpen = $state(false);
+	let activePanel = $state<'vibes' | 'tune' | null>(null);
 	let isZen = $state(false);
 	let activeTab = $state<'music' | 'ambience' | 'visuals'>('music');
 
@@ -50,6 +50,16 @@
 		audioEngine.applyState(appState.state);
 	}
 
+	function togglePanel(panel: 'vibes' | 'tune') {
+		activePanel = activePanel === panel ? null : panel;
+	}
+
+	function handleShellKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape') {
+			activePanel = null;
+		}
+	}
+
 	// Refresh settings logs when opening drawer
 	$effect(() => {
 		if (isSettingsOpen) {
@@ -57,6 +67,8 @@
 		}
 	});
 </script>
+
+<svelte:window onkeydown={handleShellKeydown} />
 
 <VisualBackground />
 
@@ -94,32 +106,45 @@
 {:else}
 	<!-- Standard UI Layout -->
 	<div class="app-layout">
-		<!-- Floating bottom-left widgets -->
-		<div class="floating-controls-container">
-			<div class="presets-row glass-panel">
-				<PresetPicker
-					bind:this={presetPickerRef}
-					onSelect={handleSelectPreset}
-					layout="horizontal"
-				/>
-			</div>
+		<header class="top-status">
+			<span class="brand-mark">KoalaFi</span>
+			<button class="status-btn" onclick={() => (isSettingsOpen = true)} aria-label="Open settings">
+				Settings
+			</button>
+		</header>
 
+		<div class="sun-stage">
 			<PlayerCard
 				onOpenSettings={() => (isSettingsOpen = true)}
 				onPresetSaved={handlePresetSaved}
-				bind:isDrawerOpen
+				isDrawerOpen={activePanel === 'tune'}
 				bind:isZen
 			/>
 		</div>
 
-		<!-- Slide-out controls drawer from the right -->
-		<div class="controls-drawer glass-panel" class:open={isDrawerOpen}>
-			<div class="drawer-header">
-				<h3>Tuning Controls</h3>
+		<aside class="side-panel vibes-panel glass-panel" class:open={activePanel === 'vibes'}>
+			<div class="panel-header">
+				<h3>Vibes</h3>
+				<button class="close-panel-btn" onclick={() => (activePanel = null)} aria-label="Close vibes">
+					<X size={18} />
+				</button>
+			</div>
+			<div class="panel-content">
+				<PresetPicker
+					bind:this={presetPickerRef}
+					onSelect={handleSelectPreset}
+					layout="grid"
+				/>
+			</div>
+		</aside>
+
+		<aside class="side-panel tune-panel glass-panel" class:open={activePanel === 'tune'}>
+			<div class="panel-header">
+				<h3>Tune</h3>
 				<button
-					class="close-drawer-btn"
-					onclick={() => (isDrawerOpen = false)}
-					aria-label="Close drawer"
+					class="close-panel-btn"
+					onclick={() => (activePanel = null)}
+					aria-label="Close tune controls"
 				>
 					<X size={18} />
 				</button>
@@ -164,6 +189,21 @@
 					</div>
 				{/if}
 			</div>
+		</aside>
+
+		<div class="bottom-actions glass-panel" aria-label="Primary actions">
+			<button class:active={activePanel === 'vibes'} onclick={() => togglePanel('vibes')}>
+				<Sparkle size={16} />
+				<span>Vibes</span>
+			</button>
+			<button class:active={activePanel === 'tune'} onclick={() => togglePanel('tune')}>
+				<Sliders size={16} />
+				<span>Tune</span>
+			</button>
+			<button onclick={() => (isZen = true)}>
+				<EyeClosed size={16} />
+				<span>Zen</span>
+			</button>
 		</div>
 	</div>
 {/if}
@@ -178,73 +218,98 @@
 <style>
 	.app-layout {
 		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
+		inset: 0;
 		pointer-events: none;
 		z-index: 10;
+		display: grid;
+		grid-template-columns: minmax(280px, 380px) minmax(300px, 1fr) minmax(300px, 420px);
+		grid-template-rows: auto 1fr auto;
+		gap: 1rem;
+		padding: clamp(1rem, 2.5vw, 2rem);
 	}
 
-	.floating-controls-container {
-		position: absolute;
-		bottom: 2rem;
-		left: 2rem;
-		width: 380px;
+	.top-status {
+		grid-column: 1 / -1;
 		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
+		align-items: center;
+		justify-content: space-between;
 		pointer-events: auto;
-		animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
-	.presets-row {
-		padding: 0.4rem 0.6rem;
-		border-radius: var(--radius-lg);
-		background: var(--color-bg-card);
+	.brand-mark {
+		color: var(--color-accent-cyan);
+		font-size: var(--font-size-xs);
+		font-weight: var(--font-weight-bold);
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+	}
+
+	.status-btn {
+		min-height: 36px;
+		padding: 0 0.85rem;
 		border: 1px solid var(--color-border);
-		max-width: 380px;
-		overflow: hidden;
+		border-radius: var(--radius-full);
+		background: rgba(9, 9, 11, 0.35);
+		color: var(--color-text-muted);
+		font-size: var(--font-size-xs);
+		pointer-events: auto;
 	}
 
-	/* Controls Drawer on the right */
-	.controls-drawer {
-		position: fixed;
-		top: 0;
-		right: 0;
-		width: 100%;
-		max-width: 420px;
-		height: 100%;
-		background: rgba(15, 23, 42, 0.96);
-		border-left: 1px solid var(--color-border);
-		box-shadow: -4px 0 24px rgba(0, 0, 0, 0.5);
-		z-index: 100;
+	.sun-stage {
+		grid-column: 2;
+		grid-row: 2;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: auto;
+	}
+
+	.side-panel {
+		grid-row: 2;
+		align-self: center;
+		max-height: min(74vh, 720px);
 		display: flex;
 		flex-direction: column;
+		overflow: hidden;
 		pointer-events: auto;
-		transform: translateX(100%);
-		transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+		opacity: 0;
+		visibility: hidden;
+		transform: translateY(16px);
+		transition:
+			opacity var(--transition-normal),
+			transform var(--transition-normal),
+			visibility var(--transition-normal);
 	}
 
-	.controls-drawer.open {
-		transform: translateX(0);
+	.side-panel.open {
+		opacity: 1;
+		visibility: visible;
+		transform: translateY(0);
 	}
 
-	.drawer-header {
+	.vibes-panel {
+		grid-column: 1;
+	}
+
+	.tune-panel {
+		grid-column: 3;
+	}
+
+	.panel-header {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 1.25rem 1.5rem 0.75rem 1.5rem;
+		padding: 1rem 1.1rem 0.75rem;
 		border-bottom: 1px solid var(--color-border);
 	}
 
-	.drawer-header h3 {
+	.panel-header h3 {
 		font-size: var(--font-size-base);
 		font-weight: var(--font-weight-bold);
 		color: var(--color-text-primary);
 	}
 
-	.close-drawer-btn {
+	.close-panel-btn {
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -258,9 +323,14 @@
 		cursor: pointer;
 	}
 
-	.close-drawer-btn:hover {
+	.close-panel-btn:hover {
 		background: var(--color-bg-hover);
 		color: var(--color-text-primary);
+	}
+
+	.panel-content {
+		padding: 1rem;
+		overflow-y: auto;
 	}
 
 	.tabs-nav {
@@ -295,7 +365,7 @@
 
 	.tab-content {
 		flex-grow: 1;
-		padding: 1.5rem;
+		padding: 1rem;
 		overflow-y: auto;
 	}
 
@@ -385,29 +455,90 @@
 		color: var(--color-accent-cyan);
 	}
 
+	.bottom-actions {
+		grid-column: 2;
+		grid-row: 3;
+		justify-self: center;
+		display: flex;
+		gap: 0.4rem;
+		padding: 0.35rem;
+		pointer-events: auto;
+	}
+
+	.bottom-actions button {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		min-height: 38px;
+		padding: 0 0.75rem;
+		border-radius: var(--radius-full);
+		color: var(--color-text-muted);
+		font-size: var(--font-size-xs);
+		font-weight: var(--font-weight-semibold);
+	}
+
+	.bottom-actions button:hover,
+	.bottom-actions button.active {
+		background: var(--color-bg-hover);
+		color: var(--color-text-primary);
+	}
+
 	/* Responsive tweaks */
-	@media (max-width: 868px) {
-		.floating-controls-container {
-			bottom: 1rem;
-			left: 1rem;
-			width: calc(100% - 2rem);
-			max-width: none;
+	@media (max-width: 1080px) {
+		.app-layout {
+			grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
 		}
-		.presets-row {
-			max-width: none;
+
+		.sun-stage,
+		.bottom-actions {
+			grid-column: 1 / -1;
 		}
-		.controls-drawer {
-			max-width: 100%;
-			height: 75%;
-			top: auto;
-			bottom: 0;
-			border-left: none;
-			border-top: 1px solid var(--color-border);
-			border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-			transform: translateY(100%);
+
+		.side-panel {
+			grid-column: 1 / -1;
+			justify-self: center;
+			width: min(420px, 100%);
 		}
-		.controls-drawer.open {
-			transform: translateY(0) translateX(0);
+	}
+
+	@media (max-width: 720px) {
+		.app-layout {
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			padding: 0.85rem;
+		}
+
+		.sun-stage {
+			flex: 1;
+			min-height: 0;
+		}
+
+		.side-panel {
+			position: fixed;
+			left: 0.75rem;
+			right: 0.75rem;
+			bottom: 0.75rem;
+			width: auto;
+			max-height: 72vh;
+			z-index: 100;
+			transform: translateY(calc(100% + 1rem));
+			border-radius: var(--radius-lg);
+		}
+
+		.side-panel.open {
+			transform: translateY(0);
+		}
+
+		.bottom-actions {
+			align-self: center;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.side-panel,
+		.side-panel.open {
+			transition: none;
 		}
 	}
 
