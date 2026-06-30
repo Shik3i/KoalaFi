@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import VisualBackground from '../visuals/VisualBackground.svelte';
 	import SunPlayer from './SunPlayer.svelte';
 	import PresetPicker from './PresetPicker.svelte';
@@ -16,6 +17,8 @@
 	let activePanel = $state<'vibes' | 'tune' | null>(null);
 	let isZen = $state(false);
 	let activeTab = $state<'music' | 'ambience' | 'visuals'>('music');
+	let vibesPanelRef = $state<HTMLElement | null>(null);
+	let tunePanelRef = $state<HTMLElement | null>(null);
 
 	let isPlaying = $derived(appState.state.music.enabled);
 	let presetPickerRef = $state<PresetPicker | null>(null);
@@ -59,6 +62,15 @@
 			activePanel = null;
 		}
 	}
+
+	$effect(() => {
+		const panel = activePanel;
+		if (!panel) return;
+
+		tick().then(() => {
+			(panel === 'vibes' ? vibesPanelRef : tunePanelRef)?.focus();
+		});
+	});
 
 	// Refresh settings logs when opening drawer
 	$effect(() => {
@@ -122,7 +134,13 @@
 			/>
 		</div>
 
-		<aside class="side-panel vibes-panel glass-panel" class:open={activePanel === 'vibes'}>
+		<aside
+			bind:this={vibesPanelRef}
+			class="side-panel vibes-panel glass-panel"
+			class:open={activePanel === 'vibes'}
+			aria-label="Vibes panel"
+			tabindex="-1"
+		>
 			<div class="panel-header">
 				<h3>Vibes</h3>
 				<button class="close-panel-btn" onclick={() => (activePanel = null)} aria-label="Close vibes">
@@ -138,7 +156,13 @@
 			</div>
 		</aside>
 
-		<aside class="side-panel tune-panel glass-panel" class:open={activePanel === 'tune'}>
+		<aside
+			bind:this={tunePanelRef}
+			class="side-panel tune-panel glass-panel"
+			class:open={activePanel === 'tune'}
+			aria-label="Tune controls panel"
+			tabindex="-1"
+		>
 			<div class="panel-header">
 				<h3>Tune</h3>
 				<button
@@ -192,15 +216,23 @@
 		</aside>
 
 		<div class="bottom-actions glass-panel" aria-label="Primary actions">
-			<button class:active={activePanel === 'vibes'} onclick={() => togglePanel('vibes')}>
+			<button
+				class:active={activePanel === 'vibes'}
+				onclick={() => togglePanel('vibes')}
+				aria-label="Open vibes panel"
+			>
 				<Sparkle size={16} />
 				<span>Vibes</span>
 			</button>
-			<button class:active={activePanel === 'tune'} onclick={() => togglePanel('tune')}>
+			<button
+				class:active={activePanel === 'tune'}
+				onclick={() => togglePanel('tune')}
+				aria-label="Open tune controls"
+			>
 				<Sliders size={16} />
 				<span>Tune</span>
 			</button>
-			<button onclick={() => (isZen = true)}>
+			<button onclick={() => (isZen = true)} aria-label="Enter Zen mode">
 				<EyeClosed size={16} />
 				<span>Zen</span>
 			</button>
@@ -267,6 +299,7 @@
 	.side-panel {
 		grid-row: 2;
 		align-self: center;
+		width: min(100%, 420px);
 		max-height: min(74vh, 720px);
 		display: flex;
 		flex-direction: column;
@@ -289,10 +322,12 @@
 
 	.vibes-panel {
 		grid-column: 1;
+		justify-self: end;
 	}
 
 	.tune-panel {
 		grid-column: 3;
+		justify-self: start;
 	}
 
 	.panel-header {
@@ -331,6 +366,10 @@
 	.panel-content {
 		padding: 1rem;
 		overflow-y: auto;
+	}
+
+	.side-panel:focus {
+		outline: none;
 	}
 
 	.tabs-nav {
@@ -520,18 +559,31 @@
 			right: 0.75rem;
 			bottom: 0.75rem;
 			width: auto;
-			max-height: 72vh;
+			max-height: min(72vh, 680px);
 			z-index: 100;
 			transform: translateY(calc(100% + 1rem));
 			border-radius: var(--radius-lg);
+			box-shadow: 0 -18px 60px rgba(0, 0, 0, 0.46);
 		}
 
 		.side-panel.open {
 			transform: translateY(0);
 		}
 
+		.side-panel::before {
+			content: '';
+			width: 38px;
+			height: 4px;
+			margin: 0.55rem auto 0;
+			border-radius: var(--radius-full);
+			background: rgba(255, 255, 255, 0.2);
+			flex: 0 0 auto;
+		}
+
 		.bottom-actions {
 			align-self: center;
+			width: min(100%, 340px);
+			justify-content: center;
 		}
 	}
 
