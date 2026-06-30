@@ -258,14 +258,16 @@
 	}
 
 	.sun-lines {
-		background: repeating-linear-gradient(
+		background: linear-gradient(
 			to bottom,
-			transparent 0 56%,
-			rgba(11, 12, 30, 0.54) 57% 59%,
-			transparent 60% 68%
+			transparent 0 64%,
+			rgba(255, 255, 255, 0.18) 65% 66%,
+			transparent 67% 72%,
+			rgba(255, 255, 255, 0.1) 73% 74%,
+			transparent 75%
 		);
-		mix-blend-mode: multiply;
-		opacity: 0.68;
+		mix-blend-mode: screen;
+		opacity: 0.42;
 	}
 
 	.play-glyph {

@@ -35,7 +35,7 @@ export function drawFrame(
 
 	const horizonY = Math.round(height * SUN_LAYOUT.horizonRatio);
 	const sunX = width / 2;
-	const sunRadius = Math.min(width, height) * SUN_LAYOUT.radiusRatio;
+	const sunRadius = Math.max(90, Math.min(190, Math.min(width, height) * SUN_LAYOUT.radiusRatio));
 
 	// 3. Water/Ground Gradient below horizon
 	const waterGrad = ctx.createLinearGradient(0, horizonY, 0, height);
@@ -84,24 +84,44 @@ export function drawFrame(
 	// 5. Draw reflection ripples for sunset / calm themes
 	if (theme === 'sunset' || theme === 'minimal-dark') {
 		ctx.save();
-		ctx.strokeStyle = colors.horizon;
-		ctx.globalAlpha = 0.3 * glow;
+		const reflectionHeight = (height - horizonY) * 0.72;
+		const glowGrad = ctx.createRadialGradient(
+			sunX,
+			horizonY + reflectionHeight * 0.15,
+			8,
+			sunX,
+			horizonY + reflectionHeight * 0.35,
+			sunRadius * 2.2
+		);
+		glowGrad.addColorStop(0, `rgba(254, 180, 123, ${0.24 * glow})`);
+		glowGrad.addColorStop(0.45, `rgba(236, 72, 153, ${0.12 * glow})`);
+		glowGrad.addColorStop(1, 'rgba(236, 72, 153, 0)');
+		ctx.fillStyle = glowGrad;
+		ctx.fillRect(sunX - sunRadius * 2.2, horizonY, sunRadius * 4.4, reflectionHeight);
 
-		const numRipples = 6;
-		const speed = motion === 'off' ? 0 : motion === 'reactive' && isPlaying ? 1.8 : 0.8;
+		const numRipples = 10;
+		const speed = motion === 'off' ? 0 : motion === 'reactive' && isPlaying ? 1.4 : 0.55;
 
 		for (let i = 0; i < numRipples; i++) {
-			const step = (i + ((frameTime * speed) % 1)) / numRipples;
-			const w = sunRadius * 1.8 * (1 - step * 0.5);
-			const rippleY = horizonY + step * (height - horizonY) * 0.8;
-			const rx = sunX;
-			// Slight wave wobble
-			const wobble = motion !== 'off' ? Math.sin(frameTime * 1.5 + i) * 6 : 0;
+			const phase = motion === 'off' ? 0 : (frameTime * speed + i * 0.17) % 1;
+			const step = (i + phase) / numRipples;
+			const rippleY = horizonY + 12 + step * reflectionHeight;
+			const widthScale = 1 - step * 0.72;
+			const rippleWidth = sunRadius * (2.05 * widthScale + 0.28);
+			const wobble = motion !== 'off' ? Math.sin(frameTime * 1.2 + i * 1.7) * (5 + step * 8) : 0;
+			const alpha = Math.max(0, 0.34 * glow * (1 - step));
+			const grad = ctx.createLinearGradient(sunX - rippleWidth / 2, 0, sunX + rippleWidth / 2, 0);
+			grad.addColorStop(0, 'rgba(254, 180, 123, 0)');
+			grad.addColorStop(0.18, `rgba(254, 180, 123, ${alpha * 0.55})`);
+			grad.addColorStop(0.5, `rgba(255, 230, 109, ${alpha})`);
+			grad.addColorStop(0.82, `rgba(236, 72, 153, ${alpha * 0.55})`);
+			grad.addColorStop(1, 'rgba(236, 72, 153, 0)');
 
+			ctx.strokeStyle = grad;
+			ctx.lineWidth = Math.max(1, 5 * (1 - step));
 			ctx.beginPath();
-			ctx.moveTo(rx - w / 2 + wobble, rippleY);
-			ctx.lineTo(rx + w / 2 + wobble, rippleY);
-			ctx.lineWidth = Math.max(1, 4 * (1 - step));
+			ctx.moveTo(sunX - rippleWidth / 2 + wobble, rippleY);
+			ctx.quadraticCurveTo(sunX, rippleY + Math.sin(i) * 7, sunX + rippleWidth / 2 - wobble, rippleY);
 			ctx.stroke();
 		}
 		ctx.restore();
