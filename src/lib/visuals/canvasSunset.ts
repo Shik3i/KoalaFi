@@ -121,7 +121,12 @@ export function drawFrame(
 			ctx.lineWidth = Math.max(1, 5 * (1 - step));
 			ctx.beginPath();
 			ctx.moveTo(sunX - rippleWidth / 2 + wobble, rippleY);
-			ctx.quadraticCurveTo(sunX, rippleY + Math.sin(i) * 7, sunX + rippleWidth / 2 - wobble, rippleY);
+			ctx.quadraticCurveTo(
+				sunX,
+				rippleY + Math.sin(i) * 7,
+				sunX + rippleWidth / 2 - wobble,
+				rippleY
+			);
 			ctx.stroke();
 		}
 		ctx.restore();
