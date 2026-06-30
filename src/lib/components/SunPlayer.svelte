@@ -109,6 +109,7 @@
 	>
 		<span class="sun-ring"></span>
 		<span class="sun-lines" aria-hidden="true"></span>
+		<span class="sun-water" aria-hidden="true"></span>
 		<span class="play-glyph">
 			{#if isPlaying}
 				<Pause size={42} weight="fill" />
@@ -117,6 +118,8 @@
 			{/if}
 		</span>
 	</button>
+
+	<span class="sun-reflection" aria-hidden="true"></span>
 
 	<div class="vibe-copy">
 		<h1>{appState.state.title || 'Seeded Vibe'}</h1>
@@ -163,16 +166,21 @@
 
 <style>
 	.sun-player {
-		width: min(82vw, 430px);
+		position: relative;
+		width: min(100%, 520px);
 		display: grid;
 		justify-items: center;
-		gap: 0.9rem;
+		gap: 0.85rem;
 		color: var(--color-text-primary);
 		text-align: center;
 	}
 
 	.sun-meta {
-		width: min(100%, 320px);
+		position: fixed;
+		top: clamp(1.6rem, 5vh, 4rem);
+		left: 50%;
+		z-index: 20;
+		width: min(82vw, 320px);
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -181,6 +189,7 @@
 		border-radius: var(--radius-full);
 		background: rgba(9, 9, 11, 0.32);
 		backdrop-filter: blur(10px);
+		transform: translateX(-50%);
 	}
 
 	.brand {
@@ -215,7 +224,8 @@
 
 	.sun-button {
 		position: relative;
-		width: clamp(190px, 36vw, 300px);
+		z-index: 3;
+		width: var(--scene-sun, clamp(190px, 36vw, 300px));
 		aspect-ratio: 1;
 		border-radius: var(--radius-full);
 		color: #170711;
@@ -246,6 +256,7 @@
 
 	.sun-ring,
 	.sun-lines,
+	.sun-water,
 	.play-glyph {
 		position: absolute;
 		inset: 0;
@@ -260,20 +271,73 @@
 	.sun-lines {
 		background: linear-gradient(
 			to bottom,
-			transparent 0 64%,
-			rgba(255, 255, 255, 0.18) 65% 66%,
-			transparent 67% 72%,
-			rgba(255, 255, 255, 0.1) 73% 74%,
-			transparent 75%
+			transparent 0 55%,
+			rgba(255, 255, 255, 0.22) 56% 57%,
+			transparent 58% 64%,
+			rgba(255, 255, 255, 0.13) 65% 66%,
+			transparent 67% 74%,
+			rgba(255, 255, 255, 0.08) 75% 76%,
+			transparent 77%
 		);
 		mix-blend-mode: screen;
 		opacity: 0.42;
 	}
 
+	.sun-water {
+		z-index: 3;
+		top: 71%;
+		background:
+			linear-gradient(90deg, transparent 8%, rgba(255, 237, 164, 0.2) 45% 55%, transparent 92%),
+			repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.11) 0 2px, transparent 2px 17px),
+			linear-gradient(180deg, rgba(28, 86, 98, 0.5), rgba(13, 34, 57, 0.74));
+		box-shadow: inset 0 1px 0 rgba(255, 239, 181, 0.3);
+	}
+
+	.sun-water::before {
+		content: '';
+		position: absolute;
+		top: -8px;
+		left: 8%;
+		right: 8%;
+		height: 16px;
+		border-radius: var(--radius-full);
+		background: linear-gradient(
+			90deg,
+			transparent,
+			rgba(255, 236, 156, 0.5),
+			rgba(244, 114, 182, 0.25),
+			transparent
+		);
+		filter: blur(5px);
+	}
+
 	.play-glyph {
+		z-index: 5;
 		display: grid;
 		place-items: center;
 		filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.22));
+	}
+
+	.sun-reflection {
+		position: absolute;
+		top: calc(var(--scene-sun, 280px) * 0.78);
+		left: 50%;
+		z-index: 1;
+		width: min(76vw, calc(var(--scene-sun, 280px) * 2.15));
+		height: clamp(120px, 25vh, 240px);
+		pointer-events: none;
+		transform: translateX(-50%);
+		background:
+			repeating-linear-gradient(180deg, rgba(255, 230, 128, 0.17) 0 2px, transparent 2px 24px),
+			radial-gradient(
+				ellipse at 50% 0,
+				rgba(255, 213, 111, 0.2),
+				rgba(236, 72, 153, 0.1) 32%,
+				transparent 70%
+			);
+		filter: blur(0.2px);
+		mask-image: linear-gradient(180deg, #000 0 18%, rgba(0, 0, 0, 0.6) 46%, transparent 100%);
+		opacity: 0.74;
 	}
 
 	.play-glyph :global(svg) {
@@ -285,8 +349,11 @@
 	}
 
 	.vibe-copy {
+		position: relative;
+		z-index: 4;
 		display: grid;
 		gap: 0.45rem;
+		margin-top: clamp(1.9rem, 5.5vh, 3.6rem);
 		text-shadow: 0 2px 18px rgba(0, 0, 0, 0.65);
 	}
 
@@ -331,6 +398,8 @@
 	}
 
 	.orbit-actions {
+		position: relative;
+		z-index: 4;
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: center;
@@ -358,12 +427,22 @@
 
 	@media (max-width: 720px) {
 		.sun-player {
-			width: min(100%, 380px);
+			width: min(100%, 390px);
 			gap: 0.75rem;
 		}
 
-		.sun-button {
-			width: clamp(180px, 64vw, 260px);
+		.sun-meta {
+			top: 1.25rem;
+			width: min(calc(100vw - 2rem), 300px);
+		}
+
+		.sun-reflection {
+			width: min(86vw, calc(var(--scene-sun, 220px) * 2.05));
+			height: 132px;
+		}
+
+		.vibe-copy {
+			margin-top: clamp(1.5rem, 4.5vh, 2.4rem);
 		}
 
 		.orbit-actions {

@@ -219,27 +219,52 @@
 
 <style>
 	.app-layout {
+		--scene-sun: clamp(220px, 24vw, 290px);
+		--scene-sun-y: clamp(280px, 43vh, 390px);
+		--scene-horizon-y: calc(var(--scene-sun-y) + var(--scene-sun) * 0.21);
+		--scene-panel-gap: 26px;
 		position: fixed;
 		inset: 0;
 		pointer-events: none;
 		z-index: 10;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: clamp(1rem, 2.5vw, 2rem);
+	}
+
+	.app-layout::before {
+		content: '';
+		position: fixed;
+		inset: var(--scene-horizon-y) 0 0;
+		z-index: 0;
+		background:
+			radial-gradient(
+				ellipse at 50% 0,
+				rgba(255, 222, 118, 0.18),
+				rgba(244, 114, 182, 0.11) 24%,
+				transparent 56%
+			),
+			linear-gradient(
+				180deg,
+				rgba(20, 55, 70, 0.62),
+				rgba(9, 18, 35, 0.88) 46%,
+				rgba(5, 8, 18, 0.96)
+			);
+		box-shadow: 0 -1px 0 rgba(255, 230, 160, 0.13);
 	}
 
 	.sun-stage {
-		display: flex;
-		align-items: center;
-		justify-content: center;
+		position: absolute;
+		top: calc(var(--scene-sun-y) - var(--scene-sun) / 2);
+		left: 0;
+		right: 0;
+		z-index: 2;
+		width: min(88vw, 520px);
+		margin-inline: auto;
 		pointer-events: auto;
-		transform: translateY(-2vh);
 	}
 
 	.side-panel {
 		position: fixed;
-		top: 50%;
+		top: calc(var(--scene-sun-y) + 56px);
+		z-index: 3;
 		width: clamp(300px, 27vw, 380px);
 		max-height: min(74vh, 720px);
 		display: flex;
@@ -262,13 +287,39 @@
 	}
 
 	.vibes-panel {
-		right: calc(50% + clamp(230px, 21vw, 285px));
-		border-radius: var(--radius-lg) var(--radius-sm) var(--radius-sm) var(--radius-lg);
+		right: calc(50vw + var(--scene-sun) / 2 + var(--scene-panel-gap));
+		border-radius: var(--radius-lg);
+		box-shadow:
+			28px 0 55px rgba(251, 191, 36, 0.12),
+			var(--shadow-lg);
 	}
 
 	.tune-panel {
-		left: calc(50% + clamp(230px, 21vw, 285px));
-		border-radius: var(--radius-sm) var(--radius-lg) var(--radius-lg) var(--radius-sm);
+		left: calc(50vw + var(--scene-sun) / 2 + var(--scene-panel-gap));
+		border-radius: var(--radius-lg);
+		box-shadow:
+			-28px 0 55px rgba(251, 191, 36, 0.12),
+			var(--shadow-lg);
+	}
+
+	.vibes-panel::before,
+	.tune-panel::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 42%;
+		pointer-events: none;
+	}
+
+	.vibes-panel::before {
+		right: 0;
+		background: linear-gradient(90deg, transparent, rgba(255, 222, 118, 0.07));
+	}
+
+	.tune-panel::before {
+		left: 0;
+		background: linear-gradient(90deg, rgba(255, 222, 118, 0.07), transparent);
 	}
 
 	.vibes-panel::after,
@@ -276,21 +327,26 @@
 		content: '';
 		position: absolute;
 		top: 50%;
-		width: 44px;
-		height: 44px;
+		width: calc(var(--scene-sun) * 0.52);
+		height: calc(var(--scene-sun) * 0.9);
 		border-radius: var(--radius-full);
-		background: radial-gradient(circle, rgba(245, 158, 11, 0.2), rgba(236, 72, 153, 0.05) 70%);
-		box-shadow: 0 0 34px rgba(236, 72, 153, 0.16);
+		background: radial-gradient(
+			circle,
+			rgba(255, 229, 120, 0.2),
+			rgba(236, 72, 153, 0.08) 58%,
+			transparent 72%
+		);
+		box-shadow: 0 0 42px rgba(245, 158, 11, 0.16);
 		transform: translateY(-50%);
 		pointer-events: none;
 	}
 
 	.vibes-panel::after {
-		right: -22px;
+		right: calc(var(--scene-sun) * -0.25);
 	}
 
 	.tune-panel::after {
-		left: -22px;
+		left: calc(var(--scene-sun) * -0.25);
 	}
 
 	.panel-header {
@@ -479,15 +535,13 @@
 
 	@media (max-width: 720px) {
 		.app-layout {
-			display: flex;
-			flex-direction: column;
-			justify-content: center;
-			padding: 0.85rem;
+			--scene-sun: clamp(184px, 61vw, 248px);
+			--scene-sun-y: 37vh;
 		}
 
 		.sun-stage {
-			min-height: 0;
-			transform: translateY(-4vh);
+			top: calc(var(--scene-sun-y) - var(--scene-sun) / 2);
+			width: min(calc(100vw - 1.5rem), 390px);
 		}
 
 		.side-panel {
@@ -502,6 +556,9 @@
 			z-index: 100;
 			transform: translateY(calc(100% + 1rem));
 			border-radius: var(--radius-lg);
+			background: #0d0f18;
+			backdrop-filter: none;
+			-webkit-backdrop-filter: none;
 			box-shadow: 0 -18px 60px rgba(0, 0, 0, 0.46);
 		}
 
@@ -511,6 +568,8 @@
 
 		.side-panel::before {
 			content: '';
+			position: static;
+			display: block;
 			width: 38px;
 			height: 4px;
 			margin: 0.55rem auto 0;
