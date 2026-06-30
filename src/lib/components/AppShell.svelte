@@ -143,16 +143,16 @@
 		>
 			<div class="panel-header">
 				<h3>Vibes</h3>
-				<button class="close-panel-btn" onclick={() => (activePanel = null)} aria-label="Close vibes">
+				<button
+					class="close-panel-btn"
+					onclick={() => (activePanel = null)}
+					aria-label="Close vibes"
+				>
 					<X size={18} />
 				</button>
 			</div>
 			<div class="panel-content">
-				<PresetPicker
-					bind:this={presetPickerRef}
-					onSelect={handleSelectPreset}
-					layout="grid"
-				/>
+				<PresetPicker bind:this={presetPickerRef} onSelect={handleSelectPreset} layout="grid" />
 			</div>
 		</aside>
 
@@ -559,7 +559,9 @@
 			right: 0.75rem;
 			bottom: 0.75rem;
 			width: auto;
+			justify-self: stretch;
 			max-height: min(72vh, 680px);
+			max-width: none;
 			z-index: 100;
 			transform: translateY(calc(100% + 1rem));
 			border-radius: var(--radius-lg);

@@ -41,3 +41,10 @@ graph TD
 
 - High-performance animated outrun sunset visuals rendered on a Canvas 2D frame-capped loop.
 - Monitors document visibility and user system preferences (reduced motion) to prevent CPU/battery drain.
+- Shares sun anchor constants with the UI; the main interactive sun is DOM/CSS for reliable focus, hover, and click behavior.
+
+### 6. UI Shell (`src/lib/components/`)
+
+- `AppShell.svelte` owns the sun-centered layout, desktop side docks, mobile bottom sheets, Zen mode, and settings drawer.
+- `SunPlayer.svelte` owns the primary play/pause button, seed chip, status indicator, share/save dialogs, and action orbit.
+- Tune controls and preset selection remain existing components mounted inside collapsible panels.

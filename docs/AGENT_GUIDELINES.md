@@ -17,6 +17,7 @@ KoalaFi v0.1 is a static, frontend-only procedural audio app. Keep changes insid
 ## Visuals
 
 - Use Canvas 2D and CSS/SVG only in v0.1.
+- Keep the main sun player as a real DOM button. Do not align invisible controls over a canvas-only sun.
 - Cap `devicePixelRatio`, throttle FPS, pause when hidden, provide motion-off mode, and respect `prefers-reduced-motion`.
 - Avoid flashing, strobing, or effects that make controls hard to read.
 

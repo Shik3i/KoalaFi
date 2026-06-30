@@ -88,7 +88,12 @@
 	});
 </script>
 
-<section class="sun-player" class:playing={isPlaying} aria-label="Sun player">
+<section
+	class="sun-player"
+	class:playing={isPlaying}
+	class:zen-active={isZen}
+	aria-label="Sun player"
+>
 	<div class="sun-meta">
 		<span class="brand">KoalaFi</span>
 		<button class="meta-btn" onclick={onOpenSettings} aria-label="Open settings">

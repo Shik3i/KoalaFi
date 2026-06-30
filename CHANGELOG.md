@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Sun-Centered Player UI**: Added a large DOM/CSS sun as the primary play/pause control with status, seed, share, save, tune, vibes, and Zen actions.
+- **Responsive Control Docks**: Added collapsible desktop side panels and mobile bottom sheets for vibes and tune controls.
 - **Tape Saturation**: Added a subtle distortion/saturation node (`Tone.Distortion`) on the music bus before compression to emulate analog tape warmth.
 - **Pitch-Drift LFOs (Wow & Flutter)**: Integrated slow vibrato oscillators into Chords and Melody instruments for organic vintage electric piano drift.
 - **Dynamic Filter Sweeps**: Connected a slow LFO to the Melody instrument's lowpass filter for shifting pluck resonance.
@@ -19,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Canvas/UI Split**: Kept Canvas 2D for the animated background while moving the duplicate interactive sun into the DOM for accessibility and robust layout.
 - **Generator Version 2**: Bumped `generatorVersion` from 1 to 2 across presets, defaults, tests, and migrations.
 - **Harmonic Chord Spacing**: Replaced root-position block chord spellings with wide open keyboard voicings spanning two octaves.
 - **Conjunct Phrasing**: Rewrote the melody generator to use motivic 4-bar rhythm patterns and stepwise scale motion instead of random notes.

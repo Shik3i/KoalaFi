@@ -19,6 +19,13 @@
 - Implemented pseudo-random deterministic velocity humanization.
 - Softened and lowpassed ambience sounds (rain, vinyl pops, dual-LFO wave swells).
 
+## v0.2.x - Sun-Centered UI Polish (Completed)
+
+- Moved the primary play/pause interaction into a large DOM/CSS sun player.
+- Kept Canvas 2D as the performant background layer for sky, horizon, reflections, rain, and grid motion.
+- Replaced the dashboard-style default with collapsible desktop docks and mobile bottom sheets.
+- Improved Zen mode so the visual background can remain the main experience.
+
 ## v0.3.0 — CC0 Sample Packs
 
 - Consider CC0-licensed synthesized one-shots or field recordings only if explicitly approved.

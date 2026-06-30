@@ -6,10 +6,14 @@ Visual backgrounds in KoalaFi are rendered using a high-performance, battery-con
 
 ## Visual Themes
 
-1. **Sunset Glow (`sunset`)**: digital outrun sliced sun, warm coral orange to deep indigo twilight sky gradient, and horizontal water reflections.
+1. **Sunset Glow (`sunset`)**: warm coral orange to deep indigo twilight sky gradient and horizontal water reflections.
 2. **Indigo Rain (`night-rain`)**: dark slate grid, vertical falling raindrops with wind angles, and minimal blue moonlight.
-3. **Minimal Dark (`minimal-dark`)**: clean zinc monochrome circles, static moon, and light grey highlights (minimal emission).
-4. **Neon Coast (`neon-coast`)**: hot pink and indigo gradient sky, glowing rose outrun sun, and cyan perspective scrolling highway grids.
+3. **Minimal Dark (`minimal-dark`)**: clean zinc monochrome atmosphere and light grey highlights (minimal emission).
+4. **Neon Coast (`neon-coast`)**: hot pink and indigo gradient sky with cyan perspective scrolling highway grids.
+
+## Sun-Centered Player
+
+The main sun is a DOM/CSS button in `src/lib/components/SunPlayer.svelte`, not a Canvas hit target. Canvas keeps the sky, horizon, water/reflections, rain, and grid motion. Shared layout values live in `src/lib/visuals/sunLayout.ts` so the canvas reflection stays visually aligned with the DOM sun without duplicating the sun disc.
 
 ## Performance Capping
 
