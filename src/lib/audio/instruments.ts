@@ -14,15 +14,18 @@ export class ChordsInstrument {
 			Q: 1
 		}).connect(this.gain);
 
-		this.synth = new Tone.PolySynth(Tone.Synth, {
-			oscillator: {
-				type: 'sine' // Soft rhodes keys tone
-			},
-			envelope: {
-				attack: 0.15, // Softer attack
-				decay: 1.2, // Longer decay
-				sustain: 0.5,
-				release: 1.8 // Longer release for warm sustain
+		this.synth = new Tone.PolySynth({
+			voice: Tone.Synth,
+			options: {
+				oscillator: {
+					type: 'sine' // Soft rhodes keys tone
+				},
+				envelope: {
+					attack: 0.15, // Softer attack
+					decay: 1.2, // Longer decay
+					sustain: 0.5,
+					release: 1.8 // Longer release for warm sustain
+				}
 			}
 		});
 

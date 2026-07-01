@@ -41,27 +41,27 @@ export class MasterEffectsPipeline {
 			release: 0.08
 		}).connect(this.masterFilter);
 
-		// Subtle saturation/tape warmth node
+		// Subtle saturation/tape warmth node (bypassed for diagnostics)
 		this.saturationNode = new Tone.Distortion({
 			distortion: 0.06, // Very gentle saturation
 			wet: 0.08
-		}).connect(this.compressor);
+		}).connect(this.masterFilter);
 
-		// 2. Aux sends
+		// 2. Aux sends (routed directly to masterFilter)
 		this.delayNode = new Tone.FeedbackDelay({
 			delayTime: '8n.',
 			feedback: 0.35,
 			wet: 0.15
-		}).connect(this.compressor);
+		}).connect(this.masterFilter);
 
 		this.reverbNode = new Tone.Reverb({
 			decay: 2.2,
 			wet: 0.25
-		}).connect(this.compressor);
+		}).connect(this.masterFilter);
 
 		// 3. Sub buses
-		// Music bus routes through saturation before compressor
-		this.musicBus = new Tone.Volume(0).connect(this.saturationNode);
+		// Music bus routed directly to masterFilter
+		this.musicBus = new Tone.Volume(0).connect(this.masterFilter);
 		this.musicBus.connect(this.delayNode);
 		this.musicBus.connect(this.reverbNode);
 
