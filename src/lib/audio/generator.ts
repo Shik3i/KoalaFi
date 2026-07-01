@@ -5,14 +5,13 @@ import type { KoalaFiState } from '../state/koalaFiState';
 
 /**
  * Deterministically generates a 64-bar musical sequence based on seed and state.
- * Structure:
- * - 4 chords in a loop (each 2 bars = 8 bar base loop)
- * - Section Intro (Bars 0-8): Ambience, soft chords, sub bass. No drums, no melody.
- * - Section Build (Bars 8-16): Adds light drums (no hats), light melody.
- * - Section Main (Bars 16-32): Full drums (hi-hats), full melody, warm comping.
- * - Section Recap (Bars 32-40): Full drums, melody drops out for first 4 bars, then returns.
- * - Section Breakdown (Bars 40-48): Drums drop out completely. Chords/Melody play softly.
- * - Section Outro (Bars 48-64): Ambient pads, no drums, no melody.
+ * Structure (64-bar Arrangement):
+ * - 0–7: Intro (chords + ambience, minimal beat, e.g. soft kick/snare, no hats).
+ * - 8–23: Main groove (full drums + bass + chords).
+ * - 24–31: Melody enters (drums + bass + chords + melody phrase).
+ * - 32–39: Dropout/reduced drums (no kick, only hats/snare, chords + bass + melody).
+ * - 40–55: Full groove returns (drums + bass + chords + melody).
+ * - 56–63: Outro/variation (softer chords + bass, lighter melody or drum fills, no hats).
  */
 export function generatePattern(seedStr: string, musicState: KoalaFiState['music']): SeededPattern {
 	const rng = new SeededRNG(seedStr);
@@ -66,28 +65,6 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 		...getScaleNotes(key, scale, 5) // Octave 5 lead
 	];
 
-	// Pre-generate 4-bar call-and-response melodic rhythm templates
-	const templatesCount = 4;
-	const rhythmTemplates: { beats: number[][]; activeBars: boolean[] }[] = [];
-	for (let t = 0; t < templatesCount; t++) {
-		const beats: number[][] = [];
-		const activeBars: boolean[] = [];
-		for (let b = 0; b < 4; b++) {
-			// Structured phrasing: bar 2 is always a rest (silence) to create breathing room
-			if (b === 2) {
-				activeBars.push(false);
-				beats.push([]);
-			} else {
-				activeBars.push(rng.next() > 0.35); // ~65% active melody per bar
-				const notesCount = rng.intRange(2, 4);
-				const possibleBeats = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5];
-				const selectedBeats = rng.shuffle(possibleBeats).slice(0, notesCount).sort();
-				beats.push(selectedBeats);
-			}
-		}
-		rhythmTemplates.push({ beats, activeBars });
-	}
-
 	// State tracking for stepwise melody motion
 	let lastMelodyIndex = Math.floor(melodyScaleNotes.length / 2);
 
@@ -96,52 +73,26 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 		const chordIndex = Math.floor((bar % 8) / 2); // 4 chords, each 2 bars
 
 		// Determine arrangement section
-		let section: 'intro' | 'build' | 'main' | 'recap' | 'breakdown' | 'outro';
+		let section: 'intro' | 'groove1' | 'melody1' | 'dropout' | 'groove2' | 'outro';
 		if (bar < 8) section = 'intro';
-		else if (bar < 16) section = 'build';
-		else if (bar < 32) section = 'main';
-		else if (bar < 40) section = 'recap';
-		else if (bar < 48) section = 'breakdown';
+		else if (bar < 24) section = 'groove1';
+		else if (bar < 32) section = 'melody1';
+		else if (bar < 40) section = 'dropout';
+		else if (bar < 56) section = 'groove2';
 		else section = 'outro';
 
-		let hasDrums = false;
-		let hasMelody = false;
+		// Determine which parts play based on preset config (e.g. sleepy disables drums)
+		const hasDrums = musicState.drums > 0.05 && musicState.sleepy <= 0.6;
+		const hasBass = musicState.bass > 0.05;
+		const hasMelody = musicState.melody > 0.05 && musicState.sleepy <= 0.6;
 		const hasChords = true;
-		const hasBass = true;
-
-		switch (section) {
-			case 'intro':
-				hasDrums = false;
-				hasMelody = false;
-				break;
-			case 'build':
-				hasDrums = true;
-				hasMelody = rng.next() > 0.5;
-				break;
-			case 'main':
-				hasDrums = true;
-				hasMelody = true;
-				break;
-			case 'recap':
-				hasDrums = true;
-				hasMelody = bar >= 36; // Melody drops out for the first 4 bars of recap
-				break;
-			case 'breakdown':
-				hasDrums = false;
-				hasMelody = rng.next() > 0.3;
-				break;
-			case 'outro':
-				hasDrums = false;
-				hasMelody = false;
-				break;
-		}
 
 		// A. Generate Chords Events
 		if (hasChords) {
 			const chordsForBar: NoteEvent[] = [];
+			const currentChordNotes = [...chordVoicings[chordIndex]];
 
 			// Apply Drop-2 style voicing transposition deterministic adjustment on alternate bars
-			const currentChordNotes = [...chordVoicings[chordIndex]];
 			if (bar % 2 === 1 && currentChordNotes.length > 2) {
 				// Shift the third of the chord down an octave for subtle texture motion
 				const note = currentChordNotes[2];
@@ -149,78 +100,49 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 				currentChordNotes[2] = note.slice(0, -1) + (octave - 1);
 			}
 
-			// If sleepy preset active or outro, keep it as static long pads
-			if (musicState.sleepy > 0.5 || section === 'outro') {
+			// If sleepy preset active or in outro, keep it as slow long pads
+			if (musicState.sleepy > 0.6) {
+				if (bar % 2 === 0) {
+					currentChordNotes.forEach((note) => {
+						chordsForBar.push({
+							time: `${bar}:0:0`,
+							note,
+							duration: '2m', // Retrigger every 2 bars to keep motion subtle
+							velocity: rng.range(0.35, 0.45)
+						});
+					});
+				}
+			} else if (musicState.focus > 0.6) {
+				// Focus preset: sparse chords (single stab on beat 0)
 				currentChordNotes.forEach((note) => {
 					chordsForBar.push({
 						time: `${bar}:0:0`,
 						note,
-						duration: '1m',
-						velocity: rng.range(0.42, 0.52)
+						duration: '2n',
+						velocity: rng.range(0.32, 0.4)
 					});
 				});
 			} else {
-				// Gentle rhythmic comping variations based on bar index
-				const compingType = bar % 4;
-				if (compingType === 0) {
-					// Whole note pad
-					currentChordNotes.forEach((note) => {
-						chordsForBar.push({
-							time: `${bar}:0:0`,
-							note,
-							duration: '1m',
-							velocity: rng.range(0.42, 0.52)
-						});
+				// General / Dusty Café comping: chord stab on beat 0:0, soft repeat on beat 1:2 or 2:2
+				const repeatTime = bar % 2 === 0 ? '1:2' : '2:2'; // & of 2 vs & of 3
+				currentChordNotes.forEach((note) => {
+					// Main stab on beat 0:0
+					chordsForBar.push({
+						time: `${bar}:0:0`,
+						note,
+						duration: '2n',
+						velocity: rng.range(0.42, 0.5)
 					});
-				} else if (compingType === 1) {
-					// Soft syncopation on beats 0 and 2.5
-					currentChordNotes.forEach((note) => {
+					// Soft repeat
+					if (rng.next() > 0.3) {
 						chordsForBar.push({
-							time: `${bar}:0:0`,
-							note,
-							duration: '2n',
-							velocity: rng.range(0.42, 0.52)
-						});
-						chordsForBar.push({
-							time: `${bar}:2:2`,
+							time: `${bar}:${repeatTime}`,
 							note,
 							duration: '4n',
-							velocity: rng.range(0.32, 0.42)
+							velocity: rng.range(0.28, 0.35)
 						});
-					});
-				} else if (compingType === 2) {
-					// Standard lofi comping on beats 0 and 2
-					currentChordNotes.forEach((note) => {
-						chordsForBar.push({
-							time: `${bar}:0:0`,
-							note,
-							duration: '2n',
-							velocity: rng.range(0.42, 0.52)
-						});
-						chordsForBar.push({
-							time: `${bar}:2:0`,
-							note,
-							duration: '2n',
-							velocity: rng.range(0.35, 0.45)
-						});
-					});
-				} else {
-					// Soft off-beat entry on beat 0.5 and beat 3
-					currentChordNotes.forEach((note) => {
-						chordsForBar.push({
-							time: `${bar}:0:2`,
-							note,
-							duration: '2n.',
-							velocity: rng.range(0.38, 0.48)
-						});
-						chordsForBar.push({
-							time: `${bar}:3:0`,
-							note,
-							duration: '4n',
-							velocity: rng.range(0.32, 0.42)
-						});
-					});
-				}
+					}
+				});
 			}
 			chords.push(chordsForBar);
 		} else {
@@ -230,70 +152,71 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 		// B. Generate Bassline Events
 		if (hasBass) {
 			const rootNote = chordVoicings[chordIndex][0];
-			const bassRoot = rootNote.replace(/[0-9]/g, '2'); // low octave
+			const bassRoot = rootNote.replace(/[0-9]/g, '2'); // low octave 2
 			const bassFifth = chordVoicings[chordIndex][1]
 				? chordVoicings[chordIndex][1].replace(/[0-9]/g, '2')
 				: bassRoot;
+			const bassOctave = rootNote.replace(/[0-9]/g, '3'); // octave 3
 
-			if (musicState.sleepy > 0.5 || section === 'outro') {
-				// Long static bass notes for sleep/outro
+			if (musicState.sleepy > 0.6) {
+				// Sleep presets: minimal bass, just a root note on beat 0 of bar 0 (every 4 bars)
+				if (bar % 4 === 0) {
+					bassline.push({
+						time: `${bar}:0:0`,
+						note: bassRoot,
+						duration: '2n',
+						velocity: rng.range(0.3, 0.4)
+					});
+				}
+			} else {
+				// Main groove bassline: short notes with rests!
+				// Hit root near kick at beat 0:0
 				bassline.push({
 					time: `${bar}:0:0`,
 					note: bassRoot,
-					duration: '1m',
+					duration: '4n', // short note
 					velocity: rng.range(0.55, 0.65)
 				});
-			} else {
-				// Dynamic walking / syncopated bass rhythm
-				const bassRhythm = bar % 4;
-				if (bassRhythm === 0) {
-					bassline.push({
-						time: `${bar}:0:0`,
-						note: bassRoot,
-						duration: '1m',
-						velocity: rng.range(0.55, 0.65)
-					});
-				} else if (bassRhythm === 1) {
-					bassline.push({
-						time: `${bar}:0:0`,
-						note: bassRoot,
-						duration: '2n',
-						velocity: rng.range(0.58, 0.68)
-					});
-					bassline.push({
-						time: `${bar}:2:0`,
-						note: bassFifth,
-						duration: '2n',
-						velocity: rng.range(0.5, 0.6)
-					});
-				} else if (bassRhythm === 2) {
-					bassline.push({
-						time: `${bar}:0:0`,
-						note: bassRoot,
-						duration: '2n',
-						velocity: rng.range(0.58, 0.68)
-					});
-					if (rng.next() > 0.45) {
+
+				// Deterministic passing notes with rests (gaps)
+				// Occasional fifth/octave passing note
+				const bassPatternType = bar % 2;
+				if (bassPatternType === 0) {
+					// Bar 1: root . . fifth . octave . .
+					if (rng.next() > 0.4) {
 						bassline.push({
-							time: `${bar}:2:2`,
+							time: `${bar}:2:0`,
 							note: bassFifth,
-							duration: '4n',
-							velocity: rng.range(0.46, 0.56)
+							duration: '8n',
+							velocity: rng.range(0.45, 0.55)
+						});
+					}
+					if (rng.next() > 0.5) {
+						bassline.push({
+							time: `${bar}:3:0`,
+							note: bassOctave,
+							duration: '8n',
+							velocity: rng.range(0.4, 0.5)
 						});
 					}
 				} else {
-					bassline.push({
-						time: `${bar}:0:0`,
-						note: bassRoot,
-						duration: '2n.',
-						velocity: rng.range(0.58, 0.68)
-					});
-					bassline.push({
-						time: `${bar}:3:0`,
-						note: bassFifth,
-						duration: '4n',
-						velocity: rng.range(0.48, 0.58)
-					});
+					// Bar 2: root . . . fifth . . .
+					if (rng.next() > 0.4) {
+						bassline.push({
+							time: `${bar}:2:0`,
+							note: bassFifth,
+							duration: '8n',
+							velocity: rng.range(0.45, 0.55)
+						});
+					}
+					if (rng.next() > 0.7) {
+						bassline.push({
+							time: `${bar}:3:2`,
+							note: bassRoot,
+							duration: '8n',
+							velocity: rng.range(0.4, 0.5)
+						});
+					}
 				}
 			}
 		}
@@ -302,43 +225,65 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 		if (hasDrums) {
 			const isLastBarOfBlock = (bar + 1) % 8 === 0;
 
-			// 1. Kick Drum
-			drums.push({ time: `${bar}:0:0`, type: 'kick', velocity: 0.85 });
-
-			const kickRnd = rng.next();
-			if (kickRnd > 0.6) {
-				drums.push({ time: `${bar}:2:2`, type: 'kick', velocity: 0.65 });
-			} else if (kickRnd > 0.35) {
-				drums.push({ time: `${bar}:2:0`, type: 'kick', velocity: 0.75 });
-			}
-
-			// 2. Snare
-			if (isLastBarOfBlock && rng.next() > 0.5) {
-				// Snare fill
-				drums.push({ time: `${bar}:1:0`, type: 'snare', velocity: 0.65 });
-				drums.push({ time: `${bar}:1:2`, type: 'snare', velocity: 0.55 });
-				drums.push({ time: `${bar}:2:0`, type: 'snare', velocity: 0.75 });
-				drums.push({ time: `${bar}:3:0`, type: 'snare', velocity: 0.45 });
-				drums.push({ time: `${bar}:3:2`, type: 'snare', velocity: 0.75 });
-			} else {
-				drums.push({ time: `${bar}:1:0`, type: 'snare', velocity: 0.75 });
-				drums.push({ time: `${bar}:3:0`, type: 'snare', velocity: 0.75 });
-			}
-
-			// 3. Hi-hats (Only in main theme/recap, builds energy)
-			const playHats = section === 'main' || section === 'recap';
-			if (playHats) {
+			if (section === 'intro' || section === 'outro') {
+				// Minimal beat (no hi-hats, soft kick/snare)
+				drums.push({ time: `${bar}:0:0`, type: 'kick', velocity: 0.65 });
+				drums.push({ time: `${bar}:1:0`, type: 'snare', velocity: 0.55 });
+				drums.push({ time: `${bar}:3:0`, type: 'snare', velocity: 0.55 });
+			} else if (section === 'dropout') {
+				// Reduced section: no kick, only hats and soft snare
+				drums.push({ time: `${bar}:1:0`, type: 'snare', velocity: 0.55 });
+				drums.push({ time: `${bar}:3:0`, type: 'snare', velocity: 0.55 });
+				// Soft hats
 				for (let beat = 0; beat < 4; beat++) {
 					drums.push({
-						time: `${bar}:${beat}:0`,
+						time: `${bar}:${beat}:2`,
 						type: 'hihat',
-						velocity: rng.range(0.35, 0.55)
+						velocity: rng.range(0.2, 0.3)
 					});
-					if (rng.next() > 0.3) {
+				}
+			} else {
+				// Full groove: kick, snare/clap, hats
+				// 1. Kick on 1 and 3
+				drums.push({ time: `${bar}:0:0`, type: 'kick', velocity: 0.8 });
+				drums.push({ time: `${bar}:2:0`, type: 'kick', velocity: 0.7 });
+
+				// Occasional kick before beat 3 or 4 (beat 1:3 or beat 2:3)
+				const kickRnd = rng.next();
+				if (kickRnd > 0.75) {
+					drums.push({ time: `${bar}:1:3`, type: 'kick', velocity: 0.55 });
+				} else if (kickRnd > 0.5) {
+					drums.push({ time: `${bar}:2:3`, type: 'kick', velocity: 0.55 });
+				}
+
+				// 2. Snare
+				if (isLastBarOfBlock && rng.next() > 0.5) {
+					// Snare fill every 8/16 bars
+					drums.push({ time: `${bar}:1:0`, type: 'snare', velocity: 0.65 });
+					drums.push({ time: `${bar}:1:2`, type: 'snare', velocity: 0.5 });
+					drums.push({ time: `${bar}:2:2`, type: 'snare', velocity: 0.6 });
+					drums.push({ time: `${bar}:3:0`, type: 'snare', velocity: 0.5 });
+					drums.push({ time: `${bar}:3:2`, type: 'snare', velocity: 0.7 });
+				} else {
+					drums.push({ time: `${bar}:1:0`, type: 'snare', velocity: 0.7 });
+					drums.push({ time: `${bar}:3:0`, type: 'snare', velocity: 0.7 });
+				}
+
+				// 3. Hi-hats on off-beats (& of 1, 2, 3, 4)
+				for (let beat = 0; beat < 4; beat++) {
+					drums.push({
+						time: `${bar}:${beat}:2`,
+						type: 'hihat',
+						velocity: rng.range(0.3, 0.45)
+					});
+
+					// Occasional ghost hi-hats on sixteenths 1 or 3
+					if (rng.next() > 0.75) {
+						const sixteenth = rng.choice([1, 3]);
 						drums.push({
-							time: `${bar}:${beat}:2`,
+							time: `${bar}:${beat}:${sixteenth}`,
 							type: 'hihat',
-							velocity: rng.range(0.2, 0.35)
+							velocity: rng.range(0.12, 0.2)
 						});
 					}
 				}
@@ -346,40 +291,65 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 		}
 
 		// D. Generate Melody Phrases
-		if (hasMelody) {
-			const blockIndex = Math.floor(bar / 4);
-			const barInBlock = bar % 4;
+		const melodyActiveSection =
+			section === 'melody1' ||
+			section === 'dropout' ||
+			section === 'groove2' ||
+			section === 'outro';
+		const barInBlock = bar % 8;
+		const isPhraseBar = barInBlock === 2 || barInBlock === 3;
+		const isAnswerBar = barInBlock === 6 || barInBlock === 7;
 
-			const templateIdx = Math.floor((rng.next() * templatesCount + blockIndex) % templatesCount);
-			const activeTemplate = rhythmTemplates[templateIdx];
+		const playMelody =
+			hasMelody && melodyActiveSection && (isPhraseBar || (isAnswerBar && section !== 'outro'));
 
-			const playMelody = activeTemplate.activeBars[barInBlock];
+		if (playMelody) {
+			const isCorePhrase = isPhraseBar;
+			const notesCount = isCorePhrase ? rng.intRange(2, 3) : rng.intRange(1, 2);
+			const possibleBeats = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5];
+			const selectedBeats = rng.shuffle(possibleBeats).slice(0, notesCount).sort();
 
-			if (playMelody) {
-				const selectedBeats = activeTemplate.beats[barInBlock];
-				selectedBeats.forEach((beat) => {
-					const beatInt = Math.floor(beat);
-					const sixteenth = beat % 1 === 0.5 ? 2 : 0;
-					const targetTime = `${bar}:${beatInt}:${sixteenth}`;
+			selectedBeats.forEach((beat, idx) => {
+				const beatInt = Math.floor(beat);
+				const sixteenth = beat % 1 === 0.5 ? 2 : 0;
+				const targetTime = `${bar}:${beatInt}:${sixteenth}`;
 
-					// Stepwise scale movement (leads move naturally)
-					const step = rng.choice([-2, -1, 0, 1, 2]);
-					let nextIndex = lastMelodyIndex + step;
-					nextIndex = Math.max(0, Math.min(melodyScaleNotes.length - 1, nextIndex));
-					lastMelodyIndex = nextIndex;
+				// Stepwise scale movement (mostly stepwise, occasional leap)
+				const moveRnd = rng.next();
+				let step: number;
+				if (moveRnd < 0.8) {
+					step = rng.choice([-1, 0, 1]); // stepwise
+				} else if (moveRnd < 0.95) {
+					step = rng.choice([-2, 2]); // small leap
+				} else {
+					step = rng.choice([-3, 3, -4, 4]); // larger leap
+				}
 
-					const note = melodyScaleNotes[nextIndex];
-					const duration = rng.choice(['4n', '8n', '8n.']);
-					const priority = rng.next();
+				let nextIndex = lastMelodyIndex + step;
+				nextIndex = Math.max(0, Math.min(melodyScaleNotes.length - 1, nextIndex));
+				lastMelodyIndex = nextIndex;
 
-					melody.push({
-						time: targetTime,
-						note,
-						duration,
-						velocity: priority
-					});
+				const note = melodyScaleNotes[nextIndex];
+				const duration = rng.choice(['4n', '8n', '8n.']);
+
+				// Priority complexity gate
+				const gate = rng.next();
+
+				// Clamped velocity for playback:
+				// core melody velocity: 0.35–0.55
+				// decorative velocity: 0.18–0.32
+				// The first note of a phrase is always core. Subsequent notes can be decorative.
+				const isCoreNote = idx === 0 || rng.next() > 0.4;
+				const velocity = isCoreNote ? rng.range(0.35, 0.55) : rng.range(0.18, 0.32);
+
+				melody.push({
+					time: targetTime,
+					note,
+					duration,
+					velocity,
+					gate
 				});
-			}
+			});
 		}
 	}
 

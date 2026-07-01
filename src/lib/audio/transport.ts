@@ -67,9 +67,10 @@ export class AudioScheduler {
 
 		// 4. Melody Part (procedural density gate)
 		this.melodyPart = new Tone.Part((time, event) => {
-			if (event.velocity !== undefined && event.velocity <= this.melodyComplexity) {
+			const gateVal = event.gate !== undefined ? event.gate : 0.5;
+			if (gateVal <= this.melodyComplexity) {
 				const delay = this.getSwingDelay(event.time);
-				const vel = this.getHumanizedVelocity(0.65, event.time, event.note);
+				const vel = this.getHumanizedVelocity(event.velocity || 0.4, event.time, event.note);
 				this.leadInst.trigger(event.note, event.duration, time + delay, vel);
 			}
 		}, pattern.melody);

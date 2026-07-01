@@ -3,6 +3,7 @@ export type NoteEvent = {
 	note: string; // e.g. "C4"
 	duration: string; // e.g. "8n"
 	velocity?: number; // e.g. 0.8
+	gate?: number; // density gate value (0..1)
 };
 
 export type DrumEvent = {
