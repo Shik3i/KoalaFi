@@ -141,6 +141,12 @@
 	$effect(() => {
 		if (typeof window === 'undefined') return;
 
+		const motion = appState.state.visual.motion;
+		if (motion === 'off') {
+			reflectionWaves = [];
+			return;
+		}
+
 		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		const beatMs = (60 / Math.max(1, appState.state.music.bpm)) * 1000;
 		const spawnMs = Math.max(680, beatMs * 1.05);

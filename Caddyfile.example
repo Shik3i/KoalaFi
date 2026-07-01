@@ -24,7 +24,7 @@
         Referrer-Policy "strict-origin-when-cross-origin"
         
         # Content Security Policy (strict block list, allow local scripts/styles and blob data connect)
-        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; object-src 'none';"
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; object-src 'none';"
     }
 
     # Service Worker: Do NOT cache long-term to ensure immediate updates
