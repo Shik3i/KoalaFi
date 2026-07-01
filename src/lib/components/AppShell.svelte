@@ -557,7 +557,7 @@
 		.app-layout {
 			--scene-sun: clamp(184px, 61vw, 248px);
 			--scene-sun-y: clamp(250px, 34dvh, 320px);
-			--scene-title-gap: clamp(3.8rem, 7dvh, 5.1rem);
+			--scene-title-gap: clamp(6rem, 12dvh, 7rem);
 			--scene-header-y: 1.25rem;
 		}
 

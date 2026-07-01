@@ -37,6 +37,32 @@
 	let isPlaying = $derived(appState.state.music.enabled);
 	let statusLabel = $derived(isPlaying ? 'Playing' : 'Paused');
 	let beatDuration = $derived(`${60 / Math.max(1, appState.state.music.bpm)}s`);
+	let reflectionWaves = $state<ReflectionWave[]>([]);
+	let nextReflectionWaveId = 0;
+
+	type ReflectionWave = {
+		id: number;
+		delayMs: number;
+		lifeMs: number;
+	};
+
+	const REFLECTION_WAVE_COUNT = 5;
+
+	function spawnReflectionWave(lifeMs: number, ageMs = 0): ReflectionWave {
+		return {
+			id: nextReflectionWaveId++,
+			delayMs: -ageMs,
+			lifeMs
+		};
+	}
+
+	function removeReflectionWave(id: number) {
+		reflectionWaves = reflectionWaves.filter((wave) => wave.id !== id);
+	}
+
+	function reflectionWaveStyle(wave: ReflectionWave) {
+		return `--wave-life: ${wave.lifeMs}ms; --wave-delay: ${wave.delayMs}ms`;
+	}
 
 	async function handlePlayToggle() {
 		try {
@@ -120,6 +146,29 @@
 			closeControls();
 		}
 	});
+
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+
+		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const beatMs = (60 / Math.max(1, appState.state.music.bpm)) * 1000;
+		const spawnMs = Math.max(680, beatMs * 1.05);
+		const lifeMs = spawnMs * REFLECTION_WAVE_COUNT;
+
+		reflectionWaves = Array.from({ length: reduced ? 4 : REFLECTION_WAVE_COUNT }, (_, index) =>
+			spawnReflectionWave(lifeMs, index * spawnMs)
+		);
+
+		if (reduced) return;
+
+		const interval = window.setInterval(() => {
+			reflectionWaves = [...reflectionWaves, spawnReflectionWave(lifeMs)].slice(
+				-REFLECTION_WAVE_COUNT - 2
+			);
+		}, spawnMs);
+
+		return () => window.clearInterval(interval);
+	});
 </script>
 
 <svelte:window onkeydown={handleWindowKeydown} />
@@ -155,14 +204,71 @@
 	</button>
 
 	<span class="scene-water" aria-hidden="true"></span>
-	<svg class="sun-reflection" aria-hidden="true" viewBox="0 0 1000 260" preserveAspectRatio="none">
+	<svg class="sun-reflection" aria-hidden="true" viewBox="0 0 1000 280" preserveAspectRatio="none">
+		<defs>
+			<radialGradient id="sun-direct-reflection" cx="50%" cy="0%" r="72%">
+				<stop offset="0" stop-color="#fff2b8" stop-opacity="0.36" />
+				<stop offset="0.34" stop-color="#ff9ec8" stop-opacity="0.2" />
+				<stop offset="0.72" stop-color="#22d3ee" stop-opacity="0.08" />
+				<stop offset="1" stop-color="#6ee7f9" stop-opacity="0" />
+			</radialGradient>
+			<linearGradient id="sun-direct-band" x1="0" x2="1" y1="0" y2="0">
+				<stop offset="0" stop-color="#ff4fa3" stop-opacity="0" />
+				<stop offset="0.22" stop-color="#ff8fc5" stop-opacity="0.3" />
+				<stop offset="0.5" stop-color="#fff2ae" stop-opacity="0.86" />
+				<stop offset="0.78" stop-color="#6ee7f9" stop-opacity="0.28" />
+				<stop offset="1" stop-color="#6ee7f9" stop-opacity="0" />
+			</linearGradient>
+			<filter id="mirror-blur" x="-20%" y="-80%" width="140%" height="260%">
+				<feGaussianBlur stdDeviation="9" />
+			</filter>
+			<linearGradient id="sun-reflection-band" x1="0" x2="1" y1="0" y2="0">
+				<stop offset="0" stop-color="#f472b6" stop-opacity="0" />
+				<stop offset="0.24" stop-color="#ffc778" stop-opacity="0.34" />
+				<stop offset="0.5" stop-color="#fff0ae" stop-opacity="0.95" />
+				<stop offset="0.76" stop-color="#ffc778" stop-opacity="0.34" />
+				<stop offset="1" stop-color="#f472b6" stop-opacity="0" />
+			</linearGradient>
+		</defs>
+		<g class="direct-sun-reflection">
+			<ellipse class="mirror-aura" cx="500" cy="72" rx="330" ry="128" />
+			<path
+				class="mirror-band mirror-band-1"
+				d="M 176 4 C 316 15 684 15 824 4 C 760 16 240 16 176 4 Z"
+			/>
+			<path
+				class="mirror-band mirror-band-2"
+				d="M 206 22 C 344 34 656 34 794 22 C 726 35 274 35 206 22 Z"
+			/>
+			<path
+				class="mirror-band mirror-band-3"
+				d="M 248 43 C 366 54 634 54 752 43 C 698 55 302 55 248 43 Z"
+			/>
+			<path
+				class="mirror-band mirror-band-4"
+				d="M 296 68 C 394 77 606 77 704 68 C 660 79 340 79 296 68 Z"
+			/>
+			<path
+				class="mirror-band mirror-band-5"
+				d="M 352 96 C 430 104 570 104 648 96 C 614 106 386 106 352 96 Z"
+			/>
+			<path
+				class="mirror-band mirror-band-6"
+				d="M 410 126 C 456 133 544 133 590 126 C 568 135 432 135 410 126 Z"
+			/>
+		</g>
 		<g class="reflection-lines">
-			<path class="wave wave-1" d="M275 8 C385 14 615 14 725 8" />
-			<path class="wave wave-2" d="M245 28 C370 38 630 38 755 28" />
-			<path class="wave wave-3" d="M215 58 C350 72 650 72 785 58" />
-			<path class="wave wave-4" d="M170 98 C330 116 670 116 830 98" />
-			<path class="wave wave-5" d="M115 148 C300 170 700 170 885 148" />
-			<path class="wave wave-6" d="M60 206 C270 232 730 232 940 206" />
+			{#each reflectionWaves as wave (wave.id)}
+				<g
+					class="wave"
+					style={reflectionWaveStyle(wave)}
+					onanimationend={() => removeReflectionWave(wave.id)}
+				>
+					<path class="wave-line wave-line-main" d="M 296 2 C 414 8 586 8 704 2" />
+					<path class="wave-line wave-line-left" d="M 226 2 C 282 5 338 5 394 2" />
+					<path class="wave-line wave-line-right" d="M 606 2 C 662 5 718 5 774 2" />
+				</g>
+			{/each}
 		</g>
 	</svg>
 
@@ -254,7 +360,9 @@
 		padding: 0.25rem 0.35rem 0.25rem 0.7rem;
 		border: 1px solid rgba(246, 223, 178, 0.13);
 		border-radius: var(--radius-full);
-		background: rgba(47, 25, 31, 0.46);
+		background:
+			linear-gradient(115deg, rgba(255, 236, 179, 0.08), transparent 34%, rgba(236, 72, 153, 0.12)),
+			rgba(47, 25, 31, 0.5);
 		backdrop-filter: blur(10px);
 		box-shadow:
 			0 12px 36px rgba(0, 0, 0, 0.18),
@@ -264,16 +372,31 @@
 
 	.brand {
 		display: inline-flex;
-		color: var(--brand-logo);
 		font-size: var(--font-size-xs);
 		font-weight: var(--font-weight-bold);
 		letter-spacing: 0.16em;
 		text-transform: uppercase;
 	}
 
+	.brand span {
+		color: transparent;
+		background: linear-gradient(
+			90deg,
+			#f7dc9b 0%,
+			#fff2bf 26%,
+			#f6a7c6 50%,
+			#a7f3d0 73%,
+			#f7dc9b 100%
+		);
+		background-size: 240% 100%;
+		-webkit-background-clip: text;
+		background-clip: text;
+		text-shadow: 0 0 18px rgba(242, 207, 143, 0.16);
+		animation: brandSweep 10s ease-in-out infinite;
+	}
+
 	.brand span:last-child {
-		color: var(--brand-logo-muted);
-		text-shadow: 0 0 14px rgba(242, 207, 143, 0.2);
+		animation-delay: -1.4s;
 	}
 
 	.meta-btn,
@@ -371,57 +494,96 @@
 
 	.sun-reflection {
 		position: absolute;
-		top: calc(var(--scene-sun, 280px) * 0.72);
+		top: calc(var(--scene-sun, 280px) * 0.72 + 1px);
 		left: 50%;
 		z-index: 5;
 		width: min(58vw, calc(var(--scene-sun, 280px) * 1.95));
-		height: clamp(118px, 17vh, 164px);
-		overflow: visible;
+		height: clamp(158px, 23vh, 224px);
+		overflow: hidden;
 		pointer-events: none;
 		transform: translateX(-50%);
 		opacity: 0.82;
+		-webkit-mask-image: linear-gradient(180deg, #000 0, #000 68%, transparent 100%);
+		mask-image: linear-gradient(180deg, #000 0, #000 68%, transparent 100%);
 	}
 
 	.reflection-lines {
 		transform-origin: 50% 0;
-		animation: reflectionFlow calc(var(--beat-duration, 0.8s) * 3) linear infinite;
+	}
+
+	.direct-sun-reflection {
+		transform-origin: 50% 0;
+		mix-blend-mode: screen;
+		filter: drop-shadow(0 0 12px rgba(255, 180, 124, 0.18));
+		animation: mirrorPulse calc(var(--beat-duration, 0.8s) * 7) ease-in-out infinite;
+	}
+
+	.mirror-aura {
+		fill: url('#sun-direct-reflection');
+		filter: url('#mirror-blur');
+		opacity: 0.3;
+	}
+
+	.mirror-band {
+		fill: url('#sun-direct-band');
+		transform-origin: 50% 50%;
+	}
+
+	.mirror-band-1 {
+		opacity: 0.9;
+	}
+
+	.mirror-band-2 {
+		opacity: 0.68;
+		transform: translateX(6px);
+	}
+
+	.mirror-band-3 {
+		opacity: 0.5;
+		transform: translateX(-8px);
+	}
+
+	.mirror-band-4 {
+		opacity: 0.34;
+		transform: translateX(10px);
+	}
+
+	.mirror-band-5 {
+		opacity: 0.22;
+		transform: translateX(-12px);
+	}
+
+	.mirror-band-6 {
+		opacity: 0.14;
 	}
 
 	.wave {
+		--wave-life: 3780ms;
+		--wave-delay: 0ms;
+		opacity: 0;
+		transform-box: fill-box;
+		transform-origin: 50% 0;
+		mix-blend-mode: screen;
+		will-change: transform, opacity;
+		animation: waveForward var(--wave-life) linear var(--wave-delay) both;
+	}
+
+	.wave-line {
 		fill: none;
+		stroke: url('#sun-reflection-band');
 		stroke-linecap: round;
 		stroke-linejoin: round;
-		filter: drop-shadow(0 0 8px rgba(255, 196, 128, 0.14));
 	}
 
-	.wave-1 {
-		stroke: rgba(255, 239, 176, 0.6);
-		stroke-width: 3;
+	.wave-line-main {
+		stroke-width: 3.1;
+		opacity: 0.72;
 	}
 
-	.wave-2 {
-		stroke: rgba(255, 226, 154, 0.48);
-		stroke-width: 3.2;
-	}
-
-	.wave-3 {
-		stroke: rgba(255, 196, 138, 0.36);
-		stroke-width: 3.5;
-	}
-
-	.wave-4 {
-		stroke: rgba(255, 154, 146, 0.26);
-		stroke-width: 3.8;
-	}
-
-	.wave-5 {
-		stroke: rgba(255, 116, 166, 0.17);
-		stroke-width: 4.1;
-	}
-
-	.wave-6 {
-		stroke: rgba(255, 106, 178, 0.1);
-		stroke-width: 4.5;
+	.wave-line-left,
+	.wave-line-right {
+		stroke-width: 2.2;
+		opacity: 0.34;
 	}
 
 	.scene-water {
@@ -432,21 +594,23 @@
 		pointer-events: none;
 		background:
 			radial-gradient(
-				ellipse at 50% 0,
-				rgba(255, 224, 135, 0.12),
-				rgba(236, 72, 153, 0.06) 28%,
-				transparent 58%
+				ellipse at 50% -4%,
+				rgba(255, 229, 157, 0.2),
+				rgba(236, 72, 153, 0.09) 24%,
+				rgba(34, 211, 238, 0.04) 43%,
+				transparent 66%
 			),
 			linear-gradient(
 				180deg,
-				rgba(13, 60, 75, 1) 0,
-				rgba(13, 60, 75, 1) 14px,
+				rgba(12, 74, 88, 1) 0,
+				rgba(13, 60, 75, 1) 18px,
 				rgba(8, 23, 41, 0.99) 44%,
 				rgba(5, 8, 18, 1)
 			);
 	}
 
-	.scene-water::before {
+	.scene-water::before,
+	.scene-water::after {
 		content: '';
 		position: absolute;
 		left: 0;
@@ -460,10 +624,22 @@
 		background: linear-gradient(
 			90deg,
 			transparent,
-			rgba(255, 232, 164, 0.55) 48%,
-			rgba(255, 128, 176, 0.18) 60%,
+			rgba(255, 232, 164, 0.72) 48%,
+			rgba(255, 128, 176, 0.28) 60%,
 			transparent
 		);
+	}
+
+	.scene-water::after {
+		top: -18px;
+		height: 54px;
+		background: radial-gradient(
+			ellipse at 50% 0,
+			rgba(255, 228, 154, 0.2),
+			rgba(236, 72, 153, 0.09) 34%,
+			transparent 72%
+		);
+		mix-blend-mode: screen;
 	}
 
 	.play-glyph :global(svg) {
@@ -629,11 +805,20 @@
 
 		.sun-reflection {
 			width: min(84vw, calc(var(--scene-sun, 220px) * 1.95));
-			height: 128px;
+			height: 184px;
 		}
 
 		.vibe-copy {
-			margin-top: var(--scene-title-gap, clamp(3.8rem, 8vh, 5.2rem));
+			position: fixed;
+			top: min(calc(var(--scene-horizon-y, 56vh) + 32dvh), calc(100dvh - 12rem));
+			left: 50%;
+			width: min(calc(100vw - 2rem), 390px);
+			margin-top: 0;
+			transform: translateX(-50%);
+		}
+
+		.sun-player.zen-active .vibe-copy {
+			transform: translateX(-50%) translateY(-4px);
 		}
 
 		.actions-popover {
@@ -658,19 +843,55 @@
 			transition: none;
 		}
 
-		.reflection-lines {
+		.wave {
 			animation: none;
+			opacity: 0.24;
+			transform: translateY(112px) scaleX(1.38) scaleY(1.16);
 		}
 	}
 
-	@keyframes reflectionFlow {
-		from {
-			opacity: 0.78;
-			transform: translateY(-30px) scaleY(0.96);
+	@keyframes brandSweep {
+		0%,
+		100% {
+			background-position: 0% 50%;
 		}
-		to {
-			opacity: 0.28;
-			transform: translateY(34px) scaleY(1.08);
+		50% {
+			background-position: 100% 50%;
+		}
+	}
+
+	@keyframes mirrorPulse {
+		0%,
+		100% {
+			opacity: 0.72;
+			transform: translateY(0) scaleX(0.98);
+		}
+		50% {
+			opacity: 0.9;
+			transform: translateY(3px) scaleX(1.04);
+		}
+	}
+
+	@keyframes waveForward {
+		0% {
+			opacity: 0;
+			transform: translateY(0) scaleX(0.95) scaleY(0.72);
+		}
+		8% {
+			opacity: 0.86;
+			transform: translateY(3px) scaleX(0.98) scaleY(0.78);
+		}
+		46% {
+			opacity: 0.72;
+			transform: translateY(92px) scaleX(1.28) scaleY(1.08);
+		}
+		82% {
+			opacity: 0.34;
+			transform: translateY(178px) scaleX(1.5) scaleY(1.28);
+		}
+		100% {
+			opacity: 0;
+			transform: translateY(236px) scaleX(1.72) scaleY(1.46);
 		}
 	}
 </style>
