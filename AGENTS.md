@@ -2,12 +2,10 @@
 
 ## Local Dev Server
 
-Use the project script:
+Start the Svelte dev server with:
 
 ```powershell
-npm run dev
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
-
-`scripts/dev.mjs` normalizes duplicate process environment keys before Vite starts.
 
 Expected URL: `http://127.0.0.1:5173/`.
