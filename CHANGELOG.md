@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-07-01
+
+### Added
+
+- **Generator Version 3**: Bumped `generatorVersion` from 2 to 3 across defaults, states, built-in presets, migrations, and tests. This introduces a complete procedural lofi music redesign.
+- **Dedicated Generator Tests**: Added `src/lib/audio/generator.test.ts` to test event structures, presets, arrangement section density, seed determinism, velocity clamping, and sleep mode silence.
+
+### Changed
+
+- **64-Bar Arrangement Sections**: Implemented structured, deterministic section progression:
+  - Bars 0-7 (Intro): Soft chords + ambience, minimal drums (no hats).
+  - Bars 8-23 (Main groove): Full drums, bass, and chords.
+  - Bars 24-31 (Melody enters): Adds call-and-response melody phrasing.
+  - Bars 32-39 (Reduced dropout): Kick drum drops out completely.
+  - Bars 40-55 (Full groove returns): All tracks active.
+  - Bars 56-63 (Outro): Light melody, minimal drums, fading into ambient pads.
+- **Rhythmic Chord Comping**: Replaced static whole-bar chord pads with soft comping stabs on beat 1 and soft repeats on off-beats. Focus presets utilize sparse stabs, and sleep presets trigger pads every 2 bars.
+- **Short Grooving Basslines**: Redesigned basslines to play short notes with rests instead of continuous sub drones. Plays root notes near kicks and triggers deterministic fifth/octave passing notes on beats 2/3.
+- **Lofi Drum Groove Grid**: Established a standard boom-bap 16-step lofi pattern (`K . h . S . h . K . h . S . h .`) with syncopated kick options, organic snare fills every 8 bars, and soft offbeat hi-hats with deterministic ghost hats.
+- **Melody Call-and-Response Phrasing**: Redesigned melody to play in 8-bar block call-and-response patterns (rests on bars 1-2, 5-6). Restricted note transitions to conjunct stepwise scale index offsets.
+- **Melody Velocity Clamping**: Separated the complexity density gate from play velocity. Clamped core melody trigger velocity to `0.35–0.55` and decorative note velocity to `0.18–0.32`.
+- **Built-in Presets Retuning**: Thoroughly retuned all 10 built-in presets (e.g. Sunset Focus, Rainy Coding, Dusty Café, Deep Sleep, Neon Coast) for clear musical and ambient identities.
+
 ## [0.2.2] - 2026-07-01
 
 ### Fixed
