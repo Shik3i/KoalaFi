@@ -16,7 +16,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'focus',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 2,
+			generatorVersion: 3,
 			seed: 'sunset-focus-seed',
 			presetId: 'sunset-focus',
 			title: 'Sunset Focus',
@@ -26,15 +26,15 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 				bpm: 72,
 				key: 'G',
 				scale: 'dorian',
-				focus: 0.5, // Soft pluck filter
-				cozy: 0.6, // Warm chords
+				focus: 0.5,
+				cozy: 0.6,
 				sleepy: 0.1,
-				jazzy: 0.5, // Moderate swing
+				jazzy: 0.5,
 				energy: 0.3,
-				melody: 0.4,
-				drums: 0.3, // Quiet steady beat
-				bass: 0.5,
-				chords: 0.6
+				melody: 0.25, // Low melody
+				drums: 0.35, // Gentle drums
+				bass: 0.5, // Audible bass
+				chords: 0.6 // Warm chords
 			},
 			ambience: {
 				rain: 0.1,
@@ -59,7 +59,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'focus',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 2,
+			generatorVersion: 3,
 			seed: 'rainy-coding-seed',
 			presetId: 'rainy-coding',
 			title: 'Rainy Coding',
@@ -69,18 +69,18 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 				bpm: 78,
 				key: 'A',
 				scale: 'minor',
-				focus: 0.4, // Warm plucks
-				cozy: 0.7, // Warm lofi chords
+				focus: 0.4,
+				cozy: 0.7,
 				sleepy: 0.1,
 				jazzy: 0.4,
 				energy: 0.3,
-				melody: 0.4, // Stable melody
-				drums: 0.35, // Muffled beat
-				bass: 0.5,
-				chords: 0.5
+				melody: 0.3, // Low melody
+				drums: 0.3, // Gentle beat
+				bass: 0.5, // Warm bass
+				chords: 0.55 // Warm chords
 			},
 			ambience: {
-				rain: 0.6, // Soothing low rain
+				rain: 0.65, // Rain audible but not dominant
 				ocean: 0.0,
 				wind: 0.2,
 				vinyl: 0.4,
@@ -102,7 +102,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'focus',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 2,
+			generatorVersion: 3,
 			seed: 'dusty-cafe-seed',
 			presetId: 'dusty-cafe',
 			title: 'Dusty Café',
@@ -113,20 +113,20 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 				key: 'F',
 				scale: 'pentatonic',
 				focus: 0.5,
-				cozy: 0.8, // Very cozy
+				cozy: 0.8,
 				sleepy: 0.2,
-				jazzy: 0.8, // High swing jazz feel
+				jazzy: 0.8, // Jazzy swing
 				energy: 0.4,
-				melody: 0.5,
-				drums: 0.45,
-				bass: 0.6,
-				chords: 0.7
+				melody: 0.4, // Occasional melody phrase
+				drums: 0.4,
+				bass: 0.6, // Soft bass movement
+				chords: 0.7 // More chord comping
 			},
 			ambience: {
 				rain: 0.0,
 				ocean: 0.0,
 				wind: 0.0,
-				vinyl: 0.4, // Dusty crackle present but subtle
+				vinyl: 0.5, // Tasteful vinyl
 				whiteNoise: 0.05,
 				pinkNoise: 0.0,
 				brownNoise: 0.0
@@ -145,7 +145,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'relax',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 2,
+			generatorVersion: 3,
 			seed: 'ocean-calm-seed',
 			presetId: 'ocean-calm',
 			title: 'Ocean Calm',
@@ -160,14 +160,14 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 				sleepy: 0.5,
 				jazzy: 0.4,
 				energy: 0.1,
-				melody: 0.3,
-				drums: 0.0, // Beatless ambient pads
-				bass: 0.3,
-				chords: 0.6
+				melody: 0.0, // No melody
+				drums: 0.0, // Less beat-driven
+				bass: 0.2, // Minimal bass
+				chords: 0.6 // Slow chord movement
 			},
 			ambience: {
 				rain: 0.0,
-				ocean: 0.7, // Rich slow wave swell
+				ocean: 0.7, // Ocean ambience
 				wind: 0.2,
 				vinyl: 0.1,
 				whiteNoise: 0.0,
@@ -188,7 +188,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'relax',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 2,
+			generatorVersion: 3,
 			seed: 'warm-window-seed',
 			presetId: 'warm-window',
 			title: 'Warm Window',
@@ -199,12 +199,12 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 				key: 'C',
 				scale: 'major',
 				focus: 0.3,
-				cozy: 0.9, // Super warm chords
+				cozy: 0.9, // Cozy chords
 				sleepy: 0.4,
 				jazzy: 0.5,
 				energy: 0.2,
-				melody: 0.3, // Sparse melody
-				drums: 0.1, // Very sparse rhythmic rimhits
+				melody: 0.3, // Calm melody phrases
+				drums: 0.2, // Light beat
 				bass: 0.4,
 				chords: 0.6
 			},
@@ -212,7 +212,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 				rain: 0.3,
 				ocean: 0.0,
 				wind: 0.2,
-				vinyl: 0.3,
+				vinyl: 0.3, // Subtle ambience
 				whiteNoise: 0.0,
 				pinkNoise: 0.0,
 				brownNoise: 0.0
@@ -231,7 +231,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'sleep',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 2,
+			generatorVersion: 3,
 			seed: 'deep-sleep-seed',
 			presetId: 'deep-sleep',
 			title: 'Deep Sleep',
@@ -241,28 +241,28 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 				bpm: 60,
 				key: 'D',
 				scale: 'minor',
-				focus: 0.1, // Heavily low-passed synth
+				focus: 0.1,
 				cozy: 0.7,
-				sleepy: 0.95, // Heavy master roll-off
+				sleepy: 0.9, // Very slow movement
 				jazzy: 0.2,
 				energy: 0.0,
-				melody: 0.0, // No melody to avoid wake triggers
-				drums: 0.0, // Beatless sleep pads
-				bass: 0.2,
-				chords: 0.5
+				melody: 0.0, // No distracting melody
+				drums: 0.0, // No drums
+				bass: 0.2, // Minimal bass
+				chords: 0.5 // Soft pads
 			},
 			ambience: {
 				rain: 0.2,
 				ocean: 0.1,
 				wind: 0.2,
-				vinyl: 0.0, // No pops in deep sleep
+				vinyl: 0.0, // No vinyl pops in sleep
 				whiteNoise: 0.0,
 				pinkNoise: 0.3,
-				brownNoise: 0.6 // Heavy soothing rumble
+				brownNoise: 0.7 // Brown noise
 			},
 			visual: {
 				theme: 'minimal-dark',
-				motion: 'off', // No movement
+				motion: 'off',
 				brightness: 0.3,
 				glow: 0.2
 			}
@@ -274,7 +274,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'sleep',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 2,
+			generatorVersion: 3,
 			seed: 'brown-noise-night-seed',
 			presetId: 'brown-noise-night',
 			title: 'Brown Noise Night',
@@ -285,14 +285,14 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 				key: 'C',
 				scale: 'minor',
 				focus: 0.0,
-				cozy: 0.0,
+				cozy: 0.2, // Subtle pad movement
 				sleepy: 1.0,
 				jazzy: 0.0,
 				energy: 0.0,
-				melody: 0.0,
-				drums: 0.0,
+				melody: 0.0, // No melody
+				drums: 0.0, // No drums
 				bass: 0.0,
-				chords: 0.0
+				chords: 0.2 // Very soft chords
 			},
 			ambience: {
 				rain: 0.0,
@@ -301,7 +301,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 				vinyl: 0.0,
 				whiteNoise: 0.0,
 				pinkNoise: 0.0,
-				brownNoise: 0.95 // Maximum comfortable sleep noise
+				brownNoise: 0.95 // Heavy brown noise
 			},
 			visual: {
 				theme: 'minimal-dark',
@@ -317,7 +317,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'ambient',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 2,
+			generatorVersion: 3,
 			seed: 'soft-rain-seed',
 			presetId: 'soft-rain',
 			title: 'Soft Rain',
@@ -333,15 +333,15 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 				jazzy: 0.0,
 				energy: 0.0,
 				melody: 0.0,
-				drums: 0.0,
+				drums: 0.0, // No drums
 				bass: 0.0,
-				chords: 0.0
+				chords: 0.3 // Soft chords
 			},
 			ambience: {
-				rain: 0.7, // Pattering low-passed rain
+				rain: 0.8, // Rain-led ambient
 				ocean: 0.0,
-				wind: 0.2, // Warm breeze rumble
-				vinyl: 0.2,
+				wind: 0.2,
+				vinyl: 0.2, // Soft vinyl
 				whiteNoise: 0.0,
 				pinkNoise: 0.1,
 				brownNoise: 0.1
@@ -360,7 +360,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'ambient',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 2,
+			generatorVersion: 3,
 			seed: 'wind-down-seed',
 			presetId: 'wind-down',
 			title: 'Wind Down',
@@ -372,18 +372,18 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 				scale: 'dorian',
 				focus: 0.2,
 				cozy: 0.8,
-				sleepy: 0.6,
+				sleepy: 0.7,
 				jazzy: 0.3,
 				energy: 0.1,
-				melody: 0.2,
-				drums: 0.0,
-				bass: 0.2,
-				chords: 0.5
+				melody: 0.1, // Minimal melody
+				drums: 0.0, // No drums
+				bass: 0.1,
+				chords: 0.4
 			},
 			ambience: {
 				rain: 0.0,
 				ocean: 0.0,
-				wind: 0.6, // Soft whistling wind
+				wind: 0.7, // Gentle wind
 				vinyl: 0.1,
 				whiteNoise: 0.0,
 				pinkNoise: 0.3,
@@ -403,25 +403,25 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'synthwave',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 2,
+			generatorVersion: 3,
 			seed: 'neon-coast-seed',
 			presetId: 'neon-coast',
 			title: 'Neon Coast',
 			sync: { mode: 'none' },
 			music: {
 				enabled: false,
-				bpm: 88, // Upbeat tempo
+				bpm: 85, // More energy
 				key: 'D',
 				scale: 'minor',
-				focus: 0.6,
-				cozy: 0.4,
+				focus: 0.7,
+				cozy: 0.3,
 				sleepy: 0.0,
 				jazzy: 0.3,
-				energy: 0.7, // Solid synthwave energy
-				melody: 0.75, // Bright theme
-				drums: 0.7, // Energetic drum triggers
-				bass: 0.7,
-				chords: 0.7
+				energy: 0.8, // Synthwave energy
+				melody: 0.7, // More melody
+				drums: 0.7, // Clear beat
+				bass: 0.7, // Audible bass
+				chords: 0.7 // More movement
 			},
 			ambience: {
 				rain: 0.0,
