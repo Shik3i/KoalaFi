@@ -10,7 +10,7 @@ Thank you for interest in contributing to KoalaFi! As an MIT-licensed, open-sour
    ```
 2. Start the dev server:
    ```bash
-   npm run dev -- --host 127.0.0.1 --port 5173
+   npm run dev
    ```
 3. Run test suites:
    ```bash

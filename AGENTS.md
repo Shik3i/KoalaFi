@@ -5,10 +5,23 @@
 Start the Svelte dev server with:
 
 ```powershell
+npm run dev
+```
+
+Expected default URL: `http://localhost:5173/`. Vite uses port `5173`
+by default and prints the actual URL if the port changes.
+
+For browser automation that must use the numeric loopback address, this optional
+form is fine:
+
+```powershell
 npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-Expected URL: `http://127.0.0.1:5173/`.
+On Windows, start the dev server directly in the repo terminal. Do not wrap it
+in `Start-Process`, `cmd /k`, or hidden background PowerShell unless explicitly
+needed; this environment can expose both `PATH` and `Path`, and wrapper-based
+launches repeatedly fail on that duplicate key.
 
 ## Verification
 

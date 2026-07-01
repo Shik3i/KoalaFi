@@ -31,6 +31,17 @@ KoalaFi is a static, frontend-only procedural audio app. Keep changes inside tha
 - Use ignored paths for generated artifacts: `test-results/`, `playwright-report/`, `.svelte-kit/`, `build/`, and `*.log`.
 - Do not commit browser debug logs or local screenshots unless the user explicitly asks.
 
+## Windows Dev Server
+
+- Start the dev server directly from the repo terminal:
+  `npm run dev`
+- Vite defaults to port `5173`. Use
+  `npm run dev -- --host 127.0.0.1 --port 5173` only when a tool specifically
+  needs the numeric loopback address or a fixed port.
+- Do not use `Start-Process`, hidden PowerShell wrappers, or `cmd /k` wrappers for the normal dev server. In this Windows environment, inherited `PATH`/`Path` duplicates can break wrapped launches.
+- If a detached process is truly required, spawn `node_modules/vite/bin/vite.js`
+  directly and pass an environment with exactly one path key: `Path`.
+
 ## Verification
 
 Before reporting done, run:

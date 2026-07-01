@@ -30,10 +30,11 @@ Manual screenshots are generated under `test-results/` and intentionally ignored
 
 ```bash
 npm ci
-npm run dev -- --host 127.0.0.1 --port 5173
+npm run dev
 ```
 
-Open `http://127.0.0.1:5173/`.
+Open `http://localhost:5173/`. Vite uses port `5173` by default and prints the
+actual URL if that port is busy.
 
 ## Commands
 

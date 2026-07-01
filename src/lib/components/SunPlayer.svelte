@@ -36,6 +36,7 @@
 	let controlsButtonRef = $state<HTMLButtonElement | null>(null);
 	let isPlaying = $derived(appState.state.music.enabled);
 	let statusLabel = $derived(isPlaying ? 'Playing' : 'Paused');
+	let beatDuration = $derived(`${60 / Math.max(1, appState.state.music.bpm)}s`);
 
 	async function handlePlayToggle() {
 		try {
@@ -127,6 +128,7 @@
 	class="sun-player"
 	class:playing={isPlaying}
 	class:zen-active={isZen}
+	style={`--beat-duration: ${beatDuration}`}
 	aria-label="Sun player"
 >
 	<div class="sun-meta">
@@ -153,7 +155,16 @@
 	</button>
 
 	<span class="scene-water" aria-hidden="true"></span>
-	<span class="sun-reflection" aria-hidden="true"></span>
+	<svg class="sun-reflection" aria-hidden="true" viewBox="0 0 1000 260" preserveAspectRatio="none">
+		<g class="reflection-lines">
+			<path class="wave wave-1" d="M275 8 C385 14 615 14 725 8" />
+			<path class="wave wave-2" d="M245 28 C370 38 630 38 755 28" />
+			<path class="wave wave-3" d="M215 58 C350 72 650 72 785 58" />
+			<path class="wave wave-4" d="M170 98 C330 116 670 116 830 98" />
+			<path class="wave wave-5" d="M115 148 C300 170 700 170 885 148" />
+			<path class="wave wave-6" d="M60 206 C270 232 730 232 940 206" />
+		</g>
+	</svg>
 
 	<div class="vibe-copy">
 		<h1>{appState.state.title || 'Seeded Vibe'}</h1>
@@ -309,6 +320,22 @@
 			filter var(--transition-normal);
 	}
 
+	.sun-button::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 4;
+		height: 28%;
+		background: linear-gradient(
+			180deg,
+			rgba(13, 60, 75, 0.9),
+			rgba(8, 24, 43, 0.98) 72%,
+			rgba(6, 12, 27, 1)
+		);
+	}
+
 	.sun-button:hover,
 	.sun-button:focus-visible {
 		transform: translateY(-2px) scale(1.02);
@@ -329,13 +356,14 @@
 	}
 
 	.sun-ring {
+		z-index: 2;
 		border-radius: inherit;
 		border: 1px solid rgba(255, 255, 255, 0.38);
 		box-shadow: inset 0 0 0 12px rgba(255, 255, 255, 0.05);
 	}
 
 	.play-glyph {
-		z-index: 5;
+		z-index: 6;
 		display: grid;
 		place-items: center;
 		filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.22));
@@ -343,45 +371,99 @@
 
 	.sun-reflection {
 		position: absolute;
-		top: calc(var(--scene-sun, 280px) * 0.88);
+		top: calc(var(--scene-sun, 280px) * 0.72);
 		left: 50%;
 		z-index: 5;
-		width: min(58vw, calc(var(--scene-sun, 280px) * 1.9));
-		height: clamp(96px, 18vh, 170px);
+		width: min(58vw, calc(var(--scene-sun, 280px) * 1.95));
+		height: clamp(118px, 17vh, 164px);
+		overflow: visible;
 		pointer-events: none;
 		transform: translateX(-50%);
-		background:
-			repeating-linear-gradient(180deg, rgba(255, 230, 128, 0.2) 0 2px, transparent 2px 26px),
-			radial-gradient(
-				ellipse at 50% 0,
-				rgba(255, 224, 135, 0.2),
-				rgba(236, 72, 153, 0.1) 34%,
-				transparent 68%
-			);
-		clip-path: ellipse(50% 44% at 50% 4%);
-		filter: blur(0.6px);
-		opacity: 0.42;
+		opacity: 0.82;
+	}
+
+	.reflection-lines {
+		transform-origin: 50% 0;
+		animation: reflectionBeat var(--beat-duration, 0.8s) ease-in-out infinite;
+	}
+
+	.wave {
+		fill: none;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		filter: drop-shadow(0 0 8px rgba(255, 196, 128, 0.14));
+	}
+
+	.wave-1 {
+		stroke: rgba(255, 239, 176, 0.6);
+		stroke-width: 3;
+	}
+
+	.wave-2 {
+		stroke: rgba(255, 226, 154, 0.48);
+		stroke-width: 3.2;
+	}
+
+	.wave-3 {
+		stroke: rgba(255, 196, 138, 0.36);
+		stroke-width: 3.5;
+	}
+
+	.wave-4 {
+		stroke: rgba(255, 154, 146, 0.26);
+		stroke-width: 3.8;
+	}
+
+	.wave-5 {
+		stroke: rgba(255, 116, 166, 0.17);
+		stroke-width: 4.1;
+	}
+
+	.wave-6 {
+		stroke: rgba(255, 106, 178, 0.1);
+		stroke-width: 4.5;
 	}
 
 	.scene-water {
 		position: fixed;
-		inset: var(--scene-horizon-y, 56vh) 0 0;
+		inset: calc(var(--scene-horizon-y, 56vh) - 1px) 0 0;
 		z-index: 4;
+		overflow: hidden;
 		pointer-events: none;
 		background:
 			radial-gradient(
 				ellipse at 50% 0,
-				rgba(255, 224, 135, 0.15),
-				rgba(236, 72, 153, 0.08) 28%,
+				rgba(255, 224, 135, 0.12),
+				rgba(236, 72, 153, 0.06) 28%,
 				transparent 58%
 			),
 			linear-gradient(
 				180deg,
-				rgba(15, 62, 75, 0.76),
-				rgba(9, 18, 35, 0.92) 44%,
-				rgba(5, 8, 18, 0.98)
+				rgba(13, 60, 75, 1) 0,
+				rgba(13, 60, 75, 1) 14px,
+				rgba(8, 23, 41, 0.99) 44%,
+				rgba(5, 8, 18, 1)
 			);
-		box-shadow: 0 -1px 0 rgba(255, 237, 180, 0.18);
+	}
+
+	.scene-water::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		pointer-events: none;
+	}
+
+	.scene-water::before {
+		top: 0;
+		height: 1px;
+		background: linear-gradient(
+			90deg,
+			transparent,
+			rgba(255, 232, 164, 0.55) 48%,
+			rgba(255, 128, 176, 0.18) 60%,
+			transparent
+		);
 	}
 
 	.play-glyph :global(svg) {
@@ -526,6 +608,14 @@
 			transform var(--transition-fast);
 	}
 
+	.sun-player.zen-active .play-glyph {
+		opacity: 0;
+		transform: scale(0.92);
+		transition:
+			opacity var(--transition-fast),
+			transform var(--transition-fast);
+	}
+
 	@media (max-width: 720px) {
 		.sun-player {
 			width: min(100%, 390px);
@@ -538,8 +628,8 @@
 		}
 
 		.sun-reflection {
-			width: min(86vw, calc(var(--scene-sun, 220px) * 2.05));
-			height: 132px;
+			width: min(84vw, calc(var(--scene-sun, 220px) * 1.95));
+			height: 128px;
 		}
 
 		.vibe-copy {
@@ -563,8 +653,29 @@
 	@media (prefers-reduced-motion: reduce) {
 		.sun-button,
 		.sun-player.zen-active .sun-meta,
-		.sun-player.zen-active .vibe-copy {
+		.sun-player.zen-active .vibe-copy,
+		.sun-player.zen-active .play-glyph {
 			transition: none;
+		}
+
+		.reflection-lines {
+			animation: none;
+		}
+	}
+
+	@keyframes reflectionBeat {
+		0%,
+		100% {
+			opacity: 0.62;
+			transform: translateY(0) scaleY(0.98);
+		}
+		38% {
+			opacity: 0.9;
+			transform: translateY(3px) scaleY(1.08);
+		}
+		66% {
+			opacity: 0.7;
+			transform: translateY(-1px) scaleY(1.01);
 		}
 	}
 </style>
