@@ -148,9 +148,9 @@ export class KoalaFiEngine {
 			this.scheduler?.loadPattern(pattern);
 		}
 
-		// 2. Adjust transport tempo smoothly
+		// 2. Adjust transport tempo directly (ramping BPM freezes Tone.js Transport tick timelines)
 		if (Tone.Transport.bpm.value !== state.music.bpm) {
-			Tone.Transport.bpm.rampTo(state.music.bpm, 2.0);
+			Tone.Transport.bpm.value = state.music.bpm;
 		}
 
 		// 3. Update real-time musical parameters (Volume, Cutoffs, Complexity)
