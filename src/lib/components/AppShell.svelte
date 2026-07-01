@@ -99,7 +99,7 @@
 	<!-- Zen / Minimal Mode Pill -->
 	<div class="zen-mode-container">
 		<div class="zen-pill glass-panel">
-			<span class="zen-logo">KoalaFi</span>
+			<span class="zen-logo"><span>Koala</span><span>Fi</span></span>
 			<span class="zen-title">{appState.state.title || 'Seeded Vibe'}</span>
 
 			<div class="zen-actions">
@@ -473,11 +473,16 @@
 	}
 
 	.zen-logo {
+		display: inline-flex;
 		font-size: 11px;
 		font-weight: var(--font-weight-bold);
-		color: var(--color-accent-cyan);
+		color: var(--brand-logo);
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
+	}
+
+	.zen-logo span:last-child {
+		color: var(--brand-accent-cyan);
 	}
 
 	.zen-title {

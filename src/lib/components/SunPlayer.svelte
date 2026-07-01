@@ -31,6 +31,8 @@
 	let errorMessage = $state<string | null>(null);
 	let isShareOpen = $state(false);
 	let isSaveOpen = $state(false);
+	let isControlsOpen = $state(false);
+	let controlsButtonRef = $state<HTMLButtonElement | null>(null);
 	let isPlaying = $derived(appState.state.music.enabled);
 	let statusLabel = $derived(isPlaying ? 'Playing' : 'Paused');
 
@@ -77,7 +79,25 @@
 			logVibePlay(appState.state);
 		}
 	}
+
+	function closeControls() {
+		isControlsOpen = false;
+	}
+
+	function handleMenuAction(action: () => void) {
+		action();
+		closeControls();
+	}
+
+	function handleWindowKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape' && isControlsOpen) {
+			closeControls();
+			controlsButtonRef?.focus();
+		}
+	}
 </script>
+
+<svelte:window onkeydown={handleWindowKeydown} />
 
 <section
 	class="sun-player"
@@ -86,7 +106,7 @@
 	aria-label="Sun player"
 >
 	<div class="sun-meta">
-		<span class="brand">KoalaFi</span>
+		<span class="brand"><span>Koala</span><span>Fi</span></span>
 		<button class="meta-btn" onclick={onOpenSettings} aria-label="Open settings">
 			<Gear size={18} />
 		</button>
@@ -127,29 +147,45 @@
 		{#if errorMessage}
 			<p class="audio-error">{errorMessage}</p>
 		{/if}
-	</div>
 
-	<div class="orbit-actions" aria-label="Sun actions">
-		<button onclick={() => onOpenPanel('vibes')} aria-label="Open vibes">
-			<Sparkle size={18} />
-			<span>Vibes</span>
-		</button>
-		<button onclick={() => (isShareOpen = true)} aria-label="Share vibe link">
-			<ShareNetwork size={18} />
-			<span>Share</span>
-		</button>
-		<button onclick={() => (isSaveOpen = true)} aria-label="Save preset">
-			<Heart size={18} />
-			<span>Save</span>
-		</button>
-		<button onclick={() => onOpenPanel('tune')} aria-label="Open tune controls">
-			<Sliders size={18} />
-			<span>Tune</span>
-		</button>
-		<button onclick={() => (isZen = true)} aria-label="Enter Zen mode">
-			<Eye size={18} />
-			<span>Zen</span>
-		</button>
+		<div class="controls-menu">
+			<button
+				bind:this={controlsButtonRef}
+				class="controls-toggle"
+				aria-label="Open controls"
+				aria-controls="sun-actions-menu"
+				aria-expanded={isControlsOpen}
+				onclick={() => (isControlsOpen = !isControlsOpen)}
+			>
+				<Sliders size={18} />
+				<span>Controls</span>
+			</button>
+
+			{#if isControlsOpen}
+				<div id="sun-actions-menu" class="actions-popover" role="menu" aria-label="Sun actions">
+					<button role="menuitem" onclick={() => handleMenuAction(() => onOpenPanel('vibes'))}>
+						<Sparkle size={18} />
+						<span>Vibes</span>
+					</button>
+					<button role="menuitem" onclick={() => handleMenuAction(() => onOpenPanel('tune'))}>
+						<Sliders size={18} />
+						<span>Tune</span>
+					</button>
+					<button role="menuitem" onclick={() => handleMenuAction(() => (isShareOpen = true))}>
+						<ShareNetwork size={18} />
+						<span>Share</span>
+					</button>
+					<button role="menuitem" onclick={() => handleMenuAction(() => (isSaveOpen = true))}>
+						<Heart size={18} />
+						<span>Save</span>
+					</button>
+					<button role="menuitem" onclick={() => handleMenuAction(() => (isZen = true))}>
+						<Eye size={18} />
+						<span>Zen</span>
+					</button>
+				</div>
+			{/if}
+		</div>
 	</div>
 </section>
 
@@ -185,16 +221,23 @@
 	}
 
 	.brand {
-		color: var(--color-accent-cyan);
+		display: inline-flex;
+		color: var(--brand-logo);
 		font-size: var(--font-size-xs);
 		font-weight: var(--font-weight-bold);
 		letter-spacing: 0.16em;
 		text-transform: uppercase;
 	}
 
+	.brand span:last-child {
+		color: var(--brand-accent-cyan);
+		text-shadow: 0 0 14px rgba(126, 231, 255, 0.24);
+	}
+
 	.meta-btn,
 	.seed-randomize,
-	.orbit-actions button {
+	.controls-toggle,
+	.actions-popover button {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -384,8 +427,9 @@
 		position: relative;
 		z-index: 6;
 		display: grid;
-		gap: 0.45rem;
-		margin-top: clamp(4.5rem, 10vh, 6.8rem);
+		justify-items: center;
+		gap: 0.5rem;
+		margin-top: clamp(5rem, 11vh, 7.4rem);
 		text-shadow: 0 2px 18px rgba(0, 0, 0, 0.65);
 	}
 
@@ -407,7 +451,7 @@
 	}
 
 	.seed-row code {
-		color: var(--color-accent-cyan);
+		color: var(--brand-logo-muted);
 	}
 
 	.status-dot {
@@ -429,32 +473,64 @@
 		font-weight: var(--font-weight-semibold);
 	}
 
-	.orbit-actions {
+	.controls-menu {
 		position: relative;
-		z-index: 6;
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: 0.45rem;
-		width: min(100%, 410px);
+		display: grid;
+		justify-items: center;
+		margin-top: 0.45rem;
 	}
 
-	.orbit-actions button {
+	.controls-toggle,
+	.actions-popover button {
 		gap: 0.35rem;
-		min-height: 40px;
-		padding: 0 0.8rem;
 		border: 1px solid rgba(255, 255, 255, 0.09);
 		border-radius: var(--radius-full);
-		background: rgba(9, 9, 11, 0.36);
 		backdrop-filter: blur(10px);
 		color: var(--color-text-primary);
 		font-size: var(--font-size-xs);
 		font-weight: var(--font-weight-semibold);
 	}
 
-	.orbit-actions button:hover {
+	.controls-toggle {
+		min-height: 42px;
+		padding: 0 0.95rem;
+		background: rgba(9, 9, 11, 0.42);
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+	}
+
+	.controls-toggle:hover,
+	.controls-toggle[aria-expanded='true'] {
 		border-color: rgba(255, 255, 255, 0.18);
 		background: rgba(255, 255, 255, 0.08);
+	}
+
+	.actions-popover {
+		position: absolute;
+		top: calc(100% + 0.6rem);
+		left: 50%;
+		z-index: 20;
+		display: grid;
+		grid-template-columns: repeat(5, max-content);
+		gap: 0.35rem;
+		padding: 0.45rem;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: var(--radius-full);
+		background: rgba(9, 9, 11, 0.66);
+		box-shadow: 0 18px 55px rgba(0, 0, 0, 0.28);
+		backdrop-filter: blur(14px);
+		transform: translateX(-50%);
+	}
+
+	.actions-popover button {
+		min-height: 38px;
+		padding: 0 0.75rem;
+		background: rgba(255, 255, 255, 0.04);
+		white-space: nowrap;
+	}
+
+	.actions-popover button:hover {
+		border-color: rgba(255, 255, 255, 0.18);
+		background: rgba(255, 255, 255, 0.09);
 	}
 
 	@media (max-width: 720px) {
@@ -474,15 +550,19 @@
 		}
 
 		.vibe-copy {
-			margin-top: clamp(3.2rem, 7vh, 4.5rem);
+			margin-top: clamp(3.8rem, 8vh, 5.2rem);
 		}
 
-		.orbit-actions {
+		.actions-popover {
+			top: calc(100% + 0.55rem);
+			grid-template-columns: repeat(3, minmax(0, 1fr));
 			gap: 0.35rem;
+			width: min(calc(100vw - 2rem), 330px);
+			border-radius: var(--radius-lg);
 		}
 
-		.orbit-actions button {
-			min-height: 42px;
+		.actions-popover button {
+			min-height: 44px;
 			padding: 0 0.65rem;
 		}
 	}

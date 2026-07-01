@@ -13,11 +13,15 @@
 	--color-text-dark: #18181b; /* Zinc 900 */
 
 	/* Neons */
-	--color-accent-pink: #ec4899; /* Pink 500 */
-	--color-accent-pink-glow: rgba(236, 72, 153, 0.35);
-	--color-accent-cyan: #06b6d4; /* Cyan 500 */
-	--color-accent-cyan-glow: rgba(6, 182, 212, 0.3);
+	--color-accent-pink: #ff6fae;
+	--color-accent-pink-glow: rgba(255, 111, 174, 0.35);
+	--color-accent-cyan: #7ee7ff;
+	--color-accent-cyan-glow: rgba(126, 231, 255, 0.26);
 	--color-accent-gold: #f59e0b; /* Amber 500 */
+	--brand-logo: #f8d58a;
+	--brand-logo-muted: #ffdca8;
+	--brand-accent-cyan: #7ee7ff;
+	--brand-accent-pink: #ff6fae;
 
 	/* Typography - Clean system font stack, NO CDNs */
 	--font-family-sans:
