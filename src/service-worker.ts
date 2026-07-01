@@ -61,12 +61,26 @@ sw.addEventListener('fetch', (event) => {
 		return;
 	}
 
-	const isPrecachedAsset = ASSET_PATHS.has(url.pathname) || ASSET_PATHS.has(url.pathname.slice(1));
+	const isPrecachedAsset =
+		ASSET_PATHS.has(url.pathname) ||
+		ASSET_PATHS.has(url.pathname.slice(1)) ||
+		url.pathname.includes('/_app/immutable/');
 	if (!isPrecachedAsset) {
 		return;
 	}
 
 	event.respondWith(
-		caches.match(event.request).then((cachedResponse) => cachedResponse ?? fetch(event.request))
+		caches.match(event.request).then((cachedResponse) => {
+			if (cachedResponse) return cachedResponse;
+			return fetch(event.request).then((response) => {
+				if (response.status === 200 && url.pathname.includes('/_app/immutable/')) {
+					const responseToCache = response.clone();
+					caches.open(CACHE_NAME).then((cache) => {
+						cache.put(event.request, responseToCache);
+					});
+				}
+				return response;
+			});
+		})
 	);
 });

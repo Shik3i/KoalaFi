@@ -95,6 +95,11 @@ export class KoalaFiEngine {
 		this.ambience?.releaseAll();
 	}
 
+	getAnalyserEnergy(): number {
+		if (!this.initialized || !this.effects) return 0;
+		return this.effects.getAnalyserEnergy();
+	}
+
 	toggle() {
 		if (!this.initialized) return;
 		if (Tone.Transport.state === 'started') {

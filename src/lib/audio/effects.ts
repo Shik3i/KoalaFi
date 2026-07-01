@@ -6,6 +6,7 @@ export class MasterEffectsPipeline {
 	compressor: Tone.Compressor;
 	limiter: Tone.Limiter;
 	mainVolume: Tone.Volume;
+	analyser: Tone.Analyser;
 
 	// Tape emulation saturation
 	saturationNode: Tone.Distortion;
@@ -17,11 +18,14 @@ export class MasterEffectsPipeline {
 	// Sub buses
 	musicBus: Tone.Volume;
 	ambienceBus: Tone.Volume;
+	ambienceWidener: Tone.StereoWidener;
 
 	constructor() {
 		// 1. Core outputs (Default volume safe and comfortable)
 		this.mainVolume = new Tone.Volume(-6).toDestination();
-		this.limiter = new Tone.Limiter(-1).connect(this.mainVolume); // Peak clipper
+		this.analyser = new Tone.Analyser('waveform', 32);
+		this.limiter = new Tone.Limiter(-1).connect(this.analyser); // Peak clipper
+		this.analyser.connect(this.mainVolume);
 
 		// Warm lowpass filter to emulate analog tape roll-off
 		this.masterFilter = new Tone.Filter({
@@ -62,7 +66,9 @@ export class MasterEffectsPipeline {
 		this.musicBus.connect(this.reverbNode);
 
 		// Ambience bus bypasses delay/reverb and saturation to stay clear
-		this.ambienceBus = new Tone.Volume(-2).connect(this.masterFilter);
+		// We add a StereoWidener with 60% width to make the ambient environment feel wide and immersive
+		this.ambienceWidener = new Tone.StereoWidener(0.6).connect(this.masterFilter);
+		this.ambienceBus = new Tone.Volume(-2).connect(this.ambienceWidener);
 	}
 
 	/**
@@ -99,7 +105,26 @@ export class MasterEffectsPipeline {
 		this.mainVolume.volume.setTargetAtTime(-6, now, 0.015);
 	}
 
+	getAnalyserEnergy(): number {
+		try {
+			const data = this.analyser.getValue() as Float32Array;
+			if (!data || data.length === 0) return 0;
+			let sumSq = 0;
+			for (let i = 0; i < data.length; i++) {
+				const val = data[i];
+				sumSq += val * val;
+			}
+			const rms = Math.sqrt(sumSq / data.length);
+			// Scale and clamp RMS for nice visual bounce reactivity
+			const energy = rms * 4.0;
+			return isNaN(energy) ? 0 : Math.max(0.0, Math.min(1.0, energy));
+		} catch {
+			return 0;
+		}
+	}
+
 	dispose() {
+		this.analyser.dispose();
 		this.masterFilter.dispose();
 		this.compressor.dispose();
 		this.limiter.dispose();
@@ -109,5 +134,6 @@ export class MasterEffectsPipeline {
 		this.reverbNode.dispose();
 		this.musicBus.dispose();
 		this.ambienceBus.dispose();
+		this.ambienceWidener.dispose();
 	}
 }

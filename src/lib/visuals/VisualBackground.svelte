@@ -2,6 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { appState } from '../state/stores.svelte';
 	import { drawFrame } from './canvasSunset';
+	import { getLoadedAudioEngine } from '../audio/engineLoader';
 
 	let canvas: HTMLCanvasElement | null = $state(null);
 	let container: HTMLDivElement | null = $state(null);
@@ -10,7 +11,7 @@
 	let resizeFrameId = 0;
 	let lastTime = 0;
 	let isPageVisible = true;
-	let prefersReducedMotion = false;
+	let prefersReducedMotion = $state(false);
 	let viewportWidth = $state(0);
 	let motionQuery: MediaQueryList | null = null;
 
@@ -69,7 +70,20 @@
 		if (!canvas) return;
 		const ctx = canvas.getContext('2d');
 		if (!ctx) return;
-		drawFrame(ctx, width, height, performance.now() / 1000, appState.state, isAudioPlaying);
+		let audioEnergy = 0;
+		if (isAudioPlaying) {
+			const engine = getLoadedAudioEngine();
+			if (engine) audioEnergy = engine.getAnalyserEnergy();
+		}
+		drawFrame(
+			ctx,
+			width,
+			height,
+			performance.now() / 1000,
+			appState.state,
+			isAudioPlaying,
+			audioEnergy
+		);
 	}
 
 	// Animation Loop
@@ -89,7 +103,20 @@
 			if (ctx) {
 				// Pass cumulative time in seconds
 				const frameTime = timestamp / 1000;
-				drawFrame(ctx, rect.width, rect.height, frameTime, appState.state, isAudioPlaying);
+				let audioEnergy = 0;
+				if (isAudioPlaying) {
+					const engine = getLoadedAudioEngine();
+					if (engine) audioEnergy = engine.getAnalyserEnergy();
+				}
+				drawFrame(
+					ctx,
+					rect.width,
+					rect.height,
+					frameTime,
+					appState.state,
+					isAudioPlaying,
+					audioEnergy
+				);
 			}
 		}
 

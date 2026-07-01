@@ -11,7 +11,8 @@ export function drawFrame(
 	height: number,
 	frameTime: number,
 	state: KoalaFiState,
-	isPlaying: boolean
+	isPlaying: boolean,
+	audioEnergy = 0
 ) {
 	const theme = state.visual.theme;
 	const motion = state.visual.motion;
@@ -35,7 +36,9 @@ export function drawFrame(
 
 	const horizonY = Math.round(height * SUN_LAYOUT.horizonRatio);
 	const sunX = width / 2;
-	const sunRadius = Math.max(90, Math.min(190, Math.min(width, height) * SUN_LAYOUT.radiusRatio));
+	const pulseScale = motion === 'reactive' && isPlaying ? 1.0 + audioEnergy * 0.08 : 1.0;
+	const sunRadius =
+		Math.max(90, Math.min(190, Math.min(width, height) * SUN_LAYOUT.radiusRatio)) * pulseScale;
 
 	// 3. Water/Ground Gradient below horizon
 	const waterGrad = ctx.createLinearGradient(0, horizonY, 0, height);
@@ -47,8 +50,12 @@ export function drawFrame(
 	// 4. Outrun Grid for neon-coast theme
 	if (theme === 'neon-coast') {
 		ctx.save();
-		ctx.strokeStyle = colors.gridColor || 'rgba(6, 182, 212, 0.2)';
-		ctx.lineWidth = 1;
+		let strokeStyle = colors.gridColor || 'rgba(6, 182, 212, 0.15)';
+		if (motion === 'reactive' && isPlaying) {
+			strokeStyle = `rgba(6, 182, 212, ${0.15 + audioEnergy * 0.4})`;
+		}
+		ctx.strokeStyle = strokeStyle;
+		ctx.lineWidth = motion === 'reactive' && isPlaying ? 1.0 + audioEnergy * 1.5 : 1;
 
 		// Perspective lines originating from vanishing point on horizon
 		const numVanishingLines = 24;
@@ -107,7 +114,8 @@ export function drawFrame(
 			const step = (i + phase) / numRipples;
 			const rippleY = horizonY + 12 + step * reflectionHeight;
 			const widthScale = 1 - step * 0.72;
-			const rippleWidth = sunRadius * (2.05 * widthScale + 0.28);
+			const rippleScale = motion === 'reactive' && isPlaying ? 1.0 + audioEnergy * 0.12 : 1.0;
+			const rippleWidth = sunRadius * (2.05 * widthScale + 0.28) * rippleScale;
 			const wobble = motion !== 'off' ? Math.sin(frameTime * 1.2 + i * 1.7) * (5 + step * 8) : 0;
 			const alpha = Math.max(0, 0.34 * glow * (1 - step));
 			const grad = ctx.createLinearGradient(sunX - rippleWidth / 2, 0, sunX + rippleWidth / 2, 0);
