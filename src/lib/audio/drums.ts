@@ -65,11 +65,11 @@ export class DrumsInstrument {
 	}
 
 	triggerSnare(time: number, velocity: number) {
-		this.snare.triggerAttack(time, velocity * 0.55);
+		this.snare.triggerAttackRelease('8n', time, velocity * 0.55);
 	}
 
 	triggerHihat(time: number, velocity: number) {
-		this.hihat.triggerAttack(time, velocity * 0.25);
+		this.hihat.triggerAttackRelease('16n', time, velocity * 0.25);
 	}
 
 	updateParams(drumsLevel: number, energyLevel: number) {

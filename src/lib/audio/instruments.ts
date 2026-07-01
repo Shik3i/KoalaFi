@@ -84,7 +84,7 @@ export class BassInstrument {
 			},
 			filter: {
 				type: 'lowpass',
-				frequency: 90,
+				frequency: 200,
 				Q: 0.8
 			},
 			envelope: {
@@ -98,7 +98,7 @@ export class BassInstrument {
 				decay: 0.15,
 				sustain: 0.6,
 				release: 0.6,
-				baseFrequency: 75,
+				baseFrequency: 150,
 				octaves: 1.2
 			}
 		}).connect(this.gain);
@@ -110,7 +110,7 @@ export class BassInstrument {
 
 	updateParams(bassLevel: number, sleepyLevel: number) {
 		// Sleepy level dampens bass (lower filter frequency)
-		const baseFreq = 70 + (1 - sleepyLevel) * 100;
+		const baseFreq = 100 + (1 - sleepyLevel) * 200;
 		this.synth.filter.frequency.setTargetAtTime(baseFreq, Tone.now(), 0.1);
 
 		// Scale volume
