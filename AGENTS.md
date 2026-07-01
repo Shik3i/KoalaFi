@@ -23,6 +23,11 @@ in `Start-Process`, `cmd /k`, or hidden background PowerShell unless explicitly
 needed; this environment can expose both `PATH` and `Path`, and wrapper-based
 launches repeatedly fail on that duplicate key.
 
+Do not use external scratch paths such as `C:\tmp` for KoalaFi work. Keep
+generated files inside the workspace and under ignored paths only. If a
+persistent background dev server is needed from Codex, request escalation and
+start it outside the sandbox; sandboxed background processes are not reliable.
+
 ## Verification
 
 Before reporting non-trivial changes done:

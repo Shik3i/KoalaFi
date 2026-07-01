@@ -41,6 +41,10 @@ KoalaFi is a static, frontend-only procedural audio app. Keep changes inside tha
 - Do not use `Start-Process`, hidden PowerShell wrappers, or `cmd /k` wrappers for the normal dev server. In this Windows environment, inherited `PATH`/`Path` duplicates can break wrapped launches.
 - If a detached process is truly required, spawn `node_modules/vite/bin/vite.js`
   directly and pass an environment with exactly one path key: `Path`.
+- Do not use external scratch paths such as `C:\tmp` for KoalaFi work. Keep
+  generated files inside the workspace and under ignored paths only.
+- Persistent background dev servers started by Codex must be run outside the
+  sandbox with escalation; sandboxed background processes are not reliable.
 
 ## Verification
 

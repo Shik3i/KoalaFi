@@ -384,7 +384,7 @@
 
 	.reflection-lines {
 		transform-origin: 50% 0;
-		animation: reflectionBeat var(--beat-duration, 0.8s) ease-in-out infinite;
+		animation: reflectionFlow calc(var(--beat-duration, 0.8s) * 3) linear infinite;
 	}
 
 	.wave {
@@ -663,19 +663,14 @@
 		}
 	}
 
-	@keyframes reflectionBeat {
-		0%,
-		100% {
-			opacity: 0.62;
-			transform: translateY(0) scaleY(0.98);
+	@keyframes reflectionFlow {
+		from {
+			opacity: 0.78;
+			transform: translateY(-30px) scaleY(0.96);
 		}
-		38% {
-			opacity: 0.9;
-			transform: translateY(3px) scaleY(1.08);
-		}
-		66% {
-			opacity: 0.7;
-			transform: translateY(-1px) scaleY(1.01);
+		to {
+			opacity: 0.28;
+			transform: translateY(34px) scaleY(1.08);
 		}
 	}
 </style>
