@@ -9,7 +9,7 @@ KoalaFi utilizes a secure, multi-stage Docker container build. It does not requi
 - Uses official Node:20-alpine image.
 - Performs npm installs cleanly (`npm ci`).
 - Executes prettier audits (`npm run format:check`).
-- Runs `npm run check`, unit tests, and `npm run build`.
+- Runs `npm run check`, unit tests (`npm run test:unit -- --run`), and `npm run build`.
 - Compiles SvelteKit routes into static `/app/build` directories.
 
 ### Server Stage
@@ -32,3 +32,13 @@ Caddy is configured via `Caddyfile.example` to provide:
    - Hashed application resources (`/_app/*`) are cached for 1 year with `immutable` flags.
 
 The release workflow publishes `ghcr.io/shik3i/koalafi` from version tags and enables Docker build provenance and SBOM output.
+
+## Local Verification
+
+Use the same image tag as local agent verification:
+
+```bash
+docker build -t koalafi:local .
+```
+
+The Docker context intentionally excludes generated output, local logs, screenshots, docs, and Git metadata through `.dockerignore`.

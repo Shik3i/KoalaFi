@@ -2,7 +2,7 @@
 
 ## Offline-First Caching Strategy
 
-KoalaFi uses an offline-first service worker. Compiled app code, static files, and prerendered routes from SvelteKit's `$service-worker` metadata are cached during installation.
+KoalaFi uses a conservative offline-capable service worker. Compiled app code, static files, and prerendered routes from SvelteKit's `$service-worker` metadata are cached during installation.
 
 ## Precached Assets
 
@@ -24,6 +24,15 @@ if (event.request.mode === 'navigate') {
 }
 ```
 
+## Runtime Fetch Policy
+
+The service worker only intercepts:
+
+- navigation requests
+- paths present in SvelteKit's precache manifest
+
+Non-precache local `GET` requests are not dynamically cached. This prevents stale development or runtime module URLs from being served after a rebuild, while still preserving offline behavior for the static app shell and known build assets.
+
 ## Cache Invalidation
 
 To prevent users from being stuck with stale, broken bundles:
@@ -33,3 +42,4 @@ To prevent users from being stuck with stale, broken bundles:
 2. During the service worker activation step, old caches are automatically deleted.
 3. Caddy serves `service-worker.js`, `manifest.webmanifest`, and `robots.txt` with `Cache-Control: public, max-age=0, must-revalidate`.
 4. Caddy serves hashed `/_app/*` assets with a one-year immutable cache policy.
+5. Dynamic runtime resources are not added to the cache by the service worker.

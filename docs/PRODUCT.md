@@ -26,3 +26,11 @@ KoalaFi is a web-based, endless generator of relaxing lofi beats, ambient noises
 - **Local Presets**: Save, rename, delete custom combinations of volumes, BPMs, keys, and visual preferences.
 - **Link Sharing**: Share a base64 URL representing the state parameters.
 - **Rough Clock Sync**: Listen together by aligning playback positions to the UTC clock. This is approximate and not sample-perfect.
+
+## Player Experience
+
+- **Default Surface**: Minimal sun-centered player with title/status text and one Controls trigger.
+- **Controls**: Vibes, Tune, Share, Save, and Zen live behind the Controls popover instead of permanent action rows.
+- **Panels**: Desktop panels dock around the sun; mobile panels become bottom sheets.
+- **Zen**: A cleaner version of the same scene. The sun remains visible and playable.
+- **Visual Tone**: Warm sunset palette, clean sun disc, subtle water/reflection, no harsh dev-tool cyan branding.

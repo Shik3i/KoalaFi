@@ -1,6 +1,6 @@
 # Development Roadmap - KoalaFi
 
-## v0.1.0 — Architecture & Foundation (Current Release)
+## v0.1.0 - Architecture & Foundation (Completed)
 
 - SvelteKit static application layout.
 - Tone.js audio synthesizers, master effects chain.
@@ -24,7 +24,12 @@
 - Moved the primary play/pause interaction into a large DOM/CSS sun player.
 - Kept Canvas 2D as the performant background layer for sky, horizon, reflections, rain, and grid motion.
 - Replaced the dashboard-style default with collapsible desktop docks and mobile bottom sheets.
-- Improved Zen mode so the visual background can remain the main experience.
+- Stabilized scene anchors for sun, horizon, header, title, Controls, desktop panels, and mobile sheets.
+- Removed duplicate sun stripe artifacts.
+- Added a polished, reduced-motion-aware Controls popover animation.
+- Improved Zen mode so the sun/player remains visible and the same scene stays active.
+- Warmed the KoalaFi brand/header palette to match the sunset visual system.
+- Tightened service worker fetch handling to avoid stale dynamic caches.
 
 ## v0.3.0 — CC0 Sample Packs
 

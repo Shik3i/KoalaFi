@@ -10,6 +10,7 @@
 		Sliders,
 		Sparkle
 	} from 'phosphor-svelte';
+	import { cubicOut } from 'svelte/easing';
 	import { appState } from '../state/stores.svelte';
 	import { audioEngine } from '../audio/koalaFiEngine';
 	import { logVibePlay } from '../storage/recentVibesRepository';
@@ -95,6 +96,29 @@
 			controlsButtonRef?.focus();
 		}
 	}
+
+	function menuTransition(node: Element) {
+		void node;
+
+		const reduced =
+			typeof window !== 'undefined' &&
+			window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+		return {
+			duration: reduced ? 1 : 170,
+			easing: cubicOut,
+			css: (t: number, u: number) => `
+				opacity: ${t};
+				transform: translateX(-50%) translateY(${u * 8}px) scale(${0.97 + t * 0.03});
+			`
+		};
+	}
+
+	$effect(() => {
+		if (isZen) {
+			closeControls();
+		}
+	});
 </script>
 
 <svelte:window onkeydown={handleWindowKeydown} />
@@ -119,8 +143,6 @@
 		aria-label={isPlaying ? 'Pause KoalaFi' : 'Play KoalaFi'}
 	>
 		<span class="sun-ring"></span>
-		<span class="sun-lines" aria-hidden="true"></span>
-		<span class="sun-water" aria-hidden="true"></span>
 		<span class="play-glyph">
 			{#if isPlaying}
 				<Pause size={42} weight="fill" />
@@ -152,7 +174,7 @@
 			<button
 				bind:this={controlsButtonRef}
 				class="controls-toggle"
-				aria-label="Open controls"
+				aria-label={isControlsOpen ? 'Close controls' : 'Open controls'}
 				aria-controls="sun-actions-menu"
 				aria-expanded={isControlsOpen}
 				onclick={() => (isControlsOpen = !isControlsOpen)}
@@ -162,7 +184,13 @@
 			</button>
 
 			{#if isControlsOpen}
-				<div id="sun-actions-menu" class="actions-popover" role="menu" aria-label="Sun actions">
+				<div
+					id="sun-actions-menu"
+					class="actions-popover"
+					role="menu"
+					aria-label="Sun actions"
+					transition:menuTransition
+				>
 					<button role="menuitem" onclick={() => handleMenuAction(() => onOpenPanel('vibes'))}>
 						<Sparkle size={18} />
 						<span>Vibes</span>
@@ -205,7 +233,7 @@
 
 	.sun-meta {
 		position: fixed;
-		top: clamp(1.6rem, 5vh, 4rem);
+		top: var(--scene-header-y, clamp(1.6rem, 5vh, 4rem));
 		left: 50%;
 		z-index: 20;
 		width: min(82vw, 320px);
@@ -213,10 +241,13 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 0.25rem 0.35rem 0.25rem 0.7rem;
-		border: 1px solid rgba(255, 255, 255, 0.08);
+		border: 1px solid rgba(246, 223, 178, 0.13);
 		border-radius: var(--radius-full);
-		background: rgba(9, 9, 11, 0.32);
+		background: rgba(47, 25, 31, 0.46);
 		backdrop-filter: blur(10px);
+		box-shadow:
+			0 12px 36px rgba(0, 0, 0, 0.18),
+			inset 0 1px 0 rgba(246, 223, 178, 0.08);
 		transform: translateX(-50%);
 	}
 
@@ -230,8 +261,8 @@
 	}
 
 	.brand span:last-child {
-		color: var(--brand-accent-cyan);
-		text-shadow: 0 0 14px rgba(126, 231, 255, 0.24);
+		color: var(--brand-logo-muted);
+		text-shadow: 0 0 14px rgba(242, 207, 143, 0.2);
 	}
 
 	.meta-btn,
@@ -264,7 +295,9 @@
 		aspect-ratio: 1;
 		border-radius: var(--radius-full);
 		color: #170711;
-		background: linear-gradient(180deg, #ffe66d 0%, #fb7185 48%, #ec4899 100%);
+		background:
+			radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.28), transparent 34%),
+			linear-gradient(180deg, #ffe98a 0%, #ffc174 34%, #ff7f88 67%, #ef5a9f 100%);
 		box-shadow:
 			0 0 30px rgba(245, 158, 11, 0.42),
 			0 0 95px rgba(236, 72, 153, 0.28),
@@ -290,8 +323,6 @@
 	}
 
 	.sun-ring,
-	.sun-lines,
-	.sun-water,
 	.play-glyph {
 		position: absolute;
 		inset: 0;
@@ -303,49 +334,6 @@
 		box-shadow: inset 0 0 0 12px rgba(255, 255, 255, 0.05);
 	}
 
-	.sun-lines {
-		background: linear-gradient(
-			to bottom,
-			transparent 0 55%,
-			rgba(255, 255, 255, 0.22) 56% 57%,
-			transparent 58% 64%,
-			rgba(255, 255, 255, 0.13) 65% 66%,
-			transparent 67% 74%,
-			rgba(255, 255, 255, 0.08) 75% 76%,
-			transparent 77%
-		);
-		mix-blend-mode: screen;
-		opacity: 0.42;
-	}
-
-	.sun-water {
-		z-index: 3;
-		top: 71%;
-		background:
-			linear-gradient(90deg, transparent 8%, rgba(255, 237, 164, 0.2) 45% 55%, transparent 92%),
-			repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.11) 0 2px, transparent 2px 17px),
-			linear-gradient(180deg, rgba(28, 86, 98, 0.5), rgba(13, 34, 57, 0.74));
-		box-shadow: inset 0 1px 0 rgba(255, 239, 181, 0.3);
-	}
-
-	.sun-water::before {
-		content: '';
-		position: absolute;
-		top: -8px;
-		left: 8%;
-		right: 8%;
-		height: 16px;
-		border-radius: var(--radius-full);
-		background: linear-gradient(
-			90deg,
-			transparent,
-			rgba(255, 236, 156, 0.5),
-			rgba(244, 114, 182, 0.25),
-			transparent
-		);
-		filter: blur(5px);
-	}
-
 	.play-glyph {
 		z-index: 5;
 		display: grid;
@@ -355,10 +343,10 @@
 
 	.sun-reflection {
 		position: absolute;
-		top: calc(var(--scene-sun, 280px) * 0.78);
+		top: calc(var(--scene-sun, 280px) * 0.88);
 		left: 50%;
-		z-index: 1;
-		width: min(58vw, calc(var(--scene-sun, 280px) * 1.72));
+		z-index: 5;
+		width: min(58vw, calc(var(--scene-sun, 280px) * 1.9));
 		height: clamp(96px, 18vh, 170px);
 		pointer-events: none;
 		transform: translateX(-50%);
@@ -372,7 +360,7 @@
 			);
 		clip-path: ellipse(50% 44% at 50% 4%);
 		filter: blur(0.6px);
-		opacity: 0.7;
+		opacity: 0.42;
 	}
 
 	.scene-water {
@@ -383,36 +371,17 @@
 		background:
 			radial-gradient(
 				ellipse at 50% 0,
-				rgba(255, 224, 135, 0.2),
-				rgba(236, 72, 153, 0.1) 28%,
+				rgba(255, 224, 135, 0.15),
+				rgba(236, 72, 153, 0.08) 28%,
 				transparent 58%
 			),
 			linear-gradient(
 				180deg,
-				rgba(20, 56, 71, 0.9),
-				rgba(9, 18, 35, 0.94) 44%,
+				rgba(15, 62, 75, 0.76),
+				rgba(9, 18, 35, 0.92) 44%,
 				rgba(5, 8, 18, 0.98)
 			);
-		box-shadow: 0 -1px 0 rgba(255, 237, 180, 0.22);
-	}
-
-	.scene-water::before {
-		content: '';
-		position: absolute;
-		top: -7px;
-		left: 50%;
-		width: min(72vw, calc(var(--scene-sun, 280px) * 2.5));
-		height: 18px;
-		border-radius: var(--radius-full);
-		background: linear-gradient(
-			90deg,
-			transparent,
-			rgba(255, 238, 170, 0.44),
-			rgba(236, 72, 153, 0.18),
-			transparent
-		);
-		filter: blur(5px);
-		transform: translateX(-50%);
+		box-shadow: 0 -1px 0 rgba(255, 237, 180, 0.18);
 	}
 
 	.play-glyph :global(svg) {
@@ -429,7 +398,7 @@
 		display: grid;
 		justify-items: center;
 		gap: 0.5rem;
-		margin-top: clamp(5rem, 11vh, 7.4rem);
+		margin-top: var(--scene-title-gap, clamp(5rem, 11vh, 7.4rem));
 		text-shadow: 0 2px 18px rgba(0, 0, 0, 0.65);
 	}
 
@@ -519,6 +488,8 @@
 		box-shadow: 0 18px 55px rgba(0, 0, 0, 0.28);
 		backdrop-filter: blur(14px);
 		transform: translateX(-50%);
+		transform-origin: top center;
+		will-change: opacity, transform;
 	}
 
 	.actions-popover button {
@@ -531,6 +502,28 @@
 	.actions-popover button:hover {
 		border-color: rgba(255, 255, 255, 0.18);
 		background: rgba(255, 255, 255, 0.09);
+	}
+
+	.sun-player.zen-active .sun-meta {
+		opacity: 0;
+		visibility: hidden;
+		pointer-events: none;
+		transform: translateX(-50%) translateY(-4px);
+		transition:
+			opacity var(--transition-fast),
+			visibility var(--transition-fast),
+			transform var(--transition-fast);
+	}
+
+	.sun-player.zen-active .vibe-copy {
+		opacity: 0;
+		visibility: hidden;
+		pointer-events: none;
+		transform: translateY(-4px);
+		transition:
+			opacity var(--transition-fast),
+			visibility var(--transition-fast),
+			transform var(--transition-fast);
 	}
 
 	@media (max-width: 720px) {
@@ -550,7 +543,7 @@
 		}
 
 		.vibe-copy {
-			margin-top: clamp(3.8rem, 8vh, 5.2rem);
+			margin-top: var(--scene-title-gap, clamp(3.8rem, 8vh, 5.2rem));
 		}
 
 		.actions-popover {
@@ -568,7 +561,9 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.sun-button {
+		.sun-button,
+		.sun-player.zen-active .sun-meta,
+		.sun-player.zen-active .vibe-copy {
 			transition: none;
 		}
 	}

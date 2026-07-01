@@ -4,6 +4,7 @@ import { build, files, prerendered, version } from '$service-worker';
 
 const CACHE_NAME = `koalafi-cache-${version}`;
 const ASSETS = [...build, ...files, ...prerendered];
+const ASSET_PATHS = new Set(ASSETS);
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 
@@ -49,40 +50,23 @@ sw.addEventListener('fetch', (event) => {
 		return;
 	}
 
+	// Handle SPA navigation requests: if offline, fall back to the prerendered shell.
+	if (event.request.mode === 'navigate') {
+		event.respondWith(
+			fetch(event.request).catch(
+				async () =>
+					(await caches.match('/')) ?? (await caches.match('/index.html')) ?? Response.error()
+			)
+		);
+		return;
+	}
+
+	const isPrecachedAsset = ASSET_PATHS.has(url.pathname) || ASSET_PATHS.has(url.pathname.slice(1));
+	if (!isPrecachedAsset) {
+		return;
+	}
+
 	event.respondWith(
-		caches.match(event.request).then((cachedResponse) => {
-			if (cachedResponse) {
-				return cachedResponse;
-			}
-
-			// Handle SPA navigation requests: if offline, fall back to the prerendered shell.
-			if (event.request.mode === 'navigate') {
-				return fetch(event.request).catch(
-					async () =>
-						(await caches.match('/')) ?? (await caches.match('/index.html')) ?? Response.error()
-				);
-			}
-
-			// Fetch from network as fallback
-			return fetch(event.request)
-				.then((networkResponse) => {
-					// Cache new successful GET resources dynamically
-					if (networkResponse.status === 200) {
-						const responseClone = networkResponse.clone();
-						caches.open(CACHE_NAME).then((cache) => {
-							cache.put(event.request, responseClone);
-						});
-					}
-					return networkResponse;
-				})
-				.catch((err) => {
-					// Offline fallback for other elements
-					console.error('Fetch failed offline:', err);
-					return new Response('Network error occurred.', {
-						status: 408,
-						statusText: 'Network Connection Timeout'
-					});
-				});
-		})
+		caches.match(event.request).then((cachedResponse) => cachedResponse ?? fetch(event.request))
 	);
 });

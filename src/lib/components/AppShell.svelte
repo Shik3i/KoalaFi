@@ -83,6 +83,12 @@
 		});
 	});
 
+	$effect(() => {
+		if (isZen) {
+			activePanel = null;
+		}
+	});
+
 	// Refresh settings logs when opening drawer
 	$effect(() => {
 		if (isSettingsOpen) {
@@ -95,49 +101,17 @@
 
 <VisualBackground />
 
-{#if isZen}
-	<!-- Zen / Minimal Mode Pill -->
-	<div class="zen-mode-container">
-		<div class="zen-pill glass-panel">
-			<span class="zen-logo"><span>Koala</span><span>Fi</span></span>
-			<span class="zen-title">{appState.state.title || 'Seeded Vibe'}</span>
-
-			<div class="zen-actions">
-				<button
-					class="zen-btn play-btn"
-					class:playing={isPlaying}
-					onclick={handlePlayToggle}
-					aria-label={isPlaying ? 'Pause' : 'Play'}
-				>
-					{#if isPlaying}
-						<Pause size={14} weight="fill" />
-					{:else}
-						<Play size={14} weight="fill" style="margin-left: 2px;" />
-					{/if}
-				</button>
-				<button
-					class="zen-btn exit-btn"
-					onclick={() => (isZen = false)}
-					title="Exit Zen mode"
-					aria-label="Exit Zen mode"
-				>
-					<EyeClosed size={16} />
-				</button>
-			</div>
-		</div>
+<div class="app-layout" class:zen-active={isZen} data-mode={isZen ? 'zen' : 'default'}>
+	<div class="sun-stage">
+		<SunPlayer
+			onOpenSettings={() => (isSettingsOpen = true)}
+			onOpenPanel={togglePanel}
+			onPresetSaved={handlePresetSaved}
+			bind:isZen
+		/>
 	</div>
-{:else}
-	<!-- Standard UI Layout -->
-	<div class="app-layout">
-		<div class="sun-stage">
-			<SunPlayer
-				onOpenSettings={() => (isSettingsOpen = true)}
-				onOpenPanel={togglePanel}
-				onPresetSaved={handlePresetSaved}
-				bind:isZen
-			/>
-		</div>
 
+	{#if !isZen}
 		<aside
 			bind:this={vibesPanelRef}
 			class="side-panel vibes-panel glass-panel"
@@ -218,6 +192,38 @@
 				{/if}
 			</div>
 		</aside>
+	{/if}
+</div>
+
+{#if isZen}
+	<div class="zen-mode-container">
+		<div class="zen-pill glass-panel">
+			<span class="zen-logo"><span>Koala</span><span>Fi</span></span>
+			<span class="zen-title">{appState.state.title || 'Seeded Vibe'}</span>
+
+			<div class="zen-actions">
+				<button
+					class="zen-btn play-btn"
+					class:playing={isPlaying}
+					onclick={handlePlayToggle}
+					aria-label={isPlaying ? 'Pause' : 'Play'}
+				>
+					{#if isPlaying}
+						<Pause size={14} weight="fill" />
+					{:else}
+						<Play size={14} weight="fill" style="margin-left: 2px;" />
+					{/if}
+				</button>
+				<button
+					class="zen-btn exit-btn"
+					onclick={() => (isZen = false)}
+					title="Exit Zen mode"
+					aria-label="Exit Zen mode"
+				>
+					<EyeClosed size={16} />
+				</button>
+			</div>
+		</div>
 	</div>
 {/if}
 
@@ -230,10 +236,15 @@
 
 <style>
 	.app-layout {
-		--scene-sun: clamp(220px, 24vw, 290px);
-		--scene-sun-y: clamp(280px, 43vh, 390px);
-		--scene-horizon-y: calc(var(--scene-sun-y) + var(--scene-sun) * 0.21);
-		--scene-panel-overlap: clamp(30px, 3vw, 44px);
+		--scene-center-x: 50vw;
+		--scene-sun: clamp(224px, 21vw, 292px);
+		--scene-sun-y: clamp(304px, 42dvh, 430px);
+		--scene-horizon-y: calc(var(--scene-sun-y) + var(--scene-sun) * 0.22);
+		--scene-title-gap: clamp(4.8rem, 9dvh, 6.9rem);
+		--scene-header-y: clamp(1.35rem, 4.7dvh, 3.35rem);
+		--scene-panel-y: var(--scene-sun-y);
+		--scene-panel-width: clamp(340px, 30vw, 440px);
+		--scene-panel-overlap: clamp(28px, 3vw, 42px);
 		--panel-bite: calc(var(--scene-sun) / 2);
 		--panel-bite-offset: calc(var(--panel-bite) - var(--scene-panel-overlap));
 		--panel-notch-gutter: calc(var(--scene-panel-overlap) + 1.25rem);
@@ -241,27 +252,6 @@
 		inset: 0;
 		pointer-events: none;
 		z-index: 10;
-	}
-
-	.app-layout::before {
-		content: '';
-		position: fixed;
-		inset: var(--scene-horizon-y) 0 0;
-		z-index: 0;
-		background:
-			radial-gradient(
-				ellipse at 50% 0,
-				rgba(255, 222, 118, 0.18),
-				rgba(244, 114, 182, 0.11) 24%,
-				transparent 56%
-			),
-			linear-gradient(
-				180deg,
-				rgba(20, 55, 70, 0.62),
-				rgba(9, 18, 35, 0.88) 46%,
-				rgba(5, 8, 18, 0.96)
-			);
-		box-shadow: 0 -1px 0 rgba(255, 230, 160, 0.13);
 	}
 
 	.sun-stage {
@@ -277,10 +267,10 @@
 
 	.side-panel {
 		position: fixed;
-		top: var(--scene-sun-y);
+		top: var(--scene-panel-y);
 		z-index: 3;
-		width: clamp(340px, 30vw, 440px);
-		max-height: min(74vh, 720px);
+		width: var(--scene-panel-width);
+		max-height: min(54vh, 500px);
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
@@ -301,7 +291,7 @@
 	}
 
 	.vibes-panel {
-		right: calc(50vw + var(--scene-sun) / 2 - var(--scene-panel-overlap));
+		right: calc(100vw - var(--scene-center-x) + var(--scene-sun) / 2 - var(--scene-panel-overlap));
 		border-radius: var(--radius-lg);
 		box-shadow:
 			28px 0 55px rgba(251, 191, 36, 0.12),
@@ -319,7 +309,7 @@
 	}
 
 	.tune-panel {
-		left: calc(50vw + var(--scene-sun) / 2 - var(--scene-panel-overlap));
+		left: calc(var(--scene-center-x) + var(--scene-sun) / 2 - var(--scene-panel-overlap));
 		border-radius: var(--radius-lg);
 		box-shadow:
 			-28px 0 55px rgba(251, 191, 36, 0.12),
@@ -398,6 +388,10 @@
 		padding-right: var(--panel-notch-gutter);
 	}
 
+	.vibes-panel :global(.preset-grid) {
+		grid-template-columns: 1fr;
+	}
+
 	.tune-panel .panel-header,
 	.tune-panel .tabs-nav,
 	.tune-panel .tab-content {
@@ -467,8 +461,10 @@
 		padding: 0.6rem 1.25rem;
 		border-radius: var(--radius-full);
 		background: rgba(15, 23, 42, 0.85);
-		border: 1px solid var(--color-border);
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+		border: 1px solid rgba(246, 223, 178, 0.16);
+		box-shadow:
+			0 4px 20px rgba(0, 0, 0, 0.3),
+			0 0 28px rgba(242, 207, 143, 0.08);
 		animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
@@ -482,7 +478,7 @@
 	}
 
 	.zen-logo span:last-child {
-		color: var(--brand-accent-cyan);
+		color: var(--brand-logo-muted);
 	}
 
 	.zen-title {
@@ -560,7 +556,9 @@
 	@media (max-width: 720px) {
 		.app-layout {
 			--scene-sun: clamp(184px, 61vw, 248px);
-			--scene-sun-y: 37vh;
+			--scene-sun-y: clamp(250px, 34dvh, 320px);
+			--scene-title-gap: clamp(3.8rem, 7dvh, 5.1rem);
+			--scene-header-y: 1.25rem;
 		}
 
 		.sun-stage {

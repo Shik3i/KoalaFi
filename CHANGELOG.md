@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-07-01
+
+### Fixed
+
+- **Sun Player Visual Stability**: Removed duplicate stripe/band overlays from the DOM sun and kept the water/reflection treatment below the horizon.
+- **Scene Layout Anchors**: Centralized sun, horizon, header, title, and panel positioning through shared CSS scene tokens for stable desktop and mobile composition.
+- **Controls Menu Interaction**: Added a reduced-motion-aware fade/slide/scale transition and Escape close behavior to the Controls popover.
+- **Zen Mode Behavior**: Kept the main sun/player visible in Zen mode while hiding only non-essential text and panels.
+- **Brand Palette**: Warmed the KoalaFi header/logo treatment to fit the sunset palette and reduced harsh cyan emphasis.
+- **Service Worker Freshness**: Limited cache interception to navigation fallback and precached assets so dev/runtime bundles do not get stranded behind stale dynamic cache entries.
+- **Local Scratch Hygiene**: Ignored generated `*.log` files and documented current verification/screenshot workflow.
+
 ## [0.2.1] - 2026-06-30
 
 ### Fixed

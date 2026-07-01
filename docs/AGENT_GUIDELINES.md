@@ -1,6 +1,6 @@
 # Agent Guidelines
 
-KoalaFi v0.1 is a static, frontend-only procedural audio app. Keep changes inside that scope unless the user explicitly asks for a larger product change.
+KoalaFi is a static, frontend-only procedural audio app. Keep changes inside that scope unless the user explicitly asks for a larger product change.
 
 ## Hard Rules
 
@@ -18,8 +18,18 @@ KoalaFi v0.1 is a static, frontend-only procedural audio app. Keep changes insid
 
 - Use Canvas 2D and CSS/SVG only in v0.1.
 - Keep the main sun player as a real DOM button. Do not align invisible controls over a canvas-only sun.
+- Keep the default player minimal: sun, title/status copy, and one Controls trigger.
+- Keep major UI placement derived from shared scene anchors in `AppShell.svelte`.
+- Put secondary actions in the Controls popover, desktop side panels, or mobile sheets. Do not reintroduce permanent duplicate action rows.
+- Zen mode should keep the same sun/player and scene visible; hide only non-essential chrome.
+- Do not put stripe or horizon overlays inside the sun disc. Scene water/reflection belongs below the horizon.
 - Cap `devicePixelRatio`, throttle FPS, pause when hidden, provide motion-off mode, and respect `prefers-reduced-motion`.
 - Avoid flashing, strobing, or effects that make controls hard to read.
+
+## Local Scratch
+
+- Use ignored paths for generated artifacts: `test-results/`, `playwright-report/`, `.svelte-kit/`, `build/`, and `*.log`.
+- Do not commit browser debug logs or local screenshots unless the user explicitly asks.
 
 ## Verification
 
@@ -34,4 +44,6 @@ npm run build
 docker build -t koalafi:local .
 ```
 
-Use browser smoke testing when available for root load, share links, rough-clock links, and responsive layout.
+If formatting fails, run `npm run format`, then rerun verification.
+
+Use browser smoke testing when available for root load, share links, rough-clock links, and responsive layout. For UI work, inspect `1366x768`, `1536x864`, `1920x1080`, and a narrow mobile viewport.

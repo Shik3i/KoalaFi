@@ -11,6 +11,8 @@ graph TD
   Store -->|Serialize| Share[URL Share Encoder]
   Store -->|Persist| DB[IndexedDB Storage Repo]
   Engine -->|Audio Out| WebAudio[Browser Web Audio API]
+  UI -->|Scene Tokens| Player[Sun DOM Player]
+  UI -->|Scene Tokens| Panels[Responsive Panels]
   SW[Service Worker] -->|Offline Cache| Assets[Static Build Files]
 ```
 
@@ -41,10 +43,16 @@ graph TD
 
 - High-performance animated outrun sunset visuals rendered on a Canvas 2D frame-capped loop.
 - Monitors document visibility and user system preferences (reduced motion) to prevent CPU/battery drain.
-- Shares sun anchor constants with the UI; the main interactive sun is DOM/CSS for reliable focus, hover, and click behavior.
+- Keeps the animated background separate from the interactive sun. `sunLayout.ts` provides coarse canvas horizon alignment; `AppShell.svelte` owns the responsive CSS scene tokens for DOM layout.
 
 ### 6. UI Shell (`src/lib/components/`)
 
 - `AppShell.svelte` owns the sun-centered layout, desktop side docks, mobile bottom sheets, Zen mode, and settings drawer.
-- `SunPlayer.svelte` owns the primary play/pause button, seed chip, status indicator, share/save dialogs, and action orbit.
+- `SunPlayer.svelte` owns the primary play/pause button, header chip, Controls popover, share/save dialogs, subtle water/reflection layer, and Zen simplification.
 - Tune controls and preset selection remain existing components mounted inside collapsible panels.
+
+### 7. Service Worker (`src/service-worker.ts`)
+
+- Navigation requests are network-first with cached shell fallback for offline use.
+- Only SvelteKit precached assets are served cache-first.
+- Non-precache local GET requests pass through the browser so development and runtime bundles do not get trapped behind stale dynamic cache entries.

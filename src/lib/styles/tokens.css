@@ -15,13 +15,13 @@
 	/* Neons */
 	--color-accent-pink: #ff6fae;
 	--color-accent-pink-glow: rgba(255, 111, 174, 0.35);
-	--color-accent-cyan: #7ee7ff;
-	--color-accent-cyan-glow: rgba(126, 231, 255, 0.26);
+	--color-accent-cyan: #8adff5;
+	--color-accent-cyan-glow: rgba(138, 223, 245, 0.24);
 	--color-accent-gold: #f59e0b; /* Amber 500 */
-	--brand-logo: #f8d58a;
-	--brand-logo-muted: #ffdca8;
-	--brand-accent-cyan: #7ee7ff;
-	--brand-accent-pink: #ff6fae;
+	--brand-logo: #f2cf8f;
+	--brand-logo-muted: #f6dfb2;
+	--brand-accent-cyan: #8adff5;
+	--brand-accent-pink: #ff83b5;
 
 	/* Typography - Clean system font stack, NO CDNs */
 	--font-family-sans:

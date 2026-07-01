@@ -8,9 +8,11 @@ Intended production domain: `lofi.koalastuff.net`. This repository includes the 
 
 ## Status
 
-v0.1 foundation is implemented and production-audited: static app shell, deterministic procedural generation, local persistence, share URLs, rough-clock sync, Canvas 2D visuals, PWA support, Docker/Caddy deployment files, CI, and tests.
+v0.2.x foundation is implemented and production-audited: static app shell, deterministic procedural generation, local persistence, share URLs, rough-clock sync, Canvas 2D visuals, PWA support, Docker/Caddy deployment files, CI, and tests.
 
-Screenshots are not committed yet.
+The current UI is a stabilized sun-centered player: the default surface stays minimal, the sun is the main play/pause target, Controls opens the secondary actions, side panels dock around shared scene anchors, and Zen keeps the same scene while removing non-essential UI.
+
+Manual screenshots are generated under `test-results/` and intentionally ignored.
 
 ## Features
 
@@ -20,6 +22,7 @@ Screenshots are not committed yet.
 - Compact `?vibe=` share URLs with validation and migration on import.
 - Rough-clock sync links based on `nowUtc - startedAtUtc`, not sample-perfect sync.
 - Responsive Canvas 2D visuals with capped FPS, reduced-motion support, and visual-off mode.
+- Sun-centered DOM player with a subtle horizon/water scene, animated Controls menu, anchored side panels, and Zen mode.
 - Offline/PWA service worker using SvelteKit `$service-worker` build metadata.
 - Multi-stage Docker build with Caddy static serving.
 
@@ -27,10 +30,10 @@ Screenshots are not committed yet.
 
 ```bash
 npm ci
-npm run dev
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-Open `http://localhost:5173`.
+Open `http://127.0.0.1:5173/`.
 
 ## Commands
 
@@ -41,9 +44,12 @@ npm run check
 npm run test
 npm run build
 npm run preview
+docker build -t koalafi:local .
 ```
 
 `npm run test` runs unit tests and Playwright e2e tests. Playwright needs a browser installed; CI runs `npx playwright install --with-deps chromium`.
+
+If `npm run format:check` fails, run `npm run format`, then rerun verification.
 
 ## Docker
 

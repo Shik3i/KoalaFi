@@ -18,7 +18,7 @@ To keep share links short, the state is mapped to a condensed key-value structur
 ```json
 {
 	"v": 1,
-	"g": 1,
+	"g": 2,
 	"s": "vibe-seed",
 	"p": "sunset-focus",
 	"t": "Sunset Focus",

@@ -13,7 +13,31 @@ Visual backgrounds in KoalaFi are rendered using a high-performance, battery-con
 
 ## Sun-Centered Player
 
-The main sun is a DOM/CSS button in `src/lib/components/SunPlayer.svelte`, not a Canvas hit target. Canvas keeps the sky, horizon, water/reflections, rain, and grid motion. Shared layout values live in `src/lib/visuals/sunLayout.ts` so the canvas reflection stays visually aligned with the DOM sun without duplicating the sun disc.
+The main sun is a DOM/CSS button in `src/lib/components/SunPlayer.svelte`, not a Canvas hit target. This keeps focus, hover, click, and keyboard behavior reliable.
+
+`src/lib/components/AppShell.svelte` owns the responsive scene model through CSS custom properties:
+
+- `--scene-center-x`
+- `--scene-sun`
+- `--scene-sun-y`
+- `--scene-horizon-y`
+- `--scene-title-gap`
+- `--scene-header-y`
+- `--scene-panel-y`
+- `--scene-panel-width`
+- `--scene-panel-overlap`
+
+The shell derives the sun stage, header, title stack, panel docks, panel notches, and mobile sheet placement from those anchors. `src/lib/visuals/sunLayout.ts` remains a coarse canvas-background alignment helper; it is not the source of truth for DOM controls.
+
+The sun disc itself must stay clean. Do not add horizontal stripe overlays inside the sun button. Horizon, water, and reflection effects belong below the horizon as subtle scene layers.
+
+## Interaction Model
+
+- Default UI: sun, title/status copy, and one Controls trigger.
+- Controls popover: secondary actions for Vibes, Tune, Share, Save, and Zen. Opening/closing uses a short fade/slide/scale transition and respects `prefers-reduced-motion`.
+- Zen: keeps the same sun/player and scene, closes open panels, and hides only non-essential chrome/text.
+- Desktop panels: Vibes and Tune dock around the sun using scene anchors and rounded cutouts.
+- Mobile panels: Vibes and Tune become bottom sheets to avoid horizontal overflow.
 
 ## Performance Capping
 
@@ -40,3 +64,5 @@ Frame updates are throttled using delta-time checks inside the render loop:
 ### 4. Accessibility
 
 If the browser matchMedia detects `prefers-reduced-motion: reduce`, the background rendering loop immediately switches to static render mode, preventing eye strain.
+
+CSS transitions on the Controls popover, Zen chrome, and panels also reduce or disable motion when requested.
