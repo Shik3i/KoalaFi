@@ -21,12 +21,7 @@ describe('Seeded Pattern Generator v3', () => {
 	it('should contain events within the expected 64-bar loop bounds', () => {
 		const pattern = generatePattern('loop-bound-seed', DEFAULT_STATE.music);
 
-		const allEvents = [
-			...pattern.bassline,
-			...pattern.drums,
-			...pattern.melody,
-			...pattern.chords.flat()
-		];
+		const allEvents = [...pattern.bassline, ...pattern.drums, ...pattern.melody, ...pattern.chords];
 
 		allEvents.forEach((event) => {
 			const bar = parseInt(event.time.split(':')[0], 10);
@@ -38,12 +33,7 @@ describe('Seeded Pattern Generator v3', () => {
 	it('should keep all velocities within safe bounds (0.0 to 1.0)', () => {
 		const pattern = generatePattern('velocity-seed', DEFAULT_STATE.music);
 
-		const allEvents = [
-			...pattern.bassline,
-			...pattern.drums,
-			...pattern.melody,
-			...pattern.chords.flat()
-		];
+		const allEvents = [...pattern.bassline, ...pattern.drums, ...pattern.melody, ...pattern.chords];
 
 		allEvents.forEach((event) => {
 			if (event.velocity !== undefined) {
@@ -60,7 +50,7 @@ describe('Seeded Pattern Generator v3', () => {
 
 		expect(pattern.drums.length).toBeGreaterThan(0);
 		expect(pattern.bassline.length).toBeGreaterThan(0);
-		expect(pattern.chords.flat().length).toBeGreaterThan(0);
+		expect(pattern.chords.length).toBeGreaterThan(0);
 
 		// Verify drums contain kick, snare, and hihat
 		const drumTypes = new Set(pattern.drums.map((d) => d.type));

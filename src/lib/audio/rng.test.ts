@@ -68,7 +68,7 @@ describe('Seeded Pattern Generator', () => {
 			...pattern.bassline.map((event) => event.time),
 			...pattern.drums.map((event) => event.time),
 			...pattern.melody.map((event) => event.time),
-			...pattern.chords.flat().map((event) => event.time)
+			...pattern.chords.map((event) => event.time)
 		];
 
 		expect(eventTimes.some((time) => time.startsWith('63:'))).toBe(true);

@@ -33,12 +33,18 @@ export class AudioScheduler {
 		const loopEnd = '64m'; // 64 bars loop length
 
 		// 1. Chords Part
-		const flatChords = pattern.chords.flat();
 		this.chordsPart = new Tone.Part((time, event) => {
-			const delay = this.getSwingDelay(event.time) + this.getStrumDelay(event.note);
-			const vel = this.getHumanizedVelocity(event.velocity || 0.5, event.time, event.note);
-			this.chordsInst.trigger([event.note], event.duration, time + delay, vel);
-		}, flatChords);
+			const delay = this.getSwingDelay(event.time);
+			const vel = this.getHumanizedVelocity(
+				event.velocity || 0.5,
+				event.time,
+				event.notes[0] || 'C4'
+			);
+			console.log(
+				`[AUDIO SCHEDULER] Triggering Chord: ${event.notes.join(',')} at time ${time + delay} (duration: ${event.duration}, velocity: ${vel})`
+			);
+			this.chordsInst.trigger(event.notes, event.duration, time + delay, vel);
+		}, pattern.chords);
 		this.chordsPart.loop = true;
 		this.chordsPart.loopEnd = loopEnd;
 		this.chordsPart.start(0);
@@ -47,6 +53,9 @@ export class AudioScheduler {
 		this.bassPart = new Tone.Part((time, event) => {
 			const delay = this.getSwingDelay(event.time);
 			const vel = this.getHumanizedVelocity(event.velocity || 0.6, event.time, event.note);
+			console.log(
+				`[AUDIO SCHEDULER] Triggering Bass: ${event.note} at time ${time + delay} (duration: ${event.duration}, velocity: ${vel})`
+			);
 			this.bassInst.trigger(event.note, event.duration, time + delay, vel);
 		}, pattern.bassline);
 		this.bassPart.loop = true;
@@ -57,6 +66,9 @@ export class AudioScheduler {
 		this.drumsPart = new Tone.Part((time, event) => {
 			const delay = this.getSwingDelay(event.time);
 			const vel = this.getHumanizedVelocity(event.velocity || 0.8, event.time, event.type);
+			console.log(
+				`[AUDIO SCHEDULER] Triggering Drum: ${event.type} at time ${time + delay} (velocity: ${vel})`
+			);
 			if (event.type === 'kick') {
 				this.drumsInst.triggerKick(time + delay, vel);
 			} else if (event.type === 'snare') {
@@ -75,7 +87,14 @@ export class AudioScheduler {
 			if (gateVal <= this.melodyComplexity) {
 				const delay = this.getSwingDelay(event.time);
 				const vel = this.getHumanizedVelocity(event.velocity || 0.4, event.time, event.note);
+				console.log(
+					`[AUDIO SCHEDULER] Triggering Melody pluck: ${event.note} at time ${time + delay} (duration: ${event.duration}, velocity: ${vel})`
+				);
 				this.leadInst.trigger(event.note, event.duration, time + delay, vel);
+			} else {
+				console.log(
+					`[AUDIO SCHEDULER] Melody pluck gated out (complexity limit: ${this.melodyComplexity}, note gate: ${gateVal})`
+				);
 			}
 		}, pattern.melody);
 		this.melodyPart.loop = true;
@@ -111,19 +130,6 @@ export class AudioScheduler {
 		const sixteenthDuration = 60 / (bpm * 4);
 		// Max swing is clamped at 22% of a sixteenth note to avoid sloppy offsets
 		return this.swingIntensity * 0.22 * sixteenthDuration;
-	}
-
-	private getStrumDelay(note: string): number {
-		try {
-			const midi = Tone.Frequency(note).toMidi();
-			if (Number.isFinite(midi)) {
-				// 1.5ms per semitone above MIDI 36 (C2)
-				return Math.max(0, midi - 36) * 0.0015;
-			}
-		} catch {
-			// fallback to 0
-		}
-		return 0;
 	}
 
 	/**

@@ -61,7 +61,7 @@ export class DrumsInstrument {
 	}
 
 	triggerKick(time: number, velocity: number) {
-		this.kick.triggerAttackRelease('C1', '8n', time, velocity * 0.85);
+		this.kick.triggerAttackRelease('C2', '8n', time, velocity * 0.85);
 	}
 
 	triggerSnare(time: number, velocity: number) {
@@ -82,7 +82,7 @@ export class DrumsInstrument {
 		this.snare.envelope.decay = snareDecay;
 
 		// Scale master drum volume
-		const vol = drumsLevel === 0 ? -96 : Tone.gainToDb(drumsLevel) - 12;
+		const vol = drumsLevel === 0 ? -96 : Tone.gainToDb(drumsLevel) - 5;
 		this.gain.volume.setTargetAtTime(vol, Tone.now(), 0.05);
 	}
 

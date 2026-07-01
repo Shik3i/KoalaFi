@@ -14,6 +14,7 @@
 	let prefersReducedMotion = $state(false);
 	let viewportWidth = $state(0);
 	let motionQuery: MediaQueryList | null = null;
+	let animTime = 0;
 
 	// React to isPlaying audio state
 	let isAudioPlaying = $derived(appState.state.music.enabled);
@@ -75,15 +76,7 @@
 			const engine = getLoadedAudioEngine();
 			if (engine) audioEnergy = engine.getAnalyserEnergy();
 		}
-		drawFrame(
-			ctx,
-			width,
-			height,
-			performance.now() / 1000,
-			appState.state,
-			isAudioPlaying,
-			audioEnergy
-		);
+		drawFrame(ctx, width, height, animTime, appState.state, isAudioPlaying, audioEnergy);
 	}
 
 	// Animation Loop
@@ -96,23 +89,30 @@
 		const elapsed = timestamp - lastTime;
 
 		if (elapsed >= fpsInterval) {
+			const deltaTime = elapsed / 1000;
 			lastTime = timestamp - (elapsed % fpsInterval);
 
 			const rect = container.getBoundingClientRect();
 			const ctx = canvas.getContext('2d');
 			if (ctx) {
-				// Pass cumulative time in seconds
-				const frameTime = timestamp / 1000;
 				let audioEnergy = 0;
 				if (isAudioPlaying) {
 					const engine = getLoadedAudioEngine();
 					if (engine) audioEnergy = engine.getAnalyserEnergy();
 				}
+
+				// Modulate animation time accumulation speed dynamically by beat/energy
+				let speed = 0.55;
+				if (visualState.motion === 'reactive') {
+					speed = isAudioPlaying ? 0.35 + audioEnergy * 2.4 : 0.55;
+				}
+				animTime += deltaTime * speed;
+
 				drawFrame(
 					ctx,
 					rect.width,
 					rect.height,
-					frameTime,
+					animTime,
 					appState.state,
 					isAudioPlaying,
 					audioEnergy

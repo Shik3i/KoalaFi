@@ -1,6 +1,6 @@
 import { SeededRNG } from './rng';
 import { getDiatonicChord, getScaleNotes } from './theory';
-import type { NoteEvent, DrumEvent, SeededPattern } from './types';
+import type { NoteEvent, ChordEvent, DrumEvent, SeededPattern } from './types';
 import type { KoalaFiState } from '../state/koalaFiState';
 
 /**
@@ -55,7 +55,7 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 		chordVoicings.push(chordNotes);
 	}
 
-	const chords: NoteEvent[][] = [];
+	const chords: ChordEvent[] = [];
 	const bassline: NoteEvent[] = [];
 	const drums: DrumEvent[] = [];
 	const melody: NoteEvent[] = [];
@@ -89,7 +89,6 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 
 		// A. Generate Chords Events
 		if (hasChords) {
-			const chordsForBar: NoteEvent[] = [];
 			const currentChordNotes = [...chordVoicings[chordIndex]];
 
 			// Apply Drop-2 style voicing transposition deterministic adjustment on alternate bars
@@ -103,50 +102,41 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 			// If sleepy preset active or in outro, keep it as slow long pads
 			if (musicState.sleepy > 0.6) {
 				if (bar % 2 === 0) {
-					currentChordNotes.forEach((note) => {
-						chordsForBar.push({
-							time: `${bar}:0:0`,
-							note,
-							duration: '2m', // Retrigger every 2 bars to keep motion subtle
-							velocity: rng.range(0.35, 0.45)
-						});
+					chords.push({
+						time: `${bar}:0:0`,
+						notes: currentChordNotes,
+						duration: '2m', // Retrigger every 2 bars to keep motion subtle
+						velocity: rng.range(0.35, 0.45)
 					});
 				}
 			} else if (musicState.focus > 0.6) {
 				// Focus preset: sparse chords (single stab on beat 0)
-				currentChordNotes.forEach((note) => {
-					chordsForBar.push({
-						time: `${bar}:0:0`,
-						note,
-						duration: '2n',
-						velocity: rng.range(0.32, 0.4)
-					});
+				chords.push({
+					time: `${bar}:0:0`,
+					notes: currentChordNotes,
+					duration: '2n',
+					velocity: rng.range(0.32, 0.4)
 				});
 			} else {
 				// General / Dusty Café comping: chord stab on beat 0:0, soft repeat on beat 1:2 or 2:2
 				const repeatTime = bar % 2 === 0 ? '1:2' : '2:2'; // & of 2 vs & of 3
-				currentChordNotes.forEach((note) => {
-					// Main stab on beat 0:0
-					chordsForBar.push({
-						time: `${bar}:0:0`,
-						note,
-						duration: '2n',
-						velocity: rng.range(0.42, 0.5)
-					});
-					// Soft repeat
-					if (rng.next() > 0.3) {
-						chordsForBar.push({
-							time: `${bar}:${repeatTime}`,
-							note,
-							duration: '4n',
-							velocity: rng.range(0.28, 0.35)
-						});
-					}
+				// Main stab on beat 0:0
+				chords.push({
+					time: `${bar}:0:0`,
+					notes: currentChordNotes,
+					duration: '2n',
+					velocity: rng.range(0.42, 0.5)
 				});
+				// Soft repeat
+				if (rng.next() > 0.3) {
+					chords.push({
+						time: `${bar}:${repeatTime}`,
+						notes: currentChordNotes,
+						duration: '4n',
+						velocity: rng.range(0.28, 0.35)
+					});
+				}
 			}
-			chords.push(chordsForBar);
-		} else {
-			chords.push([]);
 		}
 
 		// B. Generate Bassline Events

@@ -40,7 +40,10 @@ export class ChordsInstrument {
 	}
 
 	trigger(notes: string[], duration: string, time: number, velocity: number) {
-		this.synth.triggerAttackRelease(notes, duration, time, velocity);
+		notes.forEach((note, idx) => {
+			const delay = idx * 0.012; // 12ms natural strumming offset
+			this.synth.triggerAttackRelease(note, duration, time + delay, velocity);
+		});
 	}
 
 	updateParams(chordsLevel: number, cozyLevel: number, jazzyLevel: number) {
@@ -53,7 +56,7 @@ export class ChordsInstrument {
 		this.vibrato.depth.setTargetAtTime(targetDepth, Tone.now(), 0.1);
 
 		// Scale volume
-		const vol = chordsLevel === 0 ? -96 : Tone.gainToDb(chordsLevel) - 12;
+		const vol = chordsLevel === 0 ? -96 : Tone.gainToDb(chordsLevel) - 6;
 		this.gain.volume.setTargetAtTime(vol, Tone.now(), 0.05);
 	}
 
@@ -111,7 +114,7 @@ export class BassInstrument {
 		this.synth.filter.frequency.setTargetAtTime(baseFreq, Tone.now(), 0.1);
 
 		// Scale volume
-		const vol = bassLevel === 0 ? -96 : Tone.gainToDb(bassLevel) - 8;
+		const vol = bassLevel === 0 ? -96 : Tone.gainToDb(bassLevel) - 4;
 		this.gain.volume.setTargetAtTime(vol, Tone.now(), 0.05);
 	}
 
@@ -183,7 +186,7 @@ export class MelodyInstrument {
 		this.filter.frequency.setTargetAtTime(cutoff, Tone.now(), 0.1);
 
 		// Scale volume
-		const vol = melodyLevel === 0 ? -96 : Tone.gainToDb(melodyLevel) - 10;
+		const vol = melodyLevel === 0 ? -96 : Tone.gainToDb(melodyLevel) - 5;
 		this.gain.volume.setTargetAtTime(vol, Tone.now(), 0.05);
 	}
 

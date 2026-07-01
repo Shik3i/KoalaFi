@@ -6,6 +6,13 @@ export type NoteEvent = {
 	gate?: number; // density gate value (0..1)
 };
 
+export type ChordEvent = {
+	time: string;
+	notes: string[];
+	duration: string;
+	velocity?: number;
+};
+
 export type DrumEvent = {
 	time: string;
 	type: 'kick' | 'snare' | 'hihat';
@@ -13,7 +20,7 @@ export type DrumEvent = {
 };
 
 export type SeededPattern = {
-	chords: NoteEvent[][]; // chords over bars: [chordIndex][notes]
+	chords: ChordEvent[]; // Flat array of chord events
 	bassline: NoteEvent[];
 	melody: NoteEvent[];
 	drums: DrumEvent[];
