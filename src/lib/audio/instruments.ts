@@ -40,10 +40,14 @@ export class ChordsInstrument {
 		this.synth.triggerAttackRelease(notes, duration, time, velocity);
 	}
 
-	updateParams(chordsLevel: number, cozyLevel: number) {
+	updateParams(chordsLevel: number, cozyLevel: number, jazzyLevel: number) {
 		// Cozy level makes it warmer by lowering cutoff frequency
 		const cutoff = 350 + (1 - cozyLevel) * 1100;
 		this.filter.frequency.setTargetAtTime(cutoff, Tone.now(), 0.1);
+
+		// Jazzy level scales tape wow & flutter pitch vibrato depth
+		const targetDepth = 0.04 + jazzyLevel * 0.16;
+		this.vibrato.depth.setTargetAtTime(targetDepth, Tone.now(), 0.1);
 
 		// Scale volume
 		const vol = chordsLevel === 0 ? -96 : Tone.gainToDb(chordsLevel) - 12;

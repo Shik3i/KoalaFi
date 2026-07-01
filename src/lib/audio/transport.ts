@@ -31,7 +31,7 @@ export class AudioScheduler {
 		// 1. Chords Part
 		const flatChords = pattern.chords.flat();
 		this.chordsPart = new Tone.Part((time, event) => {
-			const delay = this.getSwingDelay(event.time);
+			const delay = this.getSwingDelay(event.time) + this.getStrumDelay(event.note);
 			const vel = this.getHumanizedVelocity(event.velocity || 0.5, event.time, event.note);
 			this.chordsInst.trigger([event.note], event.duration, time + delay, vel);
 		}, flatChords);
@@ -107,6 +107,19 @@ export class AudioScheduler {
 		const sixteenthDuration = 60 / (bpm * 4);
 		// Max swing is clamped at 22% of a sixteenth note to avoid sloppy offsets
 		return this.swingIntensity * 0.22 * sixteenthDuration;
+	}
+
+	private getStrumDelay(note: string): number {
+		try {
+			const midi = Tone.Frequency(note).toMidi();
+			if (Number.isFinite(midi)) {
+				// 1.5ms per semitone above MIDI 36 (C2)
+				return Math.max(0, midi - 36) * 0.0015;
+			}
+		} catch {
+			// fallback to 0
+		}
+		return 0;
 	}
 
 	/**

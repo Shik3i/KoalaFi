@@ -127,13 +127,14 @@ export class KoalaFiEngine {
 			this.scheduler?.loadPattern(pattern);
 		}
 
-		// 2. Adjust transport tempo
+		// 2. Adjust transport tempo smoothly
 		if (Tone.Transport.bpm.value !== state.music.bpm) {
-			Tone.Transport.bpm.value = state.music.bpm;
+			Tone.Transport.bpm.rampTo(state.music.bpm, 2.0);
 		}
 
 		// 3. Update real-time musical parameters (Volume, Cutoffs, Complexity)
-		if (this.chords) this.chords.updateParams(state.music.chords, state.music.cozy);
+		if (this.chords)
+			this.chords.updateParams(state.music.chords, state.music.cozy, state.music.jazzy);
 		if (this.bass) this.bass.updateParams(state.music.bass, state.music.sleepy);
 		if (this.melody) {
 			this.melody.updateParams(state.music.melody, state.music.focus);
@@ -151,7 +152,7 @@ export class KoalaFiEngine {
 
 		// 5. Update master effects (brightness, filter cutoff based on sleepy level)
 		if (this.effects) {
-			this.effects.updateParams(state.music.sleepy);
+			this.effects.updateParams(state.music.sleepy, state.music.cozy);
 		}
 	}
 

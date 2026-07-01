@@ -36,6 +36,7 @@ export class AmbienceGenerator {
 	private vinylCrackle: Tone.NoiseSynth;
 	private vinylCrackleFilter: Tone.Filter;
 	private vinylLoopId: number | null = null;
+	private vinylLevel = 0.2;
 
 	constructor(output: Tone.InputNode) {
 		// 1. Core noise colors
@@ -163,12 +164,15 @@ export class AmbienceGenerator {
 
 		// Schedule repeating event for sparse vinyl crackles (slowed down and gating for dust)
 		this.vinylLoopId = Tone.Transport.scheduleRepeat((time) => {
+			if (this.vinylLevel <= 0.05) return;
 			const seed = Math.cos(time * 220) * 10000;
 			const rnd = seed - Math.floor(seed);
-			if (rnd > 0.96) {
+			// Threshold ranges from 0.99 (rare pops at vinylLevel=0.05) to 0.90 (frequent pops at vinylLevel=1.0)
+			const threshold = 1.0 - Math.min(0.1, this.vinylLevel * 0.1);
+			if (rnd > threshold) {
 				// Sparse pops
 				this.vinylCrackle.triggerAttack(time, rnd * 0.12);
-				if (rnd > 0.985) {
+				if (rnd > threshold + 0.025) {
 					this.vinylCrackle.triggerAttack(time + 0.02, rnd * 0.08);
 				}
 			}
@@ -201,6 +205,7 @@ export class AmbienceGenerator {
 		this.windVol.volume.setTargetAtTime(getDb(state.wind, -10), now, transitionTime);
 		this.rainVol.volume.setTargetAtTime(getDb(state.rain, -10), now, transitionTime);
 		this.vinylVol.volume.setTargetAtTime(getDb(state.vinyl, -12), now, transitionTime);
+		this.vinylLevel = state.vinyl;
 	}
 
 	releaseAll() {

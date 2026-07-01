@@ -73,12 +73,18 @@ export class MasterEffectsPipeline {
 		this.mainVolume.volume.setTargetAtTime(vol, Tone.now(), 0.05);
 	}
 
-	updateParams(sleepyLevel: number) {
+	updateParams(sleepyLevel: number, cozyLevel: number) {
 		// High sleepy makes the master output warmer / lowpassed
 		const maxFreq = 16000;
 		const minFreq = 1200;
 		const targetFreq = maxFreq - sleepyLevel * (maxFreq - minFreq);
 		this.masterFilter.frequency.setTargetAtTime(targetFreq, Tone.now(), 0.25);
+
+		// Cozy level scales tape saturation wetness and distortion
+		const targetDist = 0.02 + cozyLevel * 0.18; // distortion goes from 0.02 to 0.20
+		const targetWet = 0.04 + cozyLevel * 0.16; // wet goes from 0.04 to 0.20
+		this.saturationNode.distortion = targetDist;
+		this.saturationNode.wet.setTargetAtTime(targetWet, Tone.now(), 0.1);
 	}
 
 	silenceNow() {
