@@ -1,5 +1,6 @@
 import * as Tone from 'tone';
 import type { KoalaFiState } from '../state/koalaFiState';
+import { migrateState } from '../state/migrations';
 import { generatePattern } from './generator';
 import { ChordsInstrument, BassInstrument, MelodyInstrument } from './instruments';
 import { DrumsInstrument } from './drums';
@@ -23,6 +24,8 @@ export class KoalaFiEngine {
 	private drums: DrumsInstrument | null = null;
 	private ambience: AmbienceGenerator | null = null;
 	private scheduler: AudioScheduler | null = null;
+	private playbackTogglePromise: Promise<boolean> | null = null;
+	private lifecycleVersion = 0;
 
 	get isInitialized() {
 		return this.initialized;
@@ -31,11 +34,13 @@ export class KoalaFiEngine {
 	async initializeAudio() {
 		if (this.initialized) return;
 		if (this.initializingPromise) return this.initializingPromise;
+		const version = this.lifecycleVersion;
 
 		this.initializingPromise = (async () => {
 			try {
 				// Start Tone.js Audio Context (browser policy requirement)
 				await withTimeout(Tone.start(), 5000, 'Audio context start timed out.');
+				if (version !== this.lifecycleVersion) return;
 
 				// Create effects pipeline
 				this.effects = new MasterEffectsPipeline();
@@ -103,12 +108,23 @@ export class KoalaFiEngine {
 		return Tone.Transport.state;
 	}
 
+	async togglePlayback(state: KoalaFiState): Promise<boolean> {
+		if (this.playbackTogglePromise) return this.playbackTogglePromise;
+
+		this.playbackTogglePromise = this.runPlaybackToggle(state).finally(() => {
+			this.playbackTogglePromise = null;
+		});
+
+		return this.playbackTogglePromise;
+	}
+
 	/**
 	 * Applies the full application state to the audio engine.
 	 * Regenerates patterns only if seed, generatorVersion, key, or scale changes.
 	 */
-	applyState(state: KoalaFiState) {
+	applyState(inputState: KoalaFiState) {
 		if (!this.initialized) return;
+		const state = migrateState(inputState);
 
 		// 1. Detect if sequence needs to be regenerated
 		const seedChanged = this.seed !== state.seed;
@@ -156,6 +172,20 @@ export class KoalaFiEngine {
 		}
 	}
 
+	private async runPlaybackToggle(state: KoalaFiState): Promise<boolean> {
+		const wasInitialized = this.initialized;
+		const safeState = migrateState(state);
+
+		await this.initializeAudio();
+
+		if (!wasInitialized && safeState.sync.mode === 'rough-clock') {
+			this.setPlayheadFromRoughSync(safeState);
+		}
+
+		this.toggle();
+		return this.playbackState === 'started';
+	}
+
 	/**
 	 * Sets the playhead directly from a rough-clock start parameter.
 	 */
@@ -167,6 +197,9 @@ export class KoalaFiEngine {
 	}
 
 	dispose() {
+		this.lifecycleVersion += 1;
+		this.initializingPromise = null;
+		this.playbackTogglePromise = null;
 		this.stop();
 
 		if (this.scheduler) {

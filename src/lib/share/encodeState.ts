@@ -1,47 +1,49 @@
 import type { KoalaFiState } from '../state/koalaFiState';
+import { migrateState } from '../state/migrations';
 
 /**
  * Encodes the KoalaFiState into a compact, URL-safe Base64 string.
  */
 export function encodeState(state: KoalaFiState): string {
 	try {
+		const safeState = migrateState(state);
 		const compactObj = {
-			v: state.schemaVersion,
-			g: state.generatorVersion,
-			s: state.seed,
-			p: state.presetId,
-			t: state.title,
-			sm: state.sync.mode,
-			ss: state.sync.startedAtUtc,
+			v: safeState.schemaVersion,
+			g: safeState.generatorVersion,
+			s: safeState.seed,
+			p: safeState.presetId,
+			t: safeState.title,
+			sm: safeState.sync.mode,
+			ss: safeState.sync.startedAtUtc,
 			m: [
-				state.music.enabled ? 1 : 0,
-				state.music.bpm,
-				state.music.key,
-				state.music.scale,
-				Math.round(state.music.focus * 100),
-				Math.round(state.music.cozy * 100),
-				Math.round(state.music.sleepy * 100),
-				Math.round(state.music.jazzy * 100),
-				Math.round(state.music.energy * 100),
-				Math.round(state.music.melody * 100),
-				Math.round(state.music.drums * 100),
-				Math.round(state.music.bass * 100),
-				Math.round(state.music.chords * 100)
+				safeState.music.enabled ? 1 : 0,
+				safeState.music.bpm,
+				safeState.music.key,
+				safeState.music.scale,
+				Math.round(safeState.music.focus * 100),
+				Math.round(safeState.music.cozy * 100),
+				Math.round(safeState.music.sleepy * 100),
+				Math.round(safeState.music.jazzy * 100),
+				Math.round(safeState.music.energy * 100),
+				Math.round(safeState.music.melody * 100),
+				Math.round(safeState.music.drums * 100),
+				Math.round(safeState.music.bass * 100),
+				Math.round(safeState.music.chords * 100)
 			],
 			a: [
-				Math.round(state.ambience.rain * 100),
-				Math.round(state.ambience.ocean * 100),
-				Math.round(state.ambience.wind * 100),
-				Math.round(state.ambience.vinyl * 100),
-				Math.round(state.ambience.whiteNoise * 100),
-				Math.round(state.ambience.pinkNoise * 100),
-				Math.round(state.ambience.brownNoise * 100)
+				Math.round(safeState.ambience.rain * 100),
+				Math.round(safeState.ambience.ocean * 100),
+				Math.round(safeState.ambience.wind * 100),
+				Math.round(safeState.ambience.vinyl * 100),
+				Math.round(safeState.ambience.whiteNoise * 100),
+				Math.round(safeState.ambience.pinkNoise * 100),
+				Math.round(safeState.ambience.brownNoise * 100)
 			],
 			vi: [
-				state.visual.theme,
-				state.visual.motion,
-				Math.round(state.visual.brightness * 100),
-				Math.round(state.visual.glow * 100)
+				safeState.visual.theme,
+				safeState.visual.motion,
+				Math.round(safeState.visual.brightness * 100),
+				Math.round(safeState.visual.glow * 100)
 			]
 		};
 

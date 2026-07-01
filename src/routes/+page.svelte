@@ -3,7 +3,7 @@
 	import AppShell from '../lib/components/AppShell.svelte';
 	import { appState } from '../lib/state/stores.svelte';
 	import { getStateFromUrl } from '../lib/share/urlState';
-	import { audioEngine } from '../lib/audio/koalaFiEngine';
+	import { disposeAudioEngineIfLoaded } from '../lib/audio/engineLoader';
 
 	onMount(() => {
 		if (typeof window === 'undefined') return;
@@ -24,7 +24,7 @@
 
 	onDestroy(() => {
 		// Stop and clean up Tone.js nodes on unmount to prevent leaks
-		audioEngine.dispose();
+		disposeAudioEngineIfLoaded();
 	});
 </script>
 

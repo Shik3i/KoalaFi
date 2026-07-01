@@ -1,7 +1,7 @@
 import { openDB, type IDBPDatabase } from 'idb';
 
 export const DATABASE_NAME = 'koalafi';
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 
 let dbPromise: Promise<IDBPDatabase> | null = null;
 
@@ -12,15 +12,22 @@ export function getDB(): Promise<IDBPDatabase> {
 
 	if (!dbPromise) {
 		dbPromise = openDB(DATABASE_NAME, DATABASE_VERSION, {
-			upgrade(db, oldVersion) {
+			upgrade(db, oldVersion, _newVersion, transaction) {
 				// Version 1 setup
+				let recentVibesStore;
 				if (oldVersion < 1) {
 					db.createObjectStore('appSettings', { keyPath: 'key' });
 					db.createObjectStore('userPresets', { keyPath: 'id' });
 					db.createObjectStore('favoriteVibes', { keyPath: 'id' });
-					db.createObjectStore('recentVibes', { keyPath: 'id' });
+					recentVibesStore = db.createObjectStore('recentVibes', { keyPath: 'id' });
 					db.createObjectStore('playSessions', { keyPath: 'id' });
 					db.createObjectStore('migrations', { keyPath: 'id' });
+				} else {
+					recentVibesStore = transaction.objectStore('recentVibes');
+				}
+
+				if (oldVersion < 2 && !recentVibesStore.indexNames.contains('lastPlayedAt')) {
+					recentVibesStore.createIndex('lastPlayedAt', 'lastPlayedAt');
 				}
 			}
 		});

@@ -1,5 +1,6 @@
 import { getDB } from './db';
 import type { KoalaFiState } from '../state/koalaFiState';
+import { migrateState } from '../state/migrations';
 
 export type UserPresetRecord = {
 	id: string;
@@ -36,8 +37,17 @@ export async function getPreset(id: string): Promise<UserPresetRecord | undefine
 export async function savePreset(preset: UserPresetRecord): Promise<void> {
 	try {
 		const db = await getDB();
+		const name = preset.name.trim().slice(0, 40) || 'Untitled Vibe';
+		const state = migrateState({
+			...preset.state,
+			presetId: preset.id,
+			title: name
+		});
+
 		await db.put('userPresets', {
 			...preset,
+			name,
+			state,
 			updatedAt: new Date().toISOString()
 		});
 	} catch (err) {
@@ -50,14 +60,15 @@ export async function renamePreset(id: string, name: string): Promise<void> {
 		const db = await getDB();
 		const preset = (await db.get('userPresets', id)) as UserPresetRecord | undefined;
 		if (!preset) return;
+		const safeName = name.trim().slice(0, 40) || preset.name;
 
 		await db.put('userPresets', {
 			...preset,
-			name,
-			state: {
+			name: safeName,
+			state: migrateState({
 				...preset.state,
-				title: name
-			},
+				title: safeName
+			}),
 			updatedAt: new Date().toISOString()
 		});
 	} catch (err) {

@@ -24,6 +24,10 @@ export class AudioScheduler {
 	 * Loads a pre-generated 64-bar pattern into Tone.js Parts.
 	 */
 	loadPattern(pattern: SeededPattern) {
+		this.chordsInst.releaseAll();
+		this.bassInst.releaseAll();
+		this.leadInst.releaseAll();
+		this.drumsInst.releaseAll();
 		this.clear();
 
 		const loopEnd = '64m'; // 64 bars loop length
@@ -143,6 +147,7 @@ export class AudioScheduler {
 	setPlayheadFromRoughSync(startedAtUtc: string, bpm: number) {
 		try {
 			if (!Number.isFinite(bpm) || bpm <= 0) return;
+			const wasStarted = Tone.Transport.state === 'started';
 
 			const startedTime = new Date(startedAtUtc).getTime();
 			if (Number.isNaN(startedTime)) return;
@@ -160,8 +165,13 @@ export class AudioScheduler {
 			// Calculate active loop position in seconds
 			const activePosition = elapsedSec % totalLoopSeconds;
 
+			Tone.Transport.bpm.cancelScheduledValues(Tone.now());
+			Tone.Transport.bpm.value = bpm;
 			Tone.Transport.stop();
 			Tone.Transport.seconds = activePosition;
+			if (wasStarted) {
+				Tone.Transport.start();
+			}
 		} catch (err) {
 			console.error('Failed to set playhead from rough-sync:', err);
 		}

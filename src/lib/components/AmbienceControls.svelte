@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { appState } from '../state/stores.svelte';
-	import { audioEngine } from '../audio/koalaFiEngine';
+	import { getLoadedAudioEngine } from '../audio/engineLoader';
 	import SliderControl from './SliderControl.svelte';
 
 	function syncEngine() {
-		audioEngine.applyState(appState.state);
+		getLoadedAudioEngine()?.applyState(appState.state);
 	}
 
 	$effect(() => {

@@ -1,18 +1,16 @@
 <script lang="ts">
-	import {
-		Eye,
-		Gear,
-		Heart,
-		Pause,
-		Play,
-		ShareNetwork,
-		Shuffle,
-		Sliders,
-		Sparkle
-	} from 'phosphor-svelte';
+	import Eye from 'phosphor-svelte/lib/Eye';
+	import Gear from 'phosphor-svelte/lib/Gear';
+	import Heart from 'phosphor-svelte/lib/Heart';
+	import Pause from 'phosphor-svelte/lib/Pause';
+	import Play from 'phosphor-svelte/lib/Play';
+	import ShareNetwork from 'phosphor-svelte/lib/ShareNetwork';
+	import Shuffle from 'phosphor-svelte/lib/Shuffle';
+	import Sliders from 'phosphor-svelte/lib/Sliders';
+	import Sparkle from 'phosphor-svelte/lib/Sparkle';
 	import { cubicOut } from 'svelte/easing';
 	import { appState } from '../state/stores.svelte';
-	import { audioEngine } from '../audio/koalaFiEngine';
+	import { getAudioEngine, getLoadedAudioEngine } from '../audio/engineLoader';
 	import { logVibePlay } from '../storage/recentVibesRepository';
 	import ShareDialog from './ShareDialog.svelte';
 	import SavePresetDialog from './SavePresetDialog.svelte';
@@ -67,15 +65,8 @@
 	async function handlePlayToggle() {
 		try {
 			errorMessage = null;
-			if (!audioEngine.isInitialized) {
-				await audioEngine.initializeAudio();
-				if (appState.state.sync.mode === 'rough-clock') {
-					audioEngine.setPlayheadFromRoughSync(appState.state);
-				}
-			}
-
-			audioEngine.toggle();
-			const nowPlaying = audioEngine.playbackState === 'started';
+			const audioEngine = await getAudioEngine();
+			const nowPlaying = await audioEngine.togglePlayback(appState.state);
 			appState.updateState((s) => {
 				s.music.enabled = nowPlaying;
 			});
@@ -103,7 +94,7 @@
 		});
 
 		if (isPlaying) {
-			audioEngine.applyState(appState.state);
+			getLoadedAudioEngine()?.applyState(appState.state);
 			logVibePlay(appState.state);
 		}
 	}

@@ -9,6 +9,21 @@
 		step = 0.05,
 		formatter = (v: number) => Math.round(v * 100) + '%'
 	} = $props();
+
+	function clampValue(next: unknown): number {
+		const low = Number.isFinite(Number(min)) ? Number(min) : 0;
+		const high = Number.isFinite(Number(max)) ? Number(max) : low;
+		const lower = Math.min(low, high);
+		const upper = Math.max(low, high);
+		const numeric = typeof next === 'number' ? next : Number(next);
+
+		return Number.isFinite(numeric) ? Math.max(lower, Math.min(upper, numeric)) : lower;
+	}
+
+	$effect(() => {
+		const clamped = clampValue(value);
+		if (value !== clamped) value = clamped;
+	});
 </script>
 
 <div class="slider-control">

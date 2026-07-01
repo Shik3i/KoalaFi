@@ -1,13 +1,17 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import { generateShareUrl } from '../share/urlState';
 	import { appState } from '../state/stores.svelte';
-	import { Copy, X } from 'phosphor-svelte';
+	import Copy from 'phosphor-svelte/lib/Copy';
+	import X from 'phosphor-svelte/lib/X';
 
 	let { isOpen = $bindable(false) } = $props<{ isOpen: boolean }>();
 
 	let dialogElement = $state<HTMLDialogElement | null>(null);
 	let copyStatusNormal = $state(false);
 	let copyStatusSync = $state(false);
+	let normalCopyTimeout: ReturnType<typeof setTimeout> | undefined;
+	let syncCopyTimeout: ReturnType<typeof setTimeout> | undefined;
 
 	$effect(() => {
 		if (!dialogElement) return;
@@ -39,10 +43,12 @@
 			await navigator.clipboard.writeText(link);
 			if (mode === 'none') {
 				copyStatusNormal = true;
-				setTimeout(() => (copyStatusNormal = false), 2000);
+				if (normalCopyTimeout) clearTimeout(normalCopyTimeout);
+				normalCopyTimeout = setTimeout(() => (copyStatusNormal = false), 2000);
 			} else {
 				copyStatusSync = true;
-				setTimeout(() => (copyStatusSync = false), 2000);
+				if (syncCopyTimeout) clearTimeout(syncCopyTimeout);
+				syncCopyTimeout = setTimeout(() => (copyStatusSync = false), 2000);
 			}
 		} catch (err) {
 			console.error('Failed to copy link:', err);
@@ -52,6 +58,11 @@
 	function handleClose() {
 		isOpen = false;
 	}
+
+	onDestroy(() => {
+		if (normalCopyTimeout) clearTimeout(normalCopyTimeout);
+		if (syncCopyTimeout) clearTimeout(syncCopyTimeout);
+	});
 </script>
 
 <dialog

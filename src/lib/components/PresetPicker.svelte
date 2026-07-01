@@ -3,7 +3,9 @@
 	import { BUILT_IN_PRESETS, type BuiltInPreset } from '../state/presets';
 	import { getAllPresets, deletePreset, type UserPresetRecord } from '../storage/presetsRepository';
 	import { appState } from '../state/stores.svelte';
-	import { Trash, Sparkle, Heart } from 'phosphor-svelte';
+	import Heart from 'phosphor-svelte/lib/Heart';
+	import Sparkle from 'phosphor-svelte/lib/Sparkle';
+	import Trash from 'phosphor-svelte/lib/Trash';
 	import type { KoalaFiState } from '../state/koalaFiState';
 
 	// Svelte 5 component props

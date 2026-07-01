@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { appState } from '../state/stores.svelte';
-	import { audioEngine } from '../audio/koalaFiEngine';
+	import { getLoadedAudioEngine } from '../audio/engineLoader';
 	import SliderControl from './SliderControl.svelte';
 	import ToggleControl from './ToggleControl.svelte';
 
@@ -9,7 +9,7 @@
 
 	// React to change events to update the Tone.js audio engine state
 	function syncEngine() {
-		audioEngine.applyState(appState.state);
+		getLoadedAudioEngine()?.applyState(appState.state);
 	}
 
 	// Svelte 5 effect to watch state mutations and apply to Tone.js

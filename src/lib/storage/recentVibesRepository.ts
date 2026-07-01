@@ -1,5 +1,6 @@
 import { getDB } from './db';
 import type { KoalaFiState } from '../state/koalaFiState';
+import { migrateState } from '../state/migrations';
 
 export type RecentVibeRecord = {
 	id: string; // Typically the seed or an auto-incrementing key
@@ -12,11 +13,21 @@ export type RecentVibeRecord = {
 export async function getRecentVibes(limit = 20): Promise<RecentVibeRecord[]> {
 	try {
 		const db = await getDB();
-		const all = await db.getAll('recentVibes');
-		// Sort descending by lastPlayedAt
-		return all
-			.sort((a, b) => new Date(b.lastPlayedAt).getTime() - new Date(a.lastPlayedAt).getTime())
-			.slice(0, limit);
+		const safeLimit = Math.max(0, Math.min(100, Math.floor(limit)));
+		if (safeLimit === 0) return [];
+
+		const tx = db.transaction('recentVibes', 'readonly');
+		const index = tx.objectStore('recentVibes').index('lastPlayedAt');
+		const results: RecentVibeRecord[] = [];
+
+		let cursor = await index.openCursor(null, 'prev');
+		while (cursor && results.length < safeLimit) {
+			results.push(cursor.value as RecentVibeRecord);
+			cursor = await cursor.continue();
+		}
+
+		await tx.done;
+		return results;
 	} catch (err) {
 		console.error('Failed to query recent vibes:', err);
 		return [];
@@ -26,25 +37,33 @@ export async function getRecentVibes(limit = 20): Promise<RecentVibeRecord[]> {
 export async function logVibePlay(state: KoalaFiState): Promise<void> {
 	try {
 		const db = await getDB();
-		const id = state.seed; // Use the seed as identifier
-		const existing = (await db.get('recentVibes', id)) as RecentVibeRecord | undefined;
+		const safeState = migrateState(state);
+		const id = safeState.seed; // Use the seed as identifier
+		const tx = db.transaction('recentVibes', 'readwrite');
+		const store = tx.objectStore('recentVibes');
+		const existing = (await store.get(id)) as RecentVibeRecord | undefined;
 		const now = new Date().toISOString();
+		const nextState = JSON.parse(JSON.stringify(safeState));
 
 		if (existing) {
-			existing.lastPlayedAt = now;
-			existing.playCount += 1;
-			existing.state = JSON.parse(JSON.stringify(state)); // update state in case music settings changed
-			await db.put('recentVibes', existing);
+			await store.put({
+				...existing,
+				lastPlayedAt: now,
+				playCount: existing.playCount + 1,
+				state: nextState
+			});
 		} else {
 			const record: RecentVibeRecord = {
 				id,
-				state: JSON.parse(JSON.stringify(state)),
+				state: nextState,
 				firstPlayedAt: now,
 				lastPlayedAt: now,
 				playCount: 1
 			};
-			await db.put('recentVibes', record);
+			await store.put(record);
 		}
+
+		await tx.done;
 	} catch (err) {
 		console.error('Failed to log vibe play:', err);
 	}

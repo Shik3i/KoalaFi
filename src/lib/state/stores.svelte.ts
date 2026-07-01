@@ -1,5 +1,6 @@
 import type { KoalaFiState } from './koalaFiState';
 import { DEFAULT_STATE } from './defaults';
+import { migrateState } from './migrations';
 
 // Svelte 5 Runes-based global state store
 export class AppStateStore {
@@ -11,7 +12,7 @@ export class AppStateStore {
 	}
 
 	set state(value: KoalaFiState) {
-		this.#state = value;
+		this.#state = migrateState(value);
 	}
 
 	// Update a portion of the state
@@ -21,8 +22,7 @@ export class AppStateStore {
 
 	// Entirely overwrite state (e.g. from preset or URL sync)
 	loadState(newState: KoalaFiState) {
-		// Perform deep copy to break references
-		this.#state = JSON.parse(JSON.stringify(newState));
+		this.#state = migrateState(newState);
 	}
 
 	// Reset to default

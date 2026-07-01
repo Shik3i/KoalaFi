@@ -7,10 +7,13 @@
 	import AmbienceControls from './AmbienceControls.svelte';
 	import VisualControls from './VisualControls.svelte';
 	import SettingsDrawer from './SettingsDrawer.svelte';
-	import { Play, Pause, EyeClosed, X } from 'phosphor-svelte';
+	import EyeClosed from 'phosphor-svelte/lib/EyeClosed';
+	import Pause from 'phosphor-svelte/lib/Pause';
+	import Play from 'phosphor-svelte/lib/Play';
+	import X from 'phosphor-svelte/lib/X';
 
 	import { appState } from '../state/stores.svelte';
-	import { audioEngine } from '../audio/koalaFiEngine';
+	import { getAudioEngine, getLoadedAudioEngine } from '../audio/engineLoader';
 	import type { KoalaFiState } from '../state/koalaFiState';
 
 	let isSettingsOpen = $state(false);
@@ -29,7 +32,7 @@
 
 		// Apply immediately to audio engine
 		if (appState.state.music.enabled) {
-			audioEngine.applyState(appState.state);
+			getLoadedAudioEngine()?.applyState(appState.state);
 		}
 	}
 
@@ -40,21 +43,14 @@
 	function handleSelectVibeFromHistory(historyState: KoalaFiState) {
 		appState.loadState(historyState);
 		if (appState.state.music.enabled) {
-			audioEngine.applyState(appState.state);
+			getLoadedAudioEngine()?.applyState(appState.state);
 		}
 	}
 
 	async function handlePlayToggle() {
 		try {
-			if (!audioEngine.isInitialized) {
-				await audioEngine.initializeAudio();
-				if (appState.state.sync.mode === 'rough-clock') {
-					audioEngine.setPlayheadFromRoughSync(appState.state);
-				}
-			}
-
-			audioEngine.toggle();
-			const nowPlaying = audioEngine.playbackState === 'started';
+			const audioEngine = await getAudioEngine();
+			const nowPlaying = await audioEngine.togglePlayback(appState.state);
 			appState.updateState((s) => {
 				s.music.enabled = nowPlaying;
 			});

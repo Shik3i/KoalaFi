@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { savePreset } from '../storage/presetsRepository';
 	import { appState } from '../state/stores.svelte';
-	import { FloppyDisk, X } from 'phosphor-svelte';
+	import FloppyDisk from 'phosphor-svelte/lib/FloppyDisk';
+	import X from 'phosphor-svelte/lib/X';
 
 	// Svelte 5 component props
 	let { isOpen = $bindable(false), onSaved } = $props<{

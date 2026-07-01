@@ -11,6 +11,7 @@
 	let lastTime = 0;
 	let isPageVisible = true;
 	let prefersReducedMotion = false;
+	let viewportWidth = $state(0);
 	let motionQuery: MediaQueryList | null = null;
 
 	// React to isPlaying audio state
@@ -25,8 +26,7 @@
 		const motion = visualState.motion;
 		if (prefersReducedMotion || motion === 'off') return -1; // Static render
 
-		// Check if mobile (width < 768px)
-		const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+		const isMobile = viewportWidth > 0 && viewportWidth < 768;
 		if (motion === 'reactive') {
 			return isMobile ? 1000 / 18 : 1000 / 24; // 18fps mobile, 24fps desktop
 		} else {
@@ -60,6 +60,7 @@
 		if (resizeFrameId) return;
 		resizeFrameId = requestAnimationFrame(() => {
 			resizeFrameId = 0;
+			viewportWidth = window.innerWidth;
 			resizeCanvas();
 		});
 	}
@@ -158,6 +159,7 @@
 		window.addEventListener('resize', scheduleResize);
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
+		viewportWidth = window.innerWidth;
 		resizeCanvas();
 		lastTime = performance.now();
 

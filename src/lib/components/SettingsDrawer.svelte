@@ -2,7 +2,10 @@
 	import { onMount } from 'svelte';
 	import { getRecentVibes, type RecentVibeRecord } from '../storage/recentVibesRepository';
 	import { deleteLocalDatabase } from '../storage/db';
-	import { X, Trash, Clock, Info } from 'phosphor-svelte';
+	import Clock from 'phosphor-svelte/lib/Clock';
+	import Info from 'phosphor-svelte/lib/Info';
+	import Trash from 'phosphor-svelte/lib/Trash';
+	import X from 'phosphor-svelte/lib/X';
 	import type { KoalaFiState } from '../state/koalaFiState';
 
 	// Svelte 5 props
@@ -44,7 +47,7 @@
 	});
 </script>
 
-<div class="settings-drawer-wrapper" class:open={isOpen}>
+<div class="settings-drawer-wrapper" class:open={isOpen} inert={!isOpen} aria-hidden={!isOpen}>
 	<div class="drawer-backdrop" onclick={() => (isOpen = false)} role="presentation"></div>
 	<aside class="settings-drawer glass-panel">
 		<div class="drawer-header">
