@@ -178,7 +178,12 @@
 	aria-label="Sun player"
 >
 	<div class="sun-meta">
-		<span class="brand"><span>Koala</span><span>Fi</span></span>
+		<span class="brand"
+			><span>Koala</span><span>Fi</span><span
+				style="font-size: 0.65rem; opacity: 0.5; margin-left: 0.25rem; font-weight: normal;"
+				>DEV-V4</span
+			></span
+		>
 		<button class="meta-btn" onclick={onOpenSettings} aria-label="Open settings">
 			<Gear size={18} />
 		</button>
