@@ -14,6 +14,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 	<meta name="theme-color" content="#09090b" />
 	<link rel="manifest" href="/manifest.webmanifest" />
+	<link rel="icon" href="/icons/koalafi-icon.png" type="image/png" />
 </svelte:head>
 
 {@render children()}
