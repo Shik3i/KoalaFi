@@ -52,7 +52,11 @@
 					onclick={() => handleSelect(preset)}
 					title="{preset.name} ({preset.category})"
 				>
-					<Sparkle size={12} weight={appState.state.presetId === preset.id ? 'fill' : 'regular'} />
+					<Sparkle
+						size={12}
+						weight={appState.state.presetId === preset.id ? 'fill' : 'regular'}
+						aria-hidden="true"
+					/>
 					<span>{preset.name}</span>
 				</button>
 			{/each}
@@ -65,7 +69,7 @@
 						onclick={() => handleSelect(preset)}
 						title={preset.name}
 					>
-						<Heart size={12} weight="fill" />
+						<Heart size={12} weight="fill" aria-hidden="true" />
 						<span>{preset.name}</span>
 					</button>
 					<button
@@ -73,7 +77,7 @@
 						onclick={(e) => handleDelete(preset.id, e)}
 						aria-label="Delete preset"
 					>
-						<Trash size={11} />
+						<Trash size={11} aria-hidden="true" />
 					</button>
 				</div>
 			{/each}
@@ -92,6 +96,7 @@
 							<Sparkle
 								size={16}
 								weight={appState.state.presetId === preset.id ? 'fill' : 'regular'}
+								aria-hidden="true"
 							/>
 						</div>
 						<div class="preset-info">
@@ -115,7 +120,7 @@
 								onclick={() => handleSelect(preset)}
 							>
 								<div class="preset-icon user-icon">
-									<Heart size={16} weight="fill" />
+									<Heart size={16} weight="fill" aria-hidden="true" />
 								</div>
 								<div class="preset-info">
 									<span class="preset-name">{preset.name}</span>
@@ -126,7 +131,7 @@
 								onclick={(e) => handleDelete(preset.id, e)}
 								aria-label="Delete preset"
 							>
-								<Trash size={16} />
+								<Trash size={16} aria-hidden="true" />
 							</button>
 						</div>
 					{/each}

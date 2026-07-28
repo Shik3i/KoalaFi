@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { savePreset } from '../storage/presetsRepository';
 	import { appState } from '../state/stores.svelte';
 	import FloppyDisk from 'phosphor-svelte/lib/FloppyDisk';
@@ -13,14 +14,19 @@
 	let presetName = $state('');
 	let category = $state<'focus' | 'relax' | 'sleep' | 'ambient' | 'synthwave'>('focus');
 	let dialogElement = $state<HTMLDialogElement | null>(null);
+	let nameInput = $state<HTMLInputElement | null>(null);
+	let returnFocusElement: HTMLElement | null = null;
 
 	// Watch isOpen prop to trigger native dialog show/close
 	$effect(() => {
 		if (!dialogElement) return;
 		if (isOpen) {
 			if (!dialogElement.open) {
+				returnFocusElement =
+					document.activeElement instanceof HTMLElement ? document.activeElement : null;
 				dialogElement.showModal();
 				presetName = appState.state.title || '';
+				void tick().then(() => nameInput?.focus());
 			}
 		} else {
 			if (dialogElement.open) {
@@ -63,51 +69,67 @@
 	function handleClose() {
 		isOpen = false;
 	}
+
+	function handleDialogClose() {
+		isOpen = false;
+		returnFocusElement?.focus();
+		returnFocusElement = null;
+	}
 </script>
 
 <dialog
 	bind:this={dialogElement}
 	class="save-dialog glass-panel"
-	onclose={handleClose}
+	aria-labelledby="save-dialog-title"
+	onclose={handleDialogClose}
 	onclick={(e) => e.target === dialogElement && handleClose()}
 >
-	<div class="dialog-header">
-		<h3>Save Custom Vibe</h3>
-		<button class="close-btn" onclick={handleClose} aria-label="Close dialog">
-			<X size={18} />
-		</button>
-	</div>
-
-	<div class="dialog-body">
-		<div class="input-group">
-			<label for="save-preset-name">Preset Name</label>
-			<input
-				type="text"
-				id="save-preset-name"
-				bind:value={presetName}
-				placeholder="My Relax Vibe..."
-				maxlength="40"
-			/>
+	<form
+		onsubmit={(event) => {
+			event.preventDefault();
+			void handleSave();
+		}}
+	>
+		<div class="dialog-header">
+			<h3 id="save-dialog-title">Save Custom Vibe</h3>
+			<button type="button" class="close-btn" onclick={handleClose} aria-label="Close save dialog">
+				<X size={18} aria-hidden="true" />
+			</button>
 		</div>
 
-		<div class="input-group">
-			<label for="save-preset-category">Category</label>
-			<select id="save-preset-category" bind:value={category}>
-				<option value="focus">Focus</option>
-				<option value="relax">Relax</option>
-				<option value="sleep">Sleep</option>
-				<option value="ambient">Ambient</option>
-				<option value="synthwave">Synthwave</option>
-			</select>
-		</div>
-	</div>
+		<div class="dialog-body">
+			<div class="input-group">
+				<label for="save-preset-name">Preset Name</label>
+				<input
+					bind:this={nameInput}
+					type="text"
+					id="save-preset-name"
+					bind:value={presetName}
+					placeholder="My Relax Vibe..."
+					maxlength="40"
+					required
+				/>
+			</div>
 
-	<div class="dialog-footer">
-		<button class="btn btn-secondary" onclick={handleClose}>Cancel</button>
-		<button class="btn btn-primary" onclick={handleSave}>
-			<FloppyDisk size={16} /> Save Vibe
-		</button>
-	</div>
+			<div class="input-group">
+				<label for="save-preset-category">Category</label>
+				<select id="save-preset-category" bind:value={category}>
+					<option value="focus">Focus</option>
+					<option value="relax">Relax</option>
+					<option value="sleep">Sleep</option>
+					<option value="ambient">Ambient</option>
+					<option value="synthwave">Synthwave</option>
+				</select>
+			</div>
+		</div>
+
+		<div class="dialog-footer">
+			<button type="button" class="btn btn-secondary" onclick={handleClose}>Cancel</button>
+			<button type="submit" class="btn btn-primary">
+				<FloppyDisk size={16} aria-hidden="true" /> Save Vibe
+			</button>
+		</div>
+	</form>
 </dialog>
 
 <style>

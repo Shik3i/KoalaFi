@@ -28,12 +28,13 @@
 	let settingsDrawerRef = $state<SettingsDrawer | null>(null);
 
 	function handleSelectPreset(presetState: KoalaFiState) {
+		const wasPlaying = appState.state.music.enabled;
 		appState.loadState(presetState);
+		appState.updateState((state) => {
+			state.music.enabled = wasPlaying;
+		});
 
-		// Apply immediately to audio engine
-		if (appState.state.music.enabled) {
-			getLoadedAudioEngine()?.applyState(appState.state);
-		}
+		getLoadedAudioEngine()?.applyState(appState.state);
 	}
 
 	function handlePresetSaved() {
@@ -41,10 +42,12 @@
 	}
 
 	function handleSelectVibeFromHistory(historyState: KoalaFiState) {
+		const wasPlaying = appState.state.music.enabled;
 		appState.loadState(historyState);
-		if (appState.state.music.enabled) {
-			getLoadedAudioEngine()?.applyState(appState.state);
-		}
+		appState.updateState((state) => {
+			state.music.enabled = wasPlaying;
+		});
+		getLoadedAudioEngine()?.applyState(appState.state);
 	}
 
 	async function handlePlayToggle() {
@@ -122,7 +125,7 @@
 					onclick={() => (activePanel = null)}
 					aria-label="Close vibes"
 				>
-					<X size={18} />
+					<X size={18} aria-hidden="true" />
 				</button>
 			</div>
 			<div class="panel-content">
@@ -144,7 +147,7 @@
 					onclick={() => (activePanel = null)}
 					aria-label="Close tune controls"
 				>
-					<X size={18} />
+					<X size={18} aria-hidden="true" />
 				</button>
 			</div>
 
@@ -205,9 +208,9 @@
 					aria-label={isPlaying ? 'Pause' : 'Play'}
 				>
 					{#if isPlaying}
-						<Pause size={14} weight="fill" />
+						<Pause size={14} weight="fill" aria-hidden="true" />
 					{:else}
-						<Play size={14} weight="fill" style="margin-left: 2px;" />
+						<Play size={14} weight="fill" style="margin-left: 2px;" aria-hidden="true" />
 					{/if}
 				</button>
 				<button
@@ -216,7 +219,7 @@
 					title="Exit Zen mode"
 					aria-label="Exit Zen mode"
 				>
-					<EyeClosed size={16} />
+					<EyeClosed size={16} aria-hidden="true" />
 				</button>
 			</div>
 		</div>

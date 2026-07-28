@@ -43,6 +43,9 @@ export function generateShareUrl(
 	mode: 'none' | 'rough-clock'
 ): string {
 	const clonedState = JSON.parse(JSON.stringify(state)) as KoalaFiState;
+	// Playback permission and AudioContext state are device-local. A shared link must
+	// always wait for an explicit gesture on the receiving device.
+	clonedState.music.enabled = false;
 
 	if (mode === 'rough-clock') {
 		clonedState.sync = {

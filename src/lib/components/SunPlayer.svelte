@@ -14,6 +14,7 @@
 	import { logVibePlay } from '../storage/recentVibesRepository';
 	import ShareDialog from './ShareDialog.svelte';
 	import SavePresetDialog from './SavePresetDialog.svelte';
+	import { APP_VERSION, GENERATOR_VERSION } from '../version';
 
 	let {
 		onOpenSettings,
@@ -108,6 +109,16 @@
 		closeControls();
 	}
 
+	function openDialog(dialog: 'share' | 'save') {
+		closeControls();
+		controlsButtonRef?.focus();
+		if (dialog === 'share') {
+			isShareOpen = true;
+		} else {
+			isSaveOpen = true;
+		}
+	}
+
 	function handleWindowKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape' && isControlsOpen) {
 			closeControls();
@@ -181,11 +192,11 @@
 		<span class="brand"
 			><span>Koala</span><span>Fi</span><span
 				style="font-size: 0.65rem; opacity: 0.5; margin-left: 0.25rem; font-weight: normal;"
-				>DEV-V4</span
+				>v{APP_VERSION} · G{GENERATOR_VERSION}</span
 			></span
 		>
 		<button class="meta-btn" onclick={onOpenSettings} aria-label="Open settings">
-			<Gear size={18} />
+			<Gear size={18} aria-hidden="true" />
 		</button>
 	</div>
 
@@ -198,9 +209,9 @@
 		<span class="sun-ring"></span>
 		<span class="play-glyph">
 			{#if isPlaying}
-				<Pause size={42} weight="fill" />
+				<Pause size={42} weight="fill" aria-hidden="true" />
 			{:else}
-				<Play size={42} weight="fill" />
+				<Play size={42} weight="fill" aria-hidden="true" />
 			{/if}
 		</span>
 	</button>
@@ -282,7 +293,7 @@
 			<span aria-hidden="true">/</span>
 			<code>{appState.state.seed}</code>
 			<button class="seed-randomize" onclick={handleRandomizeSeed} aria-label="Randomize seed">
-				<Shuffle size={14} />
+				<Shuffle size={14} aria-hidden="true" />
 			</button>
 		</div>
 		{#if errorMessage}
@@ -298,7 +309,7 @@
 				aria-expanded={isControlsOpen}
 				onclick={() => (isControlsOpen = !isControlsOpen)}
 			>
-				<Sliders size={18} />
+				<Sliders size={18} aria-hidden="true" />
 				<span>Controls</span>
 			</button>
 
@@ -311,23 +322,23 @@
 					transition:menuTransition
 				>
 					<button role="menuitem" onclick={() => handleMenuAction(() => onOpenPanel('vibes'))}>
-						<Sparkle size={18} />
+						<Sparkle size={18} aria-hidden="true" />
 						<span>Vibes</span>
 					</button>
 					<button role="menuitem" onclick={() => handleMenuAction(() => onOpenPanel('tune'))}>
-						<Sliders size={18} />
+						<Sliders size={18} aria-hidden="true" />
 						<span>Tune</span>
 					</button>
-					<button role="menuitem" onclick={() => handleMenuAction(() => (isShareOpen = true))}>
-						<ShareNetwork size={18} />
+					<button role="menuitem" onclick={() => openDialog('share')}>
+						<ShareNetwork size={18} aria-hidden="true" />
 						<span>Share</span>
 					</button>
-					<button role="menuitem" onclick={() => handleMenuAction(() => (isSaveOpen = true))}>
-						<Heart size={18} />
+					<button role="menuitem" onclick={() => openDialog('save')}>
+						<Heart size={18} aria-hidden="true" />
 						<span>Save</span>
 					</button>
 					<button role="menuitem" onclick={() => handleMenuAction(() => (isZen = true))}>
-						<Eye size={18} />
+						<Eye size={18} aria-hidden="true" />
 						<span>Zen</span>
 					</button>
 				</div>

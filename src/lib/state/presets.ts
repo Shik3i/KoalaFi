@@ -1,4 +1,5 @@
 import type { KoalaFiState } from './koalaFiState';
+import { GENERATOR_VERSION } from '../version';
 
 export type PresetCategory = 'focus' | 'relax' | 'sleep' | 'ambient' | 'synthwave';
 
@@ -16,7 +17,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'focus',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 3,
+			generatorVersion: GENERATOR_VERSION,
 			seed: 'sunset-focus-seed',
 			presetId: 'sunset-focus',
 			title: 'Sunset Focus',
@@ -59,7 +60,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'focus',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 3,
+			generatorVersion: GENERATOR_VERSION,
 			seed: 'rainy-coding-seed',
 			presetId: 'rainy-coding',
 			title: 'Rainy Coding',
@@ -102,7 +103,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'focus',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 3,
+			generatorVersion: GENERATOR_VERSION,
 			seed: 'dusty-cafe-seed',
 			presetId: 'dusty-cafe',
 			title: 'Dusty Café',
@@ -145,7 +146,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'relax',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 3,
+			generatorVersion: GENERATOR_VERSION,
 			seed: 'ocean-calm-seed',
 			presetId: 'ocean-calm',
 			title: 'Ocean Calm',
@@ -188,7 +189,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'relax',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 3,
+			generatorVersion: GENERATOR_VERSION,
 			seed: 'warm-window-seed',
 			presetId: 'warm-window',
 			title: 'Warm Window',
@@ -231,7 +232,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'sleep',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 3,
+			generatorVersion: GENERATOR_VERSION,
 			seed: 'deep-sleep-seed',
 			presetId: 'deep-sleep',
 			title: 'Deep Sleep',
@@ -274,7 +275,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'sleep',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 3,
+			generatorVersion: GENERATOR_VERSION,
 			seed: 'brown-noise-night-seed',
 			presetId: 'brown-noise-night',
 			title: 'Brown Noise Night',
@@ -317,7 +318,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'ambient',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 3,
+			generatorVersion: GENERATOR_VERSION,
 			seed: 'soft-rain-seed',
 			presetId: 'soft-rain',
 			title: 'Soft Rain',
@@ -360,7 +361,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'ambient',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 3,
+			generatorVersion: GENERATOR_VERSION,
 			seed: 'wind-down-seed',
 			presetId: 'wind-down',
 			title: 'Wind Down',
@@ -403,7 +404,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 		category: 'synthwave',
 		state: {
 			schemaVersion: 1,
-			generatorVersion: 3,
+			generatorVersion: GENERATOR_VERSION,
 			seed: 'neon-coast-seed',
 			presetId: 'neon-coast',
 			title: 'Neon Coast',

@@ -3,6 +3,27 @@ import { getDiatonicChord, getScaleNotes } from './theory';
 import type { NoteEvent, ChordEvent, DrumEvent, SeededPattern } from './types';
 import type { KoalaFiState } from '../state/koalaFiState';
 
+type MelodyMotifNote = {
+	position: number;
+	degreeOffset: number;
+	duration: '16n' | '8n' | '8n.' | '4n';
+	gate: number;
+};
+
+const MELODY_RHYTHMS = [
+	[0, 3, 6, 10, 14, 18, 22, 27, 30],
+	[2, 4, 7, 12, 16, 19, 23, 26, 29],
+	[0, 4, 6, 11, 15, 18, 20, 25, 29],
+	[1, 5, 8, 10, 15, 17, 21, 24, 28]
+];
+
+const MELODY_CONTOURS = [
+	[0, 1, 3, 2, 4, 2, 1, 2, 0],
+	[0, 2, 1, 4, 3, 5, 3, 1, 2],
+	[0, -1, 1, 3, 2, 4, 1, 2, 0],
+	[0, 2, 4, 3, 1, 2, 0, -1, 0]
+];
+
 /**
  * Deterministically generates a 64-bar musical sequence based on seed and state.
  * Structure (64-bar Arrangement):
@@ -64,9 +85,10 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 		...getScaleNotes(key, scale, 4), // Octave 4 lead
 		...getScaleNotes(key, scale, 5) // Octave 5 lead
 	];
-
-	// State tracking for stepwise melody motion
-	let lastMelodyIndex = Math.floor(melodyScaleNotes.length / 2);
+	const scaleLength = getScaleNotes(key, scale, 4).length;
+	const callMotif = createMelodyMotif(rng);
+	const answerMotif = createAnswerMotif(callMotif, rng);
+	let phraseNumber = 0;
 
 	// Generate bar-by-bar events for 64 bars
 	for (let bar = 0; bar < 64; bar++) {
@@ -287,59 +309,24 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 			section === 'groove2' ||
 			section === 'outro';
 		const barInBlock = bar % 8;
-		const isPhraseBar = barInBlock === 2 || barInBlock === 3;
-		const isAnswerBar = barInBlock === 6 || barInBlock === 7;
+		const isCallStart = barInBlock === 2;
+		const isAnswerStart = barInBlock === 6 && section !== 'outro';
 
-		const playMelody =
-			hasMelody && melodyActiveSection && (isPhraseBar || (isAnswerBar && section !== 'outro'));
-
-		if (playMelody) {
-			const isCorePhrase = isPhraseBar;
-			const notesCount = isCorePhrase ? rng.intRange(2, 3) : rng.intRange(1, 2);
-			const possibleBeats = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5];
-			const selectedBeats = rng.shuffle(possibleBeats).slice(0, notesCount).sort();
-
-			selectedBeats.forEach((beat, idx) => {
-				const beatInt = Math.floor(beat);
-				const sixteenth = beat % 1 === 0.5 ? 2 : 0;
-				const targetTime = `${bar}:${beatInt}:${sixteenth}`;
-
-				// Stepwise scale movement (mostly stepwise, occasional leap)
-				const moveRnd = rng.next();
-				let step: number;
-				if (moveRnd < 0.8) {
-					step = rng.choice([-1, 0, 1]); // stepwise
-				} else if (moveRnd < 0.95) {
-					step = rng.choice([-2, 2]); // small leap
-				} else {
-					step = rng.choice([-3, 3, -4, 4]); // larger leap
-				}
-
-				let nextIndex = lastMelodyIndex + step;
-				nextIndex = Math.max(0, Math.min(melodyScaleNotes.length - 1, nextIndex));
-				lastMelodyIndex = nextIndex;
-
-				const note = melodyScaleNotes[nextIndex];
-				const duration = rng.choice(['4n', '8n', '8n.']);
-
-				// Priority complexity gate
-				const gate = rng.next();
-
-				// Clamped velocity for playback:
-				// core melody velocity: 0.35–0.55
-				// decorative velocity: 0.18–0.32
-				// The first note of a phrase is always core. Subsequent notes can be decorative.
-				const isCoreNote = idx === 0 || rng.next() > 0.4;
-				const velocity = isCoreNote ? rng.range(0.35, 0.55) : rng.range(0.18, 0.32);
-
-				melody.push({
-					time: targetTime,
-					note,
-					duration,
-					velocity,
-					gate
-				});
-			});
+		if (hasMelody && melodyActiveSection && (isCallStart || isAnswerStart)) {
+			const motif = isAnswerStart ? answerMotif : callMotif;
+			melody.push(
+				...renderMelodyMotif({
+					motif,
+					startBar: bar,
+					phraseNumber,
+					isAnswer: isAnswerStart,
+					degrees,
+					scaleNotes: melodyScaleNotes,
+					scaleLength,
+					rng
+				})
+			);
+			phraseNumber += 1;
 		}
 	}
 
@@ -349,4 +336,128 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 		drums,
 		melody
 	};
+}
+
+function createMelodyMotif(rng: SeededRNG): MelodyMotifNote[] {
+	const rhythm = rng.choice(MELODY_RHYTHMS);
+	const contour = rng.choice(MELODY_CONTOURS);
+	const peakIndex = contour.indexOf(Math.max(...contour));
+
+	return rhythm.map((position, index) => {
+		const gap = (rhythm[index + 1] ?? 32) - position;
+		const isStructural = index === 0 || index === peakIndex || index === rhythm.length - 1;
+
+		return {
+			position,
+			degreeOffset: contour[index],
+			duration: durationForGap(gap, rng),
+			gate: isStructural ? rng.range(0.03, 0.18) : rng.range(0.2, 0.82)
+		};
+	});
+}
+
+function createAnswerMotif(call: MelodyMotifNote[], rng: SeededRNG): MelodyMotifNote[] {
+	let previousPosition = -1;
+	const positions = call.map((note, index) => {
+		const isLast = index === call.length - 1;
+		const rhythmicShift = index > 0 && !isLast ? rng.choice([-1, 0, 0, 1]) : 0;
+		const shifted = Math.max(0, Math.min(31, note.position + rhythmicShift));
+		const position = Math.min(31, Math.max(previousPosition + 1, shifted));
+		previousPosition = position;
+		return position;
+	});
+
+	return call.map((note, index) => {
+		const isLast = index === call.length - 1;
+		const mirroredDegree = index < 2 ? note.degreeOffset + 1 : -note.degreeOffset;
+		const gap = (positions[index + 1] ?? 32) - positions[index];
+
+		return {
+			position: positions[index],
+			degreeOffset: isLast ? 0 : mirroredDegree,
+			duration: durationForGap(gap, rng),
+			gate: isLast ? rng.range(0.03, 0.12) : Math.max(0.08, note.gate - 0.08)
+		};
+	});
+}
+
+function renderMelodyMotif({
+	motif,
+	startBar,
+	phraseNumber,
+	isAnswer,
+	degrees,
+	scaleNotes,
+	scaleLength,
+	rng
+}: {
+	motif: MelodyMotifNote[];
+	startBar: number;
+	phraseNumber: number;
+	isAnswer: boolean;
+	degrees: number[];
+	scaleNotes: string[];
+	scaleLength: number;
+	rng: SeededRNG;
+}): NoteEvent[] {
+	const chordIndex = Math.floor((startBar % 8) / 2);
+	const chordDegree = degrees[chordIndex] % scaleLength;
+	const registerLift = phraseNumber % 4 === 2 ? 2 : phraseNumber % 4 === 3 ? -1 : 0;
+	const baseIndex = clamp(chordDegree + registerLift, 1, scaleNotes.length - 6);
+	const variationIndex = 2 + (phraseNumber % Math.max(1, motif.length - 3));
+	const variationStep = phraseNumber > 1 ? (phraseNumber % 2 === 0 ? 1 : -1) : 0;
+
+	return motif.map((motifNote, index) => {
+		const absoluteSixteenth = motifNote.position;
+		const targetBar = startBar + Math.floor(absoluteSixteenth / 16);
+		const withinBar = absoluteSixteenth % 16;
+		const beat = Math.floor(withinBar / 4);
+		const sixteenth = withinBar % 4;
+		let noteIndex = baseIndex + motifNote.degreeOffset;
+
+		if (index === variationIndex) noteIndex += variationStep;
+		if (index === 0 || index === motif.length - 1) {
+			const targetDegree = isAnswer && index === motif.length - 1 ? 0 : chordDegree;
+			noteIndex = nearestScaleDegree(noteIndex, targetDegree, scaleLength, scaleNotes.length);
+		}
+
+		const structural = index === 0 || index === motif.length - 1;
+		const velocity = structural ? rng.range(0.42, 0.55) : rng.range(0.24, 0.48);
+
+		return {
+			time: `${targetBar}:${beat}:${sixteenth}`,
+			note: scaleNotes[clamp(noteIndex, 0, scaleNotes.length - 1)],
+			duration: motifNote.duration,
+			velocity,
+			gate: motifNote.gate
+		};
+	});
+}
+
+function durationForGap(gapInSixteenths: number, rng: SeededRNG): MelodyMotifNote['duration'] {
+	if (gapInSixteenths >= 6) return rng.choice(['4n', '8n.']);
+	if (gapInSixteenths >= 3) return rng.choice(['8n', '8n.']);
+	if (gapInSixteenths <= 1) return '16n';
+	return rng.choice(['16n', '8n']);
+}
+
+function nearestScaleDegree(
+	index: number,
+	degree: number,
+	scaleLength: number,
+	noteCount: number
+): number {
+	const candidates: number[] = [];
+	for (let octave = -1; octave <= 3; octave++) {
+		const candidate = degree + octave * scaleLength;
+		if (candidate >= 0 && candidate < noteCount) candidates.push(candidate);
+	}
+
+	return candidates.reduce((best, candidate) =>
+		Math.abs(candidate - index) < Math.abs(best - index) ? candidate : best
+	);
+}
+
+function clamp(value: number, min: number, max: number): number {
+	return Math.max(min, Math.min(max, value));
 }

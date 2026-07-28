@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Unified Version Metadata**: Set the application version to `0.4.0` and exposed
+  package and generator versions from a shared source in the interface and state layer.
+- **Offline Audio Quality Gate**: Added browser-native offline rendering and automated
+  peak, RMS, clipping, DC-offset, and crest-factor checks for generated melodies.
+- **Accessible Modals**: Added labelled native dialogs, deterministic initial focus,
+  keyboard focus containment, Escape close behavior, and opener-focus restoration.
+- **Automated Accessibility Audit**: Added local `axe-core` coverage for the primary
+  interface and modal surfaces, plus keyboard focus regression checks.
+- **Hardened Delivery**: Upgraded CI and container builds to Node.js 22, pinned every
+  GitHub Action to an immutable commit SHA, and added hash-based SvelteKit CSP output
+  plus stricter production security headers.
+- **Generator Version 4**: Added seeded two-bar melody motifs with reusable rhythm,
+  pitch contour, call-and-response transformation, register variation, harmonic
+  phrase anchors, and complexity-aware structural notes.
+- **Melody Structure Tests**: Added regression coverage for pitch range, distinct
+  pitches, repeated rhythmic identity, controlled variation, multi-bar phrases, and
+  bounded melodic intervals.
+
+### Fixed
+
+- **Effects Routing**: Converted delay and reverb into fully wet send effects so
+  parallel buses no longer duplicate and overload the dry signal.
+- **Melody Filter Control**: Centered LFO movement on the focus-controlled cutoff
+  instead of letting the LFO override the control.
+- **Playback Consistency**: Applied state before transport start and kept actual
+  playback synchronized across presets, history, tune controls, and shared links.
+- **Scheduler Logging**: Removed per-note console output from the audio scheduling path.
+
 ## [0.3.0] - 2026-07-01
 
 ### Added

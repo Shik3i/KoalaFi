@@ -5,7 +5,6 @@ build
 .gitignore
 .vscode
 .agents
-.github
 *.log
 test-results
 playwright-report

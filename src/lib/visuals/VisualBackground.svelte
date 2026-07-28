@@ -211,7 +211,7 @@
 	});
 </script>
 
-<div class="visual-container" bind:this={container}>
+<div class="visual-container" bind:this={container} aria-hidden="true">
 	<canvas bind:this={canvas} class="background-canvas"></canvas>
 
 	<!-- CSS Fallback styled overlays (always runs underneath canvas as fallback background) -->

@@ -1,6 +1,8 @@
+import type { GENERATOR_VERSION } from '../version';
+
 export type KoalaFiState = {
 	schemaVersion: 1;
-	generatorVersion: 3;
+	generatorVersion: typeof GENERATOR_VERSION;
 
 	seed: string;
 	presetId?: string;

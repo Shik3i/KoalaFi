@@ -1,46 +1,51 @@
 # Production configuration for KoalaFi
 :80 {
-    root * /srv
-    file_server
+	root * /srv
+	file_server
 
-    # Gzip and Zstandard compression
-    encode zstd gzip
+	# Gzip and Zstandard compression
+	encode zstd gzip
 
-    # SPA Fallback for client-side routing
-    try_files {path} /index.html
+	# SPA Fallback for client-side routing
+	try_files {path} /index.html
 
-    # Security Headers
-    header {
-        # Clickjacking defense
-        X-Frame-Options "DENY"
-        
-        # Cross-site scripting (XSS) defense
-        X-XSS-Protection "1; mode=block"
-        
-        # MIME sniffing defense
-        X-Content-Type-Options "nosniff"
-        
-        # Referrer integrity
-        Referrer-Policy "strict-origin-when-cross-origin"
-        
-        # Content Security Policy (strict block list, allow local scripts/styles and blob data connect)
-        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; object-src 'none';"
-    }
+	# Security Headers
+	header {
+		# Clickjacking defense
+		X-Frame-Options "DENY"
 
-    # Service Worker: Do NOT cache long-term to ensure immediate updates
-    @serviceWorker {
-        path /service-worker.js
-    }
-    header @serviceWorker Cache-Control "public, max-age=0, must-revalidate"
+		# MIME sniffing defense
+		X-Content-Type-Options "nosniff"
 
-    @pwaMetadata {
-        path /manifest.webmanifest /robots.txt
-    }
-    header @pwaMetadata Cache-Control "public, max-age=0, must-revalidate"
+		# Referrer integrity
+		Referrer-Policy "strict-origin-when-cross-origin"
 
-    # Hashed Assets: Cache forever (1 year)
-    @hashedAssets {
-        path /_app/*
-    }
-    header @hashedAssets Cache-Control "public, max-age=31536000, immutable"
+		# SvelteKit emits the resource-loading CSP with per-build script hashes.
+		# This header adds policies that cannot be enforced by a prerendered CSP meta tag.
+		Content-Security-Policy "frame-ancestors 'none'; object-src 'none'; base-uri 'self';"
+
+		# Isolate the app without requiring cross-origin resource embedding.
+		Cross-Origin-Opener-Policy "same-origin"
+		Cross-Origin-Resource-Policy "same-origin"
+
+		# KoalaFi never requests device sensors, payments, or capture devices.
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+	}
+
+	# Service Worker: Do NOT cache long-term to ensure immediate updates
+	@serviceWorker {
+		path /service-worker.js
+	}
+	header @serviceWorker Cache-Control "public, max-age=0, must-revalidate"
+
+	@pwaMetadata {
+		path /manifest.webmanifest /robots.txt
+	}
+	header @pwaMetadata Cache-Control "public, max-age=0, must-revalidate"
+
+	# Hashed Assets: Cache forever (1 year)
+	@hashedAssets {
+		path /_app/*
+	}
+	header @hashedAssets Cache-Control "public, max-age=31536000, immutable"
 }

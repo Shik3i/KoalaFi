@@ -2,8 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { generatePattern } from './generator';
 import { DEFAULT_STATE } from '../state/defaults';
 import { BUILT_IN_PRESETS } from '../state/presets';
+import type { NoteEvent } from './types';
 
-describe('Seeded Pattern Generator v3', () => {
+describe('Seeded Pattern Generator v4', () => {
 	it('should generate identical patterns for the same seed and state', () => {
 		const first = generatePattern('test-seed-xyz', DEFAULT_STATE.music);
 		const second = generatePattern('test-seed-xyz', DEFAULT_STATE.music);
@@ -74,6 +75,33 @@ describe('Seeded Pattern Generator v3', () => {
 		});
 	});
 
+	it('should build recognizable two-bar motifs with pitch contour and variation', () => {
+		const neonCoast = BUILT_IN_PRESETS.find((p) => p.id === 'neon-coast')!;
+		const pattern = generatePattern(neonCoast.state.seed, neonCoast.state.music);
+		const audibleMelody = pattern.melody.filter(
+			(event) => (event.gate ?? 0) <= neonCoast.state.music.melody
+		);
+		const pitches = audibleMelody.map((event) => noteToMidi(event.note));
+
+		expect(new Set(pitches).size).toBeGreaterThanOrEqual(7);
+		expect(Math.max(...pitches) - Math.min(...pitches)).toBeGreaterThanOrEqual(12);
+
+		const firstCall = phraseAt(pattern.melody, 26);
+		const repeatedCall = phraseAt(pattern.melody, 42);
+		expect(firstCall.length).toBeGreaterThanOrEqual(8);
+		expect(firstCall.some((event) => parseInt(event.time.split(':')[0], 10) === 27)).toBe(true);
+		expect(relativeRhythm(firstCall, 26)).toEqual(relativeRhythm(repeatedCall, 42));
+		expect(firstCall.map((event) => event.note)).not.toEqual(
+			repeatedCall.map((event) => event.note)
+		);
+
+		const intervals = firstCall.slice(1).map((event, index) => {
+			return Math.abs(noteToMidi(event.note) - noteToMidi(firstCall[index].note));
+		});
+		expect(intervals.some((interval) => interval >= 3)).toBe(true);
+		expect(Math.max(...intervals)).toBeLessThanOrEqual(12);
+	});
+
 	it('should generate no drum events or melody events for sleep presets', () => {
 		const deepSleep = BUILT_IN_PRESETS.find((p) => p.id === 'deep-sleep')!;
 		const pattern = generatePattern(deepSleep.state.seed, deepSleep.state.music);
@@ -121,3 +149,24 @@ describe('Seeded Pattern Generator v3', () => {
 		expect(dropout.drumCount).toBeGreaterThan(0); // Still has hats/snare
 	});
 });
+
+function phraseAt(events: NoteEvent[], startBar: number): NoteEvent[] {
+	return events.filter((event) => {
+		const bar = parseInt(event.time.split(':')[0], 10);
+		return bar === startBar || bar === startBar + 1;
+	});
+}
+
+function relativeRhythm(events: { time: string }[], startBar: number): number[] {
+	return events.map((event) => {
+		const [bar, beat, sixteenth] = event.time.split(':').map(Number);
+		return (bar - startBar) * 16 + beat * 4 + sixteenth;
+	});
+}
+
+function noteToMidi(note: string): number {
+	const match = /^([A-G])(#?)(-?\d+)$/.exec(note);
+	if (!match) throw new Error(`Invalid note: ${note}`);
+	const pitchClass = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[match[1] as 'C'];
+	return (Number(match[3]) + 1) * 12 + pitchClass + (match[2] === '#' ? 1 : 0);
+}

@@ -1,11 +1,25 @@
 <script lang="ts">
-	let { id, label, checked = $bindable(false) } = $props();
+	let {
+		id,
+		label,
+		checked = $bindable(false),
+		onChange
+	}: {
+		id: string;
+		label: string;
+		checked?: boolean;
+		onChange?: (checked: boolean) => void;
+	} = $props();
+
+	function handleChange(event: Event) {
+		onChange?.((event.currentTarget as HTMLInputElement).checked);
+	}
 </script>
 
 <div class="toggle-control">
 	<label class="toggle-label" for={id}>{label}</label>
 	<label class="switch" for={id}>
-		<input type="checkbox" {id} bind:checked />
+		<input type="checkbox" {id} bind:checked onchange={handleChange} />
 		<span class="slider"></span>
 	</label>
 </div>

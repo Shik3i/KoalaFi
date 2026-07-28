@@ -14,7 +14,9 @@
 		if (urlState) {
 			// Decode, validate, and load shared state
 			appState.loadState(urlState);
-			console.log('Successfully loaded shared vibe from URL:', appState.state.title);
+			appState.updateState((state) => {
+				state.music.enabled = false;
+			});
 
 			// Clear query params from location bar for a clean URL
 			const cleanUrl = window.location.origin + window.location.pathname;

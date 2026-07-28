@@ -1,8 +1,9 @@
 import type { KoalaFiState } from './koalaFiState';
+import { GENERATOR_VERSION } from '../version';
 
 export const DEFAULT_STATE: KoalaFiState = {
 	schemaVersion: 1,
-	generatorVersion: 3,
+	generatorVersion: GENERATOR_VERSION,
 
 	seed: 'koala-vibe',
 	presetId: 'sunset-focus',

@@ -4,6 +4,14 @@
 
 All audio in KoalaFi is synthesized procedurally inside the browser using **Tone.js**. The master bus includes compression, a warm lowpass filter, a limiter, and a conservative output volume.
 
+## Automated Audio Quality Gate
+
+`renderMelodyAudit()` renders bars 24–31 of a generated melody through a real
+`OfflineAudioContext`. Playwright rejects silent, clipped, DC-biased, excessively
+loud, or over-compressed output using peak, RMS, clipped-sample ratio, DC offset,
+and crest-factor metrics. This complements structural generator tests: it verifies
+both the notes and the resulting PCM signal.
+
 ```mermaid
 graph TD
   Chords[PolySynth Keys] --> Saturation[Tape Saturation]
@@ -14,8 +22,8 @@ graph TD
 
   Saturation --> MusicBus[Music Bus]
 
-  MusicBus -->|Send| Delay[Feedback Delay]
-  MusicBus -->|Send| Reverb[Reverb]
+  MusicBus -->|12% send| Delay[100% wet Feedback Delay]
+  MusicBus -->|18% send| Reverb[100% wet Reverb]
   MusicBus --> MasterComp[Master Compressor]
 
   Delay --> MasterComp
@@ -54,7 +62,8 @@ graph TD
 ### 3. Lead Pluck (Synth)
 
 - Triangle lead with quick decay envelope.
-- **Dynamic Filter Sweep**: A slow LFO (0.07Hz) modulates the lowpass filter cutoff by ±150Hz.
+- **Dynamic Filter Sweep**: A slow LFO (0.07Hz) moves around the focus-controlled
+  cutoff without overriding it. The sweep widens from ±80Hz to ±150Hz as focus rises.
 - **Vibrato**: A slow LFO (0.18Hz) modulates `synth.detune` by ±8 cents.
 - Routed heavily through the auxiliary delay and reverb channels.
 - **Phrasing Playback**: Generates call-and-response phrases in 8-bar blocks (clamped velocities: core `0.35–0.55`, decorative `0.18–0.32`).
@@ -82,3 +91,5 @@ graph TD
 - `dispose()` clears scheduled transport parts before disposing instruments and effects.
 - `Tone.start()` is guarded with a timeout so a blocked audio context does not leave the UI waiting forever.
 - Volume adjustments are transitioned smoothly using `setTargetAtTime` to prevent sudden jumps, pops, or clicks.
+- Delay and reverb are fully wet send effects. Their send gains control spatial depth without
+  duplicating the dry music signal.

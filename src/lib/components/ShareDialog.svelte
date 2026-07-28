@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { onDestroy, tick } from 'svelte';
 	import { generateShareUrl } from '../share/urlState';
 	import { appState } from '../state/stores.svelte';
 	import Copy from 'phosphor-svelte/lib/Copy';
@@ -8,6 +8,8 @@
 	let { isOpen = $bindable(false) } = $props<{ isOpen: boolean }>();
 
 	let dialogElement = $state<HTMLDialogElement | null>(null);
+	let closeButton = $state<HTMLButtonElement | null>(null);
+	let returnFocusElement: HTMLElement | null = null;
 	let copyStatusNormal = $state(false);
 	let copyStatusSync = $state(false);
 	let normalCopyTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -17,7 +19,10 @@
 		if (!dialogElement) return;
 		if (isOpen) {
 			if (!dialogElement.open) {
+				returnFocusElement =
+					document.activeElement instanceof HTMLElement ? document.activeElement : null;
 				dialogElement.showModal();
+				void tick().then(() => closeButton?.focus());
 			}
 		} else {
 			if (dialogElement.open) {
@@ -59,6 +64,12 @@
 		isOpen = false;
 	}
 
+	function handleDialogClose() {
+		isOpen = false;
+		returnFocusElement?.focus();
+		returnFocusElement = null;
+	}
+
 	onDestroy(() => {
 		if (normalCopyTimeout) clearTimeout(normalCopyTimeout);
 		if (syncCopyTimeout) clearTimeout(syncCopyTimeout);
@@ -68,13 +79,19 @@
 <dialog
 	bind:this={dialogElement}
 	class="share-dialog glass-panel"
-	onclose={handleClose}
+	aria-labelledby="share-dialog-title"
+	onclose={handleDialogClose}
 	onclick={(e) => e.target === dialogElement && handleClose()}
 >
 	<div class="dialog-header">
-		<h3>Share Vibe</h3>
-		<button class="close-btn" onclick={handleClose} aria-label="Close dialog">
-			<X size={18} />
+		<h3 id="share-dialog-title">Share Vibe</h3>
+		<button
+			bind:this={closeButton}
+			class="close-btn"
+			onclick={handleClose}
+			aria-label="Close share dialog"
+		>
+			<X size={18} aria-hidden="true" />
 		</button>
 	</div>
 
@@ -86,10 +103,14 @@
 				<p>Copies all settings and seed. Opens exactly the same generated soundscape.</p>
 			</div>
 			<div class="copy-box">
-				<input type="text" readonly value={getShareLink('none')} />
-				<button class="copy-btn" onclick={() => copyLink('none')}>
+				<input type="text" readonly value={getShareLink('none')} aria-label="Standard share link" />
+				<button
+					class="copy-btn"
+					onclick={() => copyLink('none')}
+					aria-label="Copy standard share link"
+				>
 					{copyStatusNormal ? 'Copied!' : 'Copy'}
-					<Copy size={14} />
+					<Copy size={14} aria-hidden="true" />
 				</button>
 			</div>
 		</div>
@@ -109,14 +130,26 @@
 				</p>
 			</div>
 			<div class="copy-box">
-				<input type="text" readonly value={getShareLink('rough-clock')} />
-				<button class="copy-btn sync-btn" onclick={() => copyLink('rough-clock')}>
+				<input
+					type="text"
+					readonly
+					value={getShareLink('rough-clock')}
+					aria-label="Rough-clock synchronized share link"
+				/>
+				<button
+					class="copy-btn sync-btn"
+					onclick={() => copyLink('rough-clock')}
+					aria-label="Copy synchronized share link"
+				>
 					{copyStatusSync ? 'Copied!' : 'Copy'}
-					<Copy size={14} />
+					<Copy size={14} aria-hidden="true" />
 				</button>
 			</div>
 		</div>
 	</div>
+	<p class="copy-status" aria-live="polite">
+		{copyStatusNormal || copyStatusSync ? 'Share link copied to clipboard.' : ''}
+	</p>
 </dialog>
 
 <style>
@@ -242,5 +275,14 @@
 	.divider {
 		height: 1px;
 		background: var(--color-border);
+	}
+
+	.copy-status {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
 	}
 </style>

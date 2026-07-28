@@ -1,4 +1,4 @@
-# Procedural Generation - KoalaFi (Generator Version 3)
+# Procedural Generation - KoalaFi (Generator Version 4)
 
 ## Deterministic Seeding Strategy
 
@@ -17,7 +17,7 @@ Music sequences are structured over a deterministic 64-bar layout divided into d
 
 The arrangement loops cleanly after bar 63.
 
-## Music Theory Constraints (Version 3)
+## Music Theory Constraints (Version 4)
 
 ### 1. Spaced Open Chord Voicings
 
@@ -58,15 +58,24 @@ K . h . S . h . K . h . S . h .
 - **Hi-hat (h)** plays on the offbeat eighth note (`&`). Occasional quiet ghost hi-hats trigger on sixteenths 1 or 3.
 - **Sleep / Ambient Presets** disable or severely reduce drums to prevent waking/distraction.
 
-### 5. Cohesive Melody Phrasing & Conjunct Motion
+### 5. Motivic Melody Phrasing, Contour & Variation
 
 Melodies are phrase-based with rests in between:
 
-- **Phrasing blocks**: Over an 8-bar block, melody is silent for bars 1-2, plays a short 4-6 note phrase in bars 3-4, rests in bars 5-6, and plays a shorter answer phrase in bars 7-8.
-- **Stepwise Conjunct Motion**: Melody notes move stepwise along the scale (80% stepwise index motion of ±0 or ±1, 15% step of ±2, 5% leap of ±3 or ±4).
+- **Phrasing blocks**: Over an 8-bar block, melody is silent for bars 1-2, plays a
+  nine-note two-bar call in bars 3-4, rests in bars 5-6, and plays a transformed
+  answer in bars 7-8.
+- **Motivic identity**: Each seed selects one syncopated rhythm and one pitch contour.
+  Later calls retain the rhythm while changing register or one interior tone, making
+  the melody recognizable without becoming a static loop.
+- **Call and response**: The answer mirrors the call contour, shifts selected attacks,
+  and resolves its final note toward the tonic.
+- **Harmony and range**: Phrase starts and endings snap to scale degrees related to the
+  current chord. Constrained register movement spans octaves 4-5, with stepwise motion,
+  controlled thirds/fourths, and no jump larger than one octave.
 - **Velocities & Complexity Gate**: Notes have a complexity gate parameter (`gate` in `[0, 1]`) and a trigger velocity. During playback, the scheduler gates notes by checking `if (event.gate <= state.music.melody)`.
-  - **Core notes** have a velocity of `0.35–0.55`.
-  - **Decorative notes** have a velocity of `0.18–0.32`.
+  - **Structural notes** have low gate values and a velocity of `0.42–0.55`.
+  - **Decorative notes** have progressively higher gate values and a velocity of `0.24–0.48`.
   - Decorative notes are quieter than core notes, and all velocities are safely clamped to avoid sudden spikes.
 - **Sleep Presets** generate zero melody events.
 

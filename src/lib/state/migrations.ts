@@ -1,5 +1,6 @@
 import type { KoalaFiState } from './koalaFiState';
 import { DEFAULT_STATE } from './defaults';
+import { GENERATOR_VERSION } from '../version';
 
 /**
  * Migrates and validates an untrusted state object, ensuring
@@ -95,7 +96,7 @@ export function migrateState(rawState: unknown): KoalaFiState {
 
 	return {
 		schemaVersion: 1,
-		generatorVersion: 3,
+		generatorVersion: GENERATOR_VERSION,
 		seed,
 		presetId,
 		title,

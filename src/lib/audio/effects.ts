@@ -14,6 +14,8 @@ export class MasterEffectsPipeline {
 	// Auxiliary spatial effects
 	delayNode: Tone.FeedbackDelay;
 	reverbNode: Tone.Reverb;
+	delaySend: Tone.Gain;
+	reverbSend: Tone.Gain;
 
 	// Sub buses
 	musicBus: Tone.Volume;
@@ -52,22 +54,24 @@ export class MasterEffectsPipeline {
 		this.delayNode = new Tone.FeedbackDelay({
 			delayTime: '8n.',
 			feedback: 0.35,
-			wet: 0.15
+			wet: 1
 		});
 		this.delayNode.connect(this.compressor);
 
 		this.reverbNode = new Tone.Reverb({
 			decay: 2.2,
-			wet: 0.25
+			wet: 1
 		});
 		this.reverbNode.connect(this.compressor);
+		this.delaySend = new Tone.Gain(0.12).connect(this.delayNode);
+		this.reverbSend = new Tone.Gain(0.18).connect(this.reverbNode);
 
 		// 3. Sub buses
 		// Music bus routes through saturation before compressor
 		this.musicBus = new Tone.Volume(0);
 		this.musicBus.connect(this.saturationNode);
-		this.musicBus.connect(this.delayNode);
-		this.musicBus.connect(this.reverbNode);
+		this.musicBus.connect(this.delaySend);
+		this.musicBus.connect(this.reverbSend);
 
 		// Ambience bus bypasses delay/reverb and saturation to stay clear
 		// We add a StereoWidener with 60% width to make the ambient environment feel wide and immersive
@@ -136,6 +140,8 @@ export class MasterEffectsPipeline {
 		this.mainVolume.dispose();
 		this.delayNode.dispose();
 		this.reverbNode.dispose();
+		this.delaySend.dispose();
+		this.reverbSend.dispose();
 		this.musicBus.dispose();
 		this.ambienceBus.dispose();
 		this.ambienceWidener.dispose();

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { getRecentVibes, type RecentVibeRecord } from '../storage/recentVibesRepository';
 	import { deleteLocalDatabase } from '../storage/db';
 	import Clock from 'phosphor-svelte/lib/Clock';
@@ -7,6 +7,7 @@
 	import Trash from 'phosphor-svelte/lib/Trash';
 	import X from 'phosphor-svelte/lib/X';
 	import type { KoalaFiState } from '../state/koalaFiState';
+	import { APP_VERSION } from '../version';
 
 	// Svelte 5 props
 	let { isOpen = $bindable(false), onSelectVibe } = $props<{
@@ -15,6 +16,9 @@
 	}>();
 
 	let recentVibes = $state<RecentVibeRecord[]>([]);
+	let dialogElement = $state<HTMLDialogElement | null>(null);
+	let closeButton = $state<HTMLButtonElement | null>(null);
+	let returnFocusElement: HTMLElement | null = null;
 
 	export async function refresh() {
 		recentVibes = await getRecentVibes();
@@ -42,18 +46,51 @@
 		isOpen = false;
 	}
 
+	function handleClose() {
+		isOpen = false;
+	}
+
+	function handleDialogClose() {
+		isOpen = false;
+		returnFocusElement?.focus();
+		returnFocusElement = null;
+	}
+
+	$effect(() => {
+		if (!dialogElement) return;
+
+		if (isOpen && !dialogElement.open) {
+			returnFocusElement =
+				document.activeElement instanceof HTMLElement ? document.activeElement : null;
+			dialogElement.showModal();
+			void tick().then(() => closeButton?.focus());
+		} else if (!isOpen && dialogElement.open) {
+			dialogElement.close();
+		}
+	});
+
 	onMount(() => {
 		refresh();
 	});
 </script>
 
-<div class="settings-drawer-wrapper" class:open={isOpen} inert={!isOpen} aria-hidden={!isOpen}>
-	<div class="drawer-backdrop" onclick={() => (isOpen = false)} role="presentation"></div>
+<dialog
+	bind:this={dialogElement}
+	class="settings-drawer-modal"
+	aria-labelledby="settings-drawer-title"
+	onclose={handleDialogClose}
+	onclick={(event) => event.target === dialogElement && handleClose()}
+>
 	<aside class="settings-drawer glass-panel">
 		<div class="drawer-header">
-			<h3>System Settings</h3>
-			<button class="close-btn" onclick={() => (isOpen = false)} aria-label="Close drawer">
-				<X size={20} />
+			<h3 id="settings-drawer-title">System Settings</h3>
+			<button
+				bind:this={closeButton}
+				class="close-btn"
+				onclick={handleClose}
+				aria-label="Close settings"
+			>
+				<X size={20} aria-hidden="true" />
 			</button>
 		</div>
 
@@ -61,7 +98,7 @@
 			<!-- Section 1: Recent Vibes -->
 			<section class="drawer-section">
 				<div class="section-title">
-					<Clock size={16} />
+					<Clock size={16} aria-hidden="true" />
 					<h4>Recent Vibes</h4>
 				</div>
 
@@ -83,11 +120,11 @@
 			<!-- Section 2: Info & Details -->
 			<section class="drawer-section info-section">
 				<div class="section-title">
-					<Info size={16} />
+					<Info size={16} aria-hidden="true" />
 					<h4>About KoalaFi</h4>
 				</div>
 				<div class="info-card">
-					<p><strong>KoalaFi v0.1.0</strong></p>
+					<p><strong>KoalaFi v{APP_VERSION}</strong></p>
 					<p class="tagline">“Endless procedural lofi & ambient noise in your browser.”</p>
 					<p>
 						100% offline-first, client-side procedural synthesis. No accounts, no user tracking, and
@@ -101,45 +138,33 @@
 				<h4>Database Administration</h4>
 				<p class="section-desc">Clear local IndexedDB tables including presets and settings.</p>
 				<button class="reset-btn" onclick={handleClearData}>
-					<Trash size={16} /> Wipe Application Data
+					<Trash size={16} aria-hidden="true" /> Wipe Application Data
 				</button>
 			</section>
 		</div>
 	</aside>
-</div>
+</dialog>
 
 <style>
-	.settings-drawer-wrapper {
+	.settings-drawer-modal {
 		position: fixed;
-		top: 0;
-		left: 0;
+		inset: 0;
 		width: 100vw;
-		height: 100vh;
+		max-width: none;
+		height: 100dvh;
+		max-height: none;
+		margin: 0;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: var(--color-text-primary);
+		overflow: hidden;
 		z-index: 100;
-		pointer-events: none;
-		transition: var(--transition-normal);
 	}
 
-	.settings-drawer-wrapper.open {
-		pointer-events: auto;
-	}
-
-	.drawer-backdrop {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
+	.settings-drawer-modal::backdrop {
 		background: rgba(2, 6, 23, 0.4);
-		opacity: 0;
 		backdrop-filter: blur(2px);
-		transition: opacity var(--transition-normal) ease;
-		pointer-events: none;
-	}
-
-	.settings-drawer-wrapper.open .drawer-backdrop {
-		opacity: 1;
-		pointer-events: auto;
 	}
 
 	.settings-drawer {
@@ -154,15 +179,25 @@
 		border-top: none;
 		border-bottom: none;
 		border-right: none;
-		transform: translateX(100%);
-		transition: transform var(--transition-normal) cubic-bezier(0.16, 1, 0.3, 1);
 		display: flex;
 		flex-direction: column;
 		z-index: 101;
+		animation: drawer-in var(--transition-normal) cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
-	.settings-drawer-wrapper.open .settings-drawer {
-		transform: translateX(0);
+	@keyframes drawer-in {
+		from {
+			transform: translateX(100%);
+		}
+		to {
+			transform: translateX(0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.settings-drawer {
+			animation: none;
+		}
 	}
 
 	.drawer-header {

@@ -36,12 +36,9 @@ export class AudioScheduler {
 		this.chordsPart = new Tone.Part((time, event) => {
 			const delay = this.getSwingDelay(event.time);
 			const vel = this.getHumanizedVelocity(
-				event.velocity || 0.5,
+				event.velocity ?? 0.5,
 				event.time,
 				event.notes[0] || 'C4'
-			);
-			console.log(
-				`[AUDIO SCHEDULER] Triggering Chord: ${event.notes.join(',')} at time ${time + delay} (duration: ${event.duration}, velocity: ${vel})`
 			);
 			this.chordsInst.trigger(event.notes, event.duration, time + delay, vel);
 		}, pattern.chords);
@@ -52,10 +49,7 @@ export class AudioScheduler {
 		// 2. Bass Part
 		this.bassPart = new Tone.Part((time, event) => {
 			const delay = this.getSwingDelay(event.time);
-			const vel = this.getHumanizedVelocity(event.velocity || 0.6, event.time, event.note);
-			console.log(
-				`[AUDIO SCHEDULER] Triggering Bass: ${event.note} at time ${time + delay} (duration: ${event.duration}, velocity: ${vel})`
-			);
+			const vel = this.getHumanizedVelocity(event.velocity ?? 0.6, event.time, event.note);
 			this.bassInst.trigger(event.note, event.duration, time + delay, vel);
 		}, pattern.bassline);
 		this.bassPart.loop = true;
@@ -65,10 +59,7 @@ export class AudioScheduler {
 		// 3. Drums Part
 		this.drumsPart = new Tone.Part((time, event) => {
 			const delay = this.getSwingDelay(event.time);
-			const vel = this.getHumanizedVelocity(event.velocity || 0.8, event.time, event.type);
-			console.log(
-				`[AUDIO SCHEDULER] Triggering Drum: ${event.type} at time ${time + delay} (velocity: ${vel})`
-			);
+			const vel = this.getHumanizedVelocity(event.velocity ?? 0.8, event.time, event.type);
 			if (event.type === 'kick') {
 				this.drumsInst.triggerKick(time + delay, vel);
 			} else if (event.type === 'snare') {
@@ -86,15 +77,8 @@ export class AudioScheduler {
 			const gateVal = event.gate !== undefined ? event.gate : 0.5;
 			if (gateVal <= this.melodyComplexity) {
 				const delay = this.getSwingDelay(event.time);
-				const vel = this.getHumanizedVelocity(event.velocity || 0.4, event.time, event.note);
-				console.log(
-					`[AUDIO SCHEDULER] Triggering Melody pluck: ${event.note} at time ${time + delay} (duration: ${event.duration}, velocity: ${vel})`
-				);
+				const vel = this.getHumanizedVelocity(event.velocity ?? 0.4, event.time, event.note);
 				this.leadInst.trigger(event.note, event.duration, time + delay, vel);
-			} else {
-				console.log(
-					`[AUDIO SCHEDULER] Melody pluck gated out (complexity limit: ${this.melodyComplexity}, note gate: ${gateVal})`
-				);
 			}
 		}, pattern.melody);
 		this.melodyPart.loop = true;

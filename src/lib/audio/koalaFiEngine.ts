@@ -7,12 +7,13 @@ import { DrumsInstrument } from './drums';
 import { AmbienceGenerator } from './ambience';
 import { MasterEffectsPipeline } from './effects';
 import { AudioScheduler } from './transport';
+import { GENERATOR_VERSION } from '../version';
 
 export class KoalaFiEngine {
 	private initialized = false;
 	private initializingPromise: Promise<void> | null = null;
 	private seed: string = '';
-	private generatorVersion = 1;
+	private generatorVersion = GENERATOR_VERSION;
 	private bpm = 75;
 	private key = '';
 	private scale = '';
@@ -123,6 +124,16 @@ export class KoalaFiEngine {
 		return this.playbackTogglePromise;
 	}
 
+	async setPlayback(state: KoalaFiState, shouldPlay: boolean): Promise<boolean> {
+		if (this.playbackTogglePromise) return this.playbackTogglePromise;
+
+		this.playbackTogglePromise = this.runSetPlayback(state, shouldPlay).finally(() => {
+			this.playbackTogglePromise = null;
+		});
+
+		return this.playbackTogglePromise;
+	}
+
 	/**
 	 * Applies the full application state to the audio engine.
 	 * Regenerates patterns only if seed, generatorVersion, key, or scale changes.
@@ -182,12 +193,34 @@ export class KoalaFiEngine {
 		const safeState = migrateState(state);
 
 		await this.initializeAudio();
+		this.applyState(safeState);
 
 		if (!wasInitialized && safeState.sync.mode === 'rough-clock') {
 			this.setPlayheadFromRoughSync(safeState);
 		}
 
 		this.toggle();
+		return this.playbackState === 'started';
+	}
+
+	private async runSetPlayback(state: KoalaFiState, shouldPlay: boolean): Promise<boolean> {
+		if (!shouldPlay && !this.initialized) return false;
+
+		const wasInitialized = this.initialized;
+		const safeState = migrateState(state);
+		await this.initializeAudio();
+		this.applyState(safeState);
+
+		if (!wasInitialized && safeState.sync.mode === 'rough-clock') {
+			this.setPlayheadFromRoughSync(safeState);
+		}
+
+		if (shouldPlay && this.playbackState !== 'started') {
+			this.start();
+		} else if (!shouldPlay && this.playbackState === 'started') {
+			this.stop();
+		}
+
 		return this.playbackState === 'started';
 	}
 

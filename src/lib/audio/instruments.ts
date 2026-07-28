@@ -1,4 +1,5 @@
 import * as Tone from 'tone';
+import { getMelodyFilterRange } from './parameters';
 
 export class ChordsInstrument {
 	synth: Tone.PolySynth;
@@ -181,9 +182,11 @@ export class MelodyInstrument {
 	}
 
 	updateParams(melodyLevel: number, focusLevel: number) {
-		// Focus level increases plucky brightness
-		const cutoff = 500 + focusLevel * 1400;
-		this.filter.frequency.setTargetAtTime(cutoff, Tone.now(), 0.1);
+		// Keep the LFO centered around the focus-controlled cutoff. A directly connected
+		// LFO owns the AudioParam, so writing the filter frequency itself has no effect.
+		const range = getMelodyFilterRange(focusLevel);
+		this.filterLFO.min = range.min;
+		this.filterLFO.max = range.max;
 
 		// Scale volume
 		const vol = melodyLevel === 0 ? -96 : Tone.gainToDb(melodyLevel) - 5;

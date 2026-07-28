@@ -2,14 +2,15 @@ import { describe, it, expect } from 'vitest';
 import { encodeState } from './encodeState';
 import { decodeState } from './decodeState';
 import { migrateState } from '../state/migrations';
-import { getRoughSyncPlayhead } from './urlState';
+import { generateShareUrl, getRoughSyncPlayhead, getStateFromUrl } from './urlState';
 import { DEFAULT_STATE } from '../state/defaults';
 import { BUILT_IN_PRESETS } from '../state/presets';
 import type { KoalaFiState } from '../state/koalaFiState';
+import { GENERATOR_VERSION } from '../version';
 
 const TEST_STATE: KoalaFiState = {
 	schemaVersion: 1,
-	generatorVersion: 3,
+	generatorVersion: GENERATOR_VERSION,
 	seed: 'test-vibe-seed',
 	presetId: 'sunset-focus',
 	title: 'Sunset Focus Test',
@@ -73,6 +74,18 @@ describe('URL State Serialization', () => {
 	it('should reject oversized encoded input', () => {
 		expect(decodeState('a'.repeat(4097))).toBeNull();
 	});
+
+	it('should not share device-local playback state', () => {
+		const playingState = structuredClone(TEST_STATE);
+		playingState.music.enabled = true;
+
+		const url = generateShareUrl('https://lofi.koalastuff.net', playingState, 'rough-clock');
+		const decoded = getStateFromUrl(url);
+
+		expect(decoded?.music.enabled).toBe(false);
+		expect(decoded?.sync.mode).toBe('rough-clock');
+		expect(decoded?.sync.startedAtUtc).toBeTruthy();
+	});
 });
 
 describe('State Migration and Validation', () => {
@@ -112,7 +125,7 @@ describe('State Migration and Validation', () => {
 			const migrated = migrateState(preset.state);
 			expect(migrated.presetId).toBe(preset.id);
 			expect(migrated.schemaVersion).toBe(1);
-			expect(migrated.generatorVersion).toBe(3);
+			expect(migrated.generatorVersion).toBe(GENERATOR_VERSION);
 		}
 	});
 

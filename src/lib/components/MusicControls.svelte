@@ -1,15 +1,36 @@
 <script lang="ts">
 	import { appState } from '../state/stores.svelte';
-	import { getLoadedAudioEngine } from '../audio/engineLoader';
+	import { getAudioEngine, getLoadedAudioEngine } from '../audio/engineLoader';
 	import SliderControl from './SliderControl.svelte';
 	import ToggleControl from './ToggleControl.svelte';
 
 	const KEYS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 	const SCALES = ['minor', 'major', 'pentatonic', 'dorian'];
+	let playbackError = $state<string | null>(null);
 
 	// React to change events to update the Tone.js audio engine state
 	function syncEngine() {
 		getLoadedAudioEngine()?.applyState(appState.state);
+	}
+
+	async function handlePlaybackChange(shouldPlay: boolean) {
+		playbackError = null;
+
+		try {
+			const audioEngine = shouldPlay ? await getAudioEngine() : getLoadedAudioEngine();
+			const nowPlaying = audioEngine
+				? await audioEngine.setPlayback(appState.state, shouldPlay)
+				: false;
+			appState.updateState((state) => {
+				state.music.enabled = nowPlaying;
+			});
+		} catch (error) {
+			console.error('Audio playback change failed:', error);
+			appState.updateState((state) => {
+				state.music.enabled = false;
+			});
+			playbackError = 'Playback blocked. Use the main play button and try again.';
+		}
 	}
 
 	// Svelte 5 effect to watch state mutations and apply to Tone.js
@@ -26,7 +47,11 @@
 			id="music-enabled"
 			label="Procedural Music"
 			bind:checked={appState.state.music.enabled}
+			onChange={handlePlaybackChange}
 		/>
+		{#if playbackError}
+			<p class="playback-error" role="status">{playbackError}</p>
+		{/if}
 	</div>
 
 	{#if appState.state.music.enabled}
@@ -117,6 +142,12 @@
 	.controls-header {
 		border-bottom: 1px solid var(--color-border);
 		padding-bottom: 0.5rem;
+	}
+
+	.playback-error {
+		margin: -0.25rem 0 0.5rem;
+		color: var(--color-accent-pink);
+		font-size: var(--font-size-xs);
 	}
 
 	.controls-grid {

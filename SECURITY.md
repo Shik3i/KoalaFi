@@ -6,8 +6,8 @@ Only the latest release version is actively supported with security updates.
 
 | Version | Supported |
 | ------- | --------- |
-| v0.2.x  | Yes       |
-| v0.1.x  | No        |
+| v0.4.x  | Yes       |
+| < v0.4  | No        |
 
 ## Reporting a Vulnerability
 
