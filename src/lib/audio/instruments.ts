@@ -11,22 +11,26 @@ export class ChordsInstrument {
 		this.gain = new Tone.Volume(-12).connect(output);
 		this.filter = new Tone.Filter({
 			type: 'lowpass',
-			frequency: 600,
-			Q: 1
+			frequency: 1450,
+			Q: 0.7
 		}).connect(this.gain);
 
-		this.synth = new Tone.PolySynth({
-			voice: Tone.Synth,
-			options: {
-				oscillator: {
-					type: 'sine' // Soft rhodes keys tone
-				},
-				envelope: {
-					attack: 0.15, // Softer attack
-					decay: 1.2, // Longer decay
-					sustain: 0.5,
-					release: 1.8 // Longer release for warm sustain
-				}
+		this.synth = new Tone.PolySynth(Tone.FMSynth, {
+			harmonicity: 2.01,
+			modulationIndex: 1.4,
+			oscillator: { type: 'sine' },
+			modulation: { type: 'triangle' },
+			envelope: {
+				attack: 0.025,
+				decay: 0.5,
+				sustain: 0.18,
+				release: 0.75
+			},
+			modulationEnvelope: {
+				attack: 0.01,
+				decay: 0.28,
+				sustain: 0.1,
+				release: 0.45
 			}
 		});
 
@@ -49,7 +53,7 @@ export class ChordsInstrument {
 
 	updateParams(chordsLevel: number, cozyLevel: number, jazzyLevel: number) {
 		// Cozy level makes it warmer by lowering cutoff frequency
-		const cutoff = 350 + (1 - cozyLevel) * 1100;
+		const cutoff = 700 + (1 - cozyLevel) * 1600;
 		this.filter.frequency.setTargetAtTime(cutoff, Tone.now(), 0.1);
 
 		// Jazzy level scales tape wow & flutter pitch vibrato depth
@@ -78,29 +82,29 @@ export class BassInstrument {
 	gain: Tone.Volume;
 
 	constructor(output: Tone.InputNode) {
-		this.gain = new Tone.Volume(-6).connect(output);
+		this.gain = new Tone.Volume(-3).connect(output);
 		this.synth = new Tone.MonoSynth({
 			oscillator: {
-				type: 'triangle' // Pure warm sub bass
+				type: 'sawtooth'
 			},
 			filter: {
 				type: 'lowpass',
-				frequency: 200,
-				Q: 0.8
+				frequency: 520,
+				Q: 1.1
 			},
 			envelope: {
-				attack: 0.18, // Slower attack for gentle sub swell
-				decay: 0.5,
-				sustain: 0.85,
-				release: 1.0
+				attack: 0.008,
+				decay: 0.16,
+				sustain: 0.34,
+				release: 0.16
 			},
 			filterEnvelope: {
-				attack: 0.08,
-				decay: 0.15,
-				sustain: 0.6,
-				release: 0.6,
-				baseFrequency: 150,
-				octaves: 1.2
+				attack: 0.004,
+				decay: 0.14,
+				sustain: 0.22,
+				release: 0.18,
+				baseFrequency: 180,
+				octaves: 2.5
 			}
 		}).connect(this.gain);
 	}
@@ -111,11 +115,11 @@ export class BassInstrument {
 
 	updateParams(bassLevel: number, sleepyLevel: number) {
 		// Sleepy level dampens bass (lower filter frequency)
-		const baseFreq = 100 + (1 - sleepyLevel) * 200;
+		const baseFreq = 180 + (1 - sleepyLevel) * 520;
 		this.synth.filter.frequency.setTargetAtTime(baseFreq, Tone.now(), 0.1);
 
 		// Scale volume
-		const vol = bassLevel === 0 ? -96 : Tone.gainToDb(bassLevel) - 4;
+		const vol = bassLevel === 0 ? -96 : Tone.gainToDb(bassLevel) - 1;
 		this.gain.volume.setTargetAtTime(vol, Tone.now(), 0.05);
 	}
 
@@ -140,19 +144,19 @@ export class MelodyInstrument {
 		this.gain = new Tone.Volume(-14).connect(output);
 		this.filter = new Tone.Filter({
 			type: 'lowpass',
-			frequency: 850,
+			frequency: 1900,
 			Q: 0.8
 		}).connect(this.gain);
 
 		this.synth = new Tone.Synth({
 			oscillator: {
-				type: 'triangle' // Gentle plucks
+				type: 'triangle8'
 			},
 			envelope: {
-				attack: 0.08, // Softer attack
-				decay: 0.35, // Longer decay
-				sustain: 0.2,
-				release: 1.2 // Dreamy release trail
+				attack: 0.012,
+				decay: 0.16,
+				sustain: 0.06,
+				release: 0.32
 			}
 		}).connect(this.filter);
 

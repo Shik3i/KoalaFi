@@ -7,16 +7,12 @@ import { DrumsInstrument } from './drums';
 import { AmbienceGenerator } from './ambience';
 import { MasterEffectsPipeline } from './effects';
 import { AudioScheduler } from './transport';
-import { GENERATOR_VERSION } from '../version';
 
 export class KoalaFiEngine {
 	private initialized = false;
 	private initializingPromise: Promise<void> | null = null;
-	private seed: string = '';
-	private generatorVersion = GENERATOR_VERSION;
+	private patternSignature = '';
 	private bpm = 75;
-	private key = '';
-	private scale = '';
 
 	private effects: MasterEffectsPipeline | null = null;
 	private chords: ChordsInstrument | null = null;
@@ -136,26 +132,20 @@ export class KoalaFiEngine {
 
 	/**
 	 * Applies the full application state to the audio engine.
-	 * Regenerates patterns only if seed, generatorVersion, key, or scale changes.
+	 * Regenerates patterns whenever an input that changes event structure crosses
+	 * into a new state. Mix-only values remain real-time controls.
 	 */
 	applyState(inputState: KoalaFiState) {
 		if (!this.initialized) return;
 		const state = migrateState(inputState);
 
 		// 1. Detect if sequence needs to be regenerated
-		const seedChanged = this.seed !== state.seed;
-		const versionChanged = this.generatorVersion !== state.generatorVersion;
-		const keyChanged = this.key !== state.music.key;
-		const scaleChanged = this.scale !== state.music.scale;
+		const nextPatternSignature = getPatternSignature(state);
 
-		if (seedChanged || versionChanged || keyChanged || scaleChanged || this.chords === null) {
-			this.seed = state.seed;
-			this.generatorVersion = state.generatorVersion;
-			this.key = state.music.key;
-			this.scale = state.music.scale;
+		if (this.patternSignature !== nextPatternSignature || this.chords === null) {
+			this.patternSignature = nextPatternSignature;
 
-			// Regenerate the 64-bar pattern deterministically
-			const pattern = generatePattern(this.seed, state.music);
+			const pattern = generatePattern(state.seed, state.music);
 			this.scheduler?.loadPattern(pattern);
 		}
 
@@ -271,6 +261,20 @@ export class KoalaFiEngine {
 
 		this.initialized = false;
 	}
+}
+
+function getPatternSignature(state: KoalaFiState): string {
+	return [
+		state.seed,
+		state.generatorVersion,
+		state.music.key,
+		state.music.scale,
+		state.music.focus > 0.6,
+		state.music.sleepy > 0.6,
+		state.music.bass > 0.05,
+		state.music.melody > 0.05,
+		state.music.drums > 0.05
+	].join('|');
 }
 
 // Global audio engine singleton

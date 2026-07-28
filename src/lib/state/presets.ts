@@ -32,7 +32,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 				sleepy: 0.1,
 				jazzy: 0.5,
 				energy: 0.3,
-				melody: 0.25, // Low melody
+				melody: 0.55, // Clear but restrained lead
 				drums: 0.35, // Gentle drums
 				bass: 0.5, // Audible bass
 				chords: 0.6 // Warm chords
@@ -75,7 +75,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 				sleepy: 0.1,
 				jazzy: 0.4,
 				energy: 0.3,
-				melody: 0.3, // Low melody
+				melody: 0.5, // Clear focus melody
 				drums: 0.3, // Gentle beat
 				bass: 0.5, // Warm bass
 				chords: 0.55 // Warm chords
@@ -118,7 +118,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 				sleepy: 0.2,
 				jazzy: 0.8, // Jazzy swing
 				energy: 0.4,
-				melody: 0.4, // Occasional melody phrase
+				melody: 0.6, // Jazzy melodic ornaments
 				drums: 0.4,
 				bass: 0.6, // Soft bass movement
 				chords: 0.7 // More chord comping
@@ -204,7 +204,7 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
 				sleepy: 0.4,
 				jazzy: 0.5,
 				energy: 0.2,
-				melody: 0.3, // Calm melody phrases
+				melody: 0.45, // Calm but audible phrases
 				drums: 0.2, // Light beat
 				bass: 0.4,
 				chords: 0.6

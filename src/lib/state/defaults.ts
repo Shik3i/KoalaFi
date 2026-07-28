@@ -23,7 +23,7 @@ export const DEFAULT_STATE: KoalaFiState = {
 		sleepy: 0.3,
 		jazzy: 0.5,
 		energy: 0.4,
-		melody: 0.5,
+		melody: 0.6,
 		drums: 0.5,
 		bass: 0.5,
 		chords: 0.5

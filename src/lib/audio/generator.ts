@@ -6,30 +6,30 @@ import type { KoalaFiState } from '../state/koalaFiState';
 type MelodyMotifNote = {
 	position: number;
 	degreeOffset: number;
-	duration: '16n' | '8n' | '8n.' | '4n';
+	duration: '16n' | '8n';
 	gate: number;
 };
 
 const MELODY_RHYTHMS = [
-	[0, 3, 6, 10, 14, 18, 22, 27, 30],
-	[2, 4, 7, 12, 16, 19, 23, 26, 29],
-	[0, 4, 6, 11, 15, 18, 20, 25, 29],
-	[1, 5, 8, 10, 15, 17, 21, 24, 28]
+	[0, 2, 4, 7, 9, 12, 14, 17, 19, 22, 24, 27, 30],
+	[1, 3, 6, 8, 11, 13, 15, 18, 20, 23, 25, 28, 31],
+	[0, 3, 5, 7, 10, 12, 15, 16, 19, 21, 24, 26, 29],
+	[2, 4, 6, 9, 11, 14, 15, 18, 21, 23, 25, 28, 30]
 ];
 
 const MELODY_CONTOURS = [
-	[0, 1, 3, 2, 4, 2, 1, 2, 0],
-	[0, 2, 1, 4, 3, 5, 3, 1, 2],
-	[0, -1, 1, 3, 2, 4, 1, 2, 0],
-	[0, 2, 4, 3, 1, 2, 0, -1, 0]
+	[0, 1, 3, 2, 4, 3, 1, 2, 4, 5, 3, 1, 0],
+	[0, 2, 1, 3, 5, 4, 2, 3, 1, 0, 2, 1, 0],
+	[0, -1, 1, 2, 4, 3, 5, 4, 2, 1, 3, 1, 0],
+	[0, 2, 4, 3, 1, 2, 0, -1, 1, 3, 2, 1, 0]
 ];
 
 /**
  * Deterministically generates a 64-bar musical sequence based on seed and state.
  * Structure (64-bar Arrangement):
- * - 0–7: Intro (chords + ambience, minimal beat, e.g. soft kick/snare, no hats).
- * - 8–23: Main groove (full drums + bass + chords).
- * - 24–31: Melody enters (drums + bass + chords + melody phrase).
+ * - 0–7: Intro (melody call/response, short chords, minimal kick/snare, no hats).
+ * - 8–23: Main groove (full drums + bass + chords + melody).
+ * - 24–31: Main variation (full groove + transformed melody).
  * - 32–39: Dropout/reduced drums (no kick, only hats/snare, chords + bass + melody).
  * - 40–55: Full groove returns (drums + bass + chords + melody).
  * - 56–63: Outro/variation (softer chords + bass, lighter melody or drum fills, no hats).
@@ -108,6 +108,7 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 		const hasBass = musicState.bass > 0.05;
 		const hasMelody = musicState.melody > 0.05 && musicState.sleepy <= 0.6;
 		const hasChords = true;
+		const isElectro = musicState.energy >= 0.65;
 
 		// A. Generate Chords Events
 		if (hasChords) {
@@ -132,13 +133,21 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 					});
 				}
 			} else if (musicState.focus > 0.6) {
-				// Focus preset: sparse chords (single stab on beat 0)
+				// Focus preset: short electric-piano comping with space between attacks.
 				chords.push({
 					time: `${bar}:0:0`,
 					notes: currentChordNotes,
-					duration: '2n',
+					duration: '4n',
 					velocity: rng.range(0.32, 0.4)
 				});
+				if (bar % 2 === 1) {
+					chords.push({
+						time: `${bar}:2:2`,
+						notes: currentChordNotes,
+						duration: '8n',
+						velocity: rng.range(0.24, 0.32)
+					});
+				}
 			} else {
 				// General / Dusty Café comping: chord stab on beat 0:0, soft repeat on beat 1:2 or 2:2
 				const repeatTime = bar % 2 === 0 ? '1:2' : '2:2'; // & of 2 vs & of 3
@@ -146,7 +155,7 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 				chords.push({
 					time: `${bar}:0:0`,
 					notes: currentChordNotes,
-					duration: '2n',
+					duration: '4n',
 					velocity: rng.range(0.42, 0.5)
 				});
 				// Soft repeat
@@ -154,7 +163,7 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 					chords.push({
 						time: `${bar}:${repeatTime}`,
 						notes: currentChordNotes,
-						duration: '4n',
+						duration: '8n',
 						velocity: rng.range(0.28, 0.35)
 					});
 				}
@@ -165,8 +174,8 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 		if (hasBass) {
 			const rootNote = chordVoicings[chordIndex][0];
 			const bassRoot = rootNote.replace(/[0-9]/g, '2'); // low octave 2
-			const bassFifth = chordVoicings[chordIndex][1]
-				? chordVoicings[chordIndex][1].replace(/[0-9]/g, '2')
+			const bassFifth = chordVoicings[chordIndex][2]
+				? chordVoicings[chordIndex][2].replace(/[0-9]/g, '2')
 				: bassRoot;
 			const bassOctave = rootNote.replace(/[0-9]/g, '3'); // octave 3
 
@@ -181,54 +190,38 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 					});
 				}
 			} else {
-				// Main groove bassline: short notes with rests!
-				// Hit root near kick at beat 0:0
-				bassline.push({
-					time: `${bar}:0:0`,
-					note: bassRoot,
-					duration: '4n', // short note
-					velocity: rng.range(0.55, 0.65)
-				});
+				const groove = isElectro
+					? [
+							{ position: '0:0', note: bassRoot, duration: '8n', velocity: 0.78 },
+							{ position: '0:3', note: bassOctave, duration: '16n', velocity: 0.56 },
+							{ position: '1:2', note: bassFifth, duration: '8n', velocity: 0.68 },
+							{ position: '2:0', note: bassRoot, duration: '8n', velocity: 0.74 },
+							{
+								position: '3:2',
+								note: bar % 2 === 0 ? bassOctave : bassFifth,
+								duration: '8n',
+								velocity: 0.64
+							}
+						]
+					: [
+							{ position: '0:0', note: bassRoot, duration: '8n', velocity: 0.7 },
+							{ position: '1:3', note: bassFifth, duration: '16n', velocity: 0.53 },
+							{
+								position: '2:2',
+								note: bar % 2 === 0 ? bassOctave : bassRoot,
+								duration: '8n',
+								velocity: 0.62
+							},
+							{ position: '3:3', note: bassRoot, duration: '16n', velocity: 0.48 }
+						];
 
-				// Deterministic passing notes with rests (gaps)
-				// Occasional fifth/octave passing note
-				const bassPatternType = bar % 2;
-				if (bassPatternType === 0) {
-					// Bar 1: root . . fifth . octave . .
-					if (rng.next() > 0.4) {
-						bassline.push({
-							time: `${bar}:2:0`,
-							note: bassFifth,
-							duration: '8n',
-							velocity: rng.range(0.45, 0.55)
-						});
-					}
-					if (rng.next() > 0.5) {
-						bassline.push({
-							time: `${bar}:3:0`,
-							note: bassOctave,
-							duration: '8n',
-							velocity: rng.range(0.4, 0.5)
-						});
-					}
-				} else {
-					// Bar 2: root . . . fifth . . .
-					if (rng.next() > 0.4) {
-						bassline.push({
-							time: `${bar}:2:0`,
-							note: bassFifth,
-							duration: '8n',
-							velocity: rng.range(0.45, 0.55)
-						});
-					}
-					if (rng.next() > 0.7) {
-						bassline.push({
-							time: `${bar}:3:2`,
-							note: bassRoot,
-							duration: '8n',
-							velocity: rng.range(0.4, 0.5)
-						});
-					}
+				for (const event of groove) {
+					bassline.push({
+						time: `${bar}:${event.position}`,
+						note: event.note,
+						duration: event.duration,
+						velocity: event.velocity + rng.range(-0.035, 0.035)
+					});
 				}
 			}
 		}
@@ -237,7 +230,28 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 		if (hasDrums) {
 			const isLastBarOfBlock = (bar + 1) % 8 === 0;
 
-			if (section === 'intro' || section === 'outro') {
+			if (isElectro && section !== 'dropout') {
+				// Four-on-the-floor electronic pulse with a backbeat and alternating offbeat hats.
+				const sectionLevel = section === 'intro' || section === 'outro' ? 0.82 : 1;
+				for (let beat = 0; beat < 4; beat++) {
+					drums.push({
+						time: `${bar}:${beat}:0`,
+						type: 'kick',
+						velocity: (beat === 0 ? 0.92 : 0.82) * sectionLevel
+					});
+					drums.push({
+						time: `${bar}:${beat}:2`,
+						type: 'hihat',
+						velocity: (beat % 2 === 0 ? 0.52 : 0.42) * sectionLevel
+					});
+				}
+				drums.push({ time: `${bar}:1:0`, type: 'snare', velocity: 0.76 * sectionLevel });
+				drums.push({ time: `${bar}:3:0`, type: 'snare', velocity: 0.8 * sectionLevel });
+				if (isLastBarOfBlock) {
+					drums.push({ time: `${bar}:3:2`, type: 'snare', velocity: 0.58 });
+					drums.push({ time: `${bar}:3:3`, type: 'hihat', velocity: 0.62 });
+				}
+			} else if (section === 'intro' || section === 'outro') {
 				// Minimal beat (no hi-hats, soft kick/snare)
 				drums.push({ time: `${bar}:0:0`, type: 'kick', velocity: 0.65 });
 				drums.push({ time: `${bar}:1:0`, type: 'snare', velocity: 0.55 });
@@ -255,18 +269,14 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 					});
 				}
 			} else {
-				// Full groove: kick, snare/clap, hats
-				// 1. Kick on 1 and 3
+				// Lo-fi boom-bap anchors plus a fixed syncopated ghost kick.
 				drums.push({ time: `${bar}:0:0`, type: 'kick', velocity: 0.8 });
 				drums.push({ time: `${bar}:2:0`, type: 'kick', velocity: 0.7 });
-
-				// Occasional kick before beat 3 or 4 (beat 1:3 or beat 2:3)
-				const kickRnd = rng.next();
-				if (kickRnd > 0.75) {
-					drums.push({ time: `${bar}:1:3`, type: 'kick', velocity: 0.55 });
-				} else if (kickRnd > 0.5) {
-					drums.push({ time: `${bar}:2:3`, type: 'kick', velocity: 0.55 });
-				}
+				drums.push({
+					time: `${bar}:${bar % 2 === 0 ? '1:3' : '2:3'}`,
+					type: 'kick',
+					velocity: 0.56
+				});
 
 				// 2. Snare
 				if (isLastBarOfBlock && rng.next() > 0.5) {
@@ -303,16 +313,11 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 		}
 
 		// D. Generate Melody Phrases
-		const melodyActiveSection =
-			section === 'melody1' ||
-			section === 'dropout' ||
-			section === 'groove2' ||
-			section === 'outro';
 		const barInBlock = bar % 8;
-		const isCallStart = barInBlock === 2;
-		const isAnswerStart = barInBlock === 6 && section !== 'outro';
+		const isCallStart = barInBlock === 0;
+		const isAnswerStart = barInBlock === 4 && section !== 'outro';
 
-		if (hasMelody && melodyActiveSection && (isCallStart || isAnswerStart)) {
+		if (hasMelody && (isCallStart || isAnswerStart)) {
 			const motif = isAnswerStart ? answerMotif : callMotif;
 			melody.push(
 				...renderMelodyMotif({
@@ -342,16 +347,17 @@ function createMelodyMotif(rng: SeededRNG): MelodyMotifNote[] {
 	const rhythm = rng.choice(MELODY_RHYTHMS);
 	const contour = rng.choice(MELODY_CONTOURS);
 	const peakIndex = contour.indexOf(Math.max(...contour));
+	const coreIndices = new Set([0, 1, 3, 5, 7, 9, rhythm.length - 1]);
 
 	return rhythm.map((position, index) => {
 		const gap = (rhythm[index + 1] ?? 32) - position;
-		const isStructural = index === 0 || index === peakIndex || index === rhythm.length - 1;
+		const isStructural = coreIndices.has(index) || index === peakIndex;
 
 		return {
 			position,
 			degreeOffset: contour[index],
 			duration: durationForGap(gap, rng),
-			gate: isStructural ? rng.range(0.03, 0.18) : rng.range(0.2, 0.82)
+			gate: isStructural ? 0 : rng.range(0.25, 0.82)
 		};
 	});
 }
@@ -376,7 +382,7 @@ function createAnswerMotif(call: MelodyMotifNote[], rng: SeededRNG): MelodyMotif
 			position: positions[index],
 			degreeOffset: isLast ? 0 : mirroredDegree,
 			duration: durationForGap(gap, rng),
-			gate: isLast ? rng.range(0.03, 0.12) : Math.max(0.08, note.gate - 0.08)
+			gate: note.gate === 0 || isLast ? 0 : Math.max(0.2, note.gate - 0.08)
 		};
 	});
 }
@@ -435,10 +441,9 @@ function renderMelodyMotif({
 }
 
 function durationForGap(gapInSixteenths: number, rng: SeededRNG): MelodyMotifNote['duration'] {
-	if (gapInSixteenths >= 6) return rng.choice(['4n', '8n.']);
-	if (gapInSixteenths >= 3) return rng.choice(['8n', '8n.']);
+	if (gapInSixteenths >= 3) return '8n';
 	if (gapInSixteenths <= 1) return '16n';
-	return rng.choice(['16n', '8n']);
+	return rng.next() > 0.35 ? '8n' : '16n';
 }
 
 function nearestScaleDegree(

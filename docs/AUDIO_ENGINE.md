@@ -6,7 +6,7 @@ All audio in KoalaFi is synthesized procedurally inside the browser using **Tone
 
 ## Automated Audio Quality Gate
 
-`renderMelodyAudit()` renders bars 24–31 of a generated melody through a real
+`renderMelodyAudit()` and `renderBassAudit()` render generated parts through a real
 `OfflineAudioContext`. Playwright rejects silent, clipped, DC-biased, excessively
 loud, or over-compressed output using peak, RMS, clipped-sample ratio, DC offset,
 and crest-factor metrics. This complements structural generator tests: it verifies
@@ -52,28 +52,34 @@ graph TD
 - **Tape Wow & Flutter**: A slow LFO (`Tone.LFO` modulating `synth.detune` by ±7 cents at 0.12Hz) adds gentle analog pitch drift.
 - **Comping Playback**: Scheduled using soft comping stabs and repeats instead of continuous pads to create rhythmic breathing room.
 
-### 2. Sub Bass (MonoSynth)
+### 2. Harmonic Bass (MonoSynth)
 
-- Triangle oscillator playing deep notes (octave 2).
-- Warm envelope: slow attack (180ms) for a gentle sub swell on note start.
-- Clean lowpass envelope to emphasize fundamental warmth while avoiding muddiness.
-- **Grooving Playback**: Plays short notes (duration `'4n'` or `'8n'`) with rests instead of a solid drone.
+- Saw oscillator playing octave-2 roots/fifths and octave-3 accents.
+- Tight envelope: 8ms attack, 160ms decay, and 160ms release.
+- Dynamic lowpass envelope preserves the fundamental while exposing enough harmonics
+  to remain audible on laptop and mobile speakers.
+- **Grooving Playback**: Lo-fi states use four syncopated attacks per bar; high-energy
+  electronic states use a driving five-attack root/fifth/octave pattern.
 
 ### 3. Lead Pluck (Synth)
 
-- Triangle lead with quick decay envelope.
+- Harmonic triangle pluck with a 12ms attack, 160ms decay, low sustain, and 320ms
+  release.
 - **Dynamic Filter Sweep**: A slow LFO (0.07Hz) moves around the focus-controlled
   cutoff without overriding it. The sweep widens from ±80Hz to ±150Hz as focus rises.
 - **Vibrato**: A slow LFO (0.18Hz) modulates `synth.detune` by ±8 cents.
 - Routed heavily through the auxiliary delay and reverb channels.
-- **Phrasing Playback**: Generates call-and-response phrases in 8-bar blocks (clamped velocities: core `0.35–0.55`, decorative `0.18–0.32`).
+- **Phrasing Playback**: Starts a 13-note call in bar 1 and a transformed answer in
+  bar 5 of each 8-bar block. Seven core notes always remain audible; complexity adds
+  syncopated ornaments.
 
 ### 4. Drums
 
-- **Kick**: Short pitch-sweep on a sine oscillator using a `MembraneSynth` (tight decay: 220ms, velocity scale: 0.85).
-- **Snare**: Pink noise burst passed through a bandpass filter centered at 750Hz (Q: 0.8) for a dusty, soft clap.
-- **Hi-hat**: Pink noise burst (softer and less tiring than white noise) passed through a highpass filter centered at 6500Hz.
-- **Beat Patterns**: Scheduled on a 16-step grid with deterministic swing and velocity humanization.
+- **Kick**: Short pitch-sweep on a sine oscillator using a `MembraneSynth` (tight decay: 280ms).
+- **Snare**: Pink noise burst passed through a bandpass filter centered at 1150Hz (Q: 0.9) for an audible dusty clap.
+- **Hi-hat**: Pink noise burst passed through a highpass filter centered at 5200Hz.
+- **Beat Patterns**: Lower-energy states use syncopated boom-bap; energy values from
+  `0.65` use four-on-the-floor electronic drums. Both remain deterministic.
 
 ### 5. Ambience
 

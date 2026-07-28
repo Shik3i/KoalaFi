@@ -55,7 +55,7 @@ test('run audio playback and check for console errors', async ({ page }) => {
 	expect(runtimeErrors).toEqual([]);
 });
 
-test('offline melody render stays within the audio quality gate', async ({ page }) => {
+test('offline melody and bass renders stay within the audio quality gate', async ({ page }) => {
 	await page.goto('/demo/playwright');
 	await page.getByRole('button', { name: 'Run offline melody audit' }).click();
 
@@ -70,6 +70,18 @@ test('offline melody render stays within the audio quality gate', async ({ page 
 	expect(metrics.dcOffset).toBeLessThan(0.01);
 	expect(metrics.clippedSampleRatio).toBe(0);
 	expect(metrics.crestFactorDb).toBeGreaterThanOrEqual(2);
+
+	const bassOutput = page.getByTestId('bass-audio-metrics');
+	await expect(bassOutput).toBeVisible();
+	const bassMetrics = JSON.parse((await bassOutput.textContent()) ?? '') as AudioQualityMetrics;
+
+	expect(bassMetrics.peak).toBeGreaterThanOrEqual(0.03);
+	expect(bassMetrics.peak).toBeLessThan(0.999);
+	expect(bassMetrics.rms).toBeGreaterThanOrEqual(0.003);
+	expect(bassMetrics.rms).toBeLessThan(0.4);
+	expect(bassMetrics.dcOffset).toBeLessThan(0.01);
+	expect(bassMetrics.clippedSampleRatio).toBe(0);
+	expect(bassMetrics.crestFactorDb).toBeGreaterThanOrEqual(2);
 });
 
 test('main view and modal surfaces pass axe and restore focus', async ({ page }) => {

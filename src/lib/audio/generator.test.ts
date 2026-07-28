@@ -4,7 +4,7 @@ import { DEFAULT_STATE } from '../state/defaults';
 import { BUILT_IN_PRESETS } from '../state/presets';
 import type { NoteEvent } from './types';
 
-describe('Seeded Pattern Generator v4', () => {
+describe('Seeded Pattern Generator v6', () => {
 	it('should generate identical patterns for the same seed and state', () => {
 		const first = generatePattern('test-seed-xyz', DEFAULT_STATE.music);
 		const second = generatePattern('test-seed-xyz', DEFAULT_STATE.music);
@@ -86,11 +86,11 @@ describe('Seeded Pattern Generator v4', () => {
 		expect(new Set(pitches).size).toBeGreaterThanOrEqual(7);
 		expect(Math.max(...pitches) - Math.min(...pitches)).toBeGreaterThanOrEqual(12);
 
-		const firstCall = phraseAt(pattern.melody, 26);
-		const repeatedCall = phraseAt(pattern.melody, 42);
-		expect(firstCall.length).toBeGreaterThanOrEqual(8);
-		expect(firstCall.some((event) => parseInt(event.time.split(':')[0], 10) === 27)).toBe(true);
-		expect(relativeRhythm(firstCall, 26)).toEqual(relativeRhythm(repeatedCall, 42));
+		const firstCall = phraseAt(pattern.melody, 24);
+		const repeatedCall = phraseAt(pattern.melody, 40);
+		expect(firstCall.length).toBeGreaterThanOrEqual(12);
+		expect(firstCall.some((event) => parseInt(event.time.split(':')[0], 10) === 25)).toBe(true);
+		expect(relativeRhythm(firstCall, 24)).toEqual(relativeRhythm(repeatedCall, 40));
 		expect(firstCall.map((event) => event.note)).not.toEqual(
 			repeatedCall.map((event) => event.note)
 		);
@@ -102,12 +102,77 @@ describe('Seeded Pattern Generator v4', () => {
 		expect(Math.max(...intervals)).toBeLessThanOrEqual(12);
 	});
 
+	it('starts an articulated audible melody immediately instead of exposing chord drones', () => {
+		for (const preset of BUILT_IN_PRESETS.filter(
+			(item) => item.state.music.melody > 0.05 && item.state.music.sleepy <= 0.6
+		)) {
+			const pattern = generatePattern(preset.state.seed, preset.state.music);
+			const audible = pattern.melody.filter(
+				(event) => (event.gate ?? 0) <= preset.state.music.melody
+			);
+			const openingPhrase = phraseAt(audible, 0);
+			const onsetPositions = relativeRhythm(openingPhrase, 0);
+			const gaps = onsetPositions
+				.slice(1)
+				.map((position, index) => position - onsetPositions[index]);
+
+			expect(openingPhrase.length, preset.name).toBeGreaterThanOrEqual(7);
+			expect(
+				new Set(openingPhrase.map((event) => event.note)).size,
+				preset.name
+			).toBeGreaterThanOrEqual(5);
+			expect(Math.min(...onsetPositions), preset.name).toBeLessThanOrEqual(2);
+			expect(Math.max(...gaps), preset.name).toBeLessThanOrEqual(8);
+			expect(
+				openingPhrase.every((event) => event.duration === '8n' || event.duration === '16n'),
+				preset.name
+			).toBe(true);
+		}
+	});
+
 	it('should generate no drum events or melody events for sleep presets', () => {
 		const deepSleep = BUILT_IN_PRESETS.find((p) => p.id === 'deep-sleep')!;
 		const pattern = generatePattern(deepSleep.state.seed, deepSleep.state.music);
 
 		expect(pattern.drums.length).toBe(0);
 		expect(pattern.melody.length).toBe(0);
+	});
+
+	it('creates a syncopated bass groove with real root, fifth and octave movement', () => {
+		for (const preset of BUILT_IN_PRESETS.filter(
+			(item) => item.state.music.bass > 0.05 && item.state.music.sleepy <= 0.6
+		)) {
+			const pattern = generatePattern(preset.state.seed, preset.state.music);
+			const firstBar = pattern.bassline.filter((event) => event.time.startsWith('0:'));
+
+			expect(firstBar.length, preset.name).toBeGreaterThanOrEqual(4);
+			expect(new Set(firstBar.map((event) => event.note)).size, preset.name).toBeGreaterThanOrEqual(
+				2
+			);
+			expect(
+				firstBar.some((event) => event.time.endsWith(':3')),
+				preset.name
+			).toBe(true);
+			expect(
+				firstBar.every((event) => event.duration === '8n' || event.duration === '16n'),
+				preset.name
+			).toBe(true);
+		}
+	});
+
+	it('separates electro four-on-the-floor from the syncopated lo-fi beat', () => {
+		const neonCoast = BUILT_IN_PRESETS.find((preset) => preset.id === 'neon-coast')!;
+		const dustyCafe = BUILT_IN_PRESETS.find((preset) => preset.id === 'dusty-cafe')!;
+		const electro = generatePattern(neonCoast.state.seed, neonCoast.state.music);
+		const lofi = generatePattern(dustyCafe.state.seed, dustyCafe.state.music);
+		const kicksAtBar = (events: typeof electro.drums, bar: number) =>
+			events
+				.filter((event) => event.type === 'kick' && event.time.startsWith(`${bar}:`))
+				.map((event) => event.time);
+
+		expect(kicksAtBar(electro.drums, 8)).toEqual(['8:0:0', '8:1:0', '8:2:0', '8:3:0']);
+		expect(kicksAtBar(lofi.drums, 8)).toContain('8:1:3');
+		expect(kicksAtBar(lofi.drums, 8)).not.toContain('8:3:0');
 	});
 
 	it('should verify 64-bar arrangement sections differ in musical density', () => {
@@ -141,9 +206,10 @@ describe('Seeded Pattern Generator v4', () => {
 		// Assertions:
 		// Groove 1 has more drum events than intro because of hi-hats
 		expect(groove1.drumCount).toBeGreaterThan(intro.drumCount);
-		// Melody 1 has melody notes, Groove 1 has zero melody notes
+		// Melodies now begin in the intro and continue through every non-sleep section.
+		expect(intro.melodyCount).toBeGreaterThan(0);
+		expect(groove1.melodyCount).toBeGreaterThan(intro.melodyCount);
 		expect(melody1.melodyCount).toBeGreaterThan(0);
-		expect(groove1.melodyCount).toBe(0);
 		// Dropout section has fewer drum events than Melody 1 (no kick)
 		expect(dropout.drumCount).toBeLessThan(melody1.drumCount);
 		expect(dropout.drumCount).toBeGreaterThan(0); // Still has hats/snare

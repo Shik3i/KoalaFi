@@ -1,4 +1,4 @@
-# Procedural Generation - KoalaFi (Generator Version 4)
+# Procedural Generation - KoalaFi (Generator Version 6)
 
 ## Deterministic Seeding Strategy
 
@@ -8,16 +8,16 @@ KoalaFi utilizes a custom 32-bit PRNG (Mulberry32) seeded by hashing the user's 
 
 Music sequences are structured over a deterministic 64-bar layout divided into distinct sections:
 
-1. **Intro (Bars 0-7)**: Intro section. Chords play simply. Bass plays simple roots. Drums play a minimal kick/snare pattern (no hi-hats). Melody is silent.
-2. **Main Groove (Bars 8-23)**: The full groove enters. Drums play the complete 16-step lofi beat. Bass plays a walking pattern. Chords comp rhythmically. Melody is silent.
-3. **Melody Phrase Enters (Bars 24-31)**: The melody lead enters. Drums, bass, and chords continue their groove while the melody phrase triggers call-and-response segments.
+1. **Intro (Bars 0-7)**: Short electric-piano chords, a simple bass groove, minimal kick/snare, and the first melodic call-and-response phrase begin immediately.
+2. **Main Groove (Bars 8-23)**: The full 16-step lofi beat enters while bass, chord comping, and melodic phrases continue.
+3. **Main Variation (Bars 24-31)**: The full groove continues with a transformed melodic register and interior-note variation.
 4. **Reduced / Dropout Section (Bars 32-39)**: Reduced energy section. Kick drops out completely, leaving only hi-hats and soft snare/claps. Chords, bass, and melody continue playing.
 5. **Full Groove Returns (Bars 40-55)**: Kick re-enters for the final full groove section. All layers (drums, bass, chords, and melody) are active.
 6. **Outro / Variation (Bars 56-63)**: Outro section. Hi-hats drop out. Melody becomes lighter. Drums play a minimal beat, fading out into ambient pads.
 
 The arrangement loops cleanly after bar 63.
 
-## Music Theory Constraints (Version 4)
+## Music Theory Constraints (Version 6)
 
 ### 1. Spaced Open Chord Voicings
 
@@ -32,39 +32,51 @@ Based on the key and scale, a progression template selects four scale degrees (e
 Chords are played using rhythmic comping stabs instead of endless held pads:
 
 - **General / Jazzy Playback**: A chord stab plays on beat 1 (beat 0:0), and a soft repeat plays on the off-beat `&` of beat 2 or 3 (`1:2` or `2:2` sixteenth note offset).
-- **Focus Presets**: Stabs are sparse (single stab on beat 1) and low velocity.
+- **Focus Presets**: A short beat-1 stab is answered by a quiet offbeat eighth-note
+  chord every other bar.
 - **Sleep Presets**: Retain slow pad-style movement, with subtle retriggers every 2 bars.
 
 ### 3. Basslines
 
 Basslines are structured grooves rather than a continuous sub drone:
 
-- Bass notes play short durations (e.g. `4n` and `8n` with rests) to create musical space.
-- A root note triggers near the kick (beat 0:0).
-- Deterministic fifth/octave passing notes are played on beats 2 and 3 with gaps/rests.
+- Bass notes use `8n` roots and `16n` passing tones with explicit rests.
+- Lo-fi states play four syncopated root/fifth/octave attacks per bar.
+- High-energy electronic states play five driving root/fifth/octave attacks per bar.
+- Passing tones use the actual chord fifth rather than the third.
 - Sleep presets use minimal bass (a single root note every 4 bars).
 
 ### 4. Drums
 
-Drums are sequenced on a 16-step grid per bar:
+Lo-fi drums are sequenced on a 16-step grid per bar:
 
 ```txt
 1 e & a 2 e & a 3 e & a 4 e & a
 K . h . S . h . K . h . S . h .
 ```
 
-- **Kick (K)** plays on beats 1 and 3. An occasional kick triggers before beat 3 or 4 using deterministic RNG.
+- **Kick (K)** plays on beats 1 and 3. A fixed syncopated ghost kick alternates
+  between the end of beats 2 and 3.
 - **Snare (S)** plays on beats 2 and 4. A subtle organic snare fill is triggered every 8 bars.
 - **Hi-hat (h)** plays on the offbeat eighth note (`&`). Occasional quiet ghost hi-hats trigger on sixteenths 1 or 3.
 - **Sleep / Ambient Presets** disable or severely reduce drums to prevent waking/distraction.
 
+High-energy states (`energy >= 0.65`) switch to a separate electronic grid:
+
+```txt
+1 e & a 2 e & a 3 e & a 4 e & a
+K . h . K . h . K . h . K . h .
+```
+
+Snares reinforce beats 2 and 4, and every eighth bar adds a short deterministic fill.
+
 ### 5. Motivic Melody Phrasing, Contour & Variation
 
-Melodies are phrase-based with rests in between:
+Melodies are phrase-based, articulated, and present from the opening bar:
 
-- **Phrasing blocks**: Over an 8-bar block, melody is silent for bars 1-2, plays a
-  nine-note two-bar call in bars 3-4, rests in bars 5-6, and plays a transformed
-  answer in bars 7-8.
+- **Phrasing blocks**: Every 8-bar block begins with a 13-note two-bar call. A
+  transformed two-bar answer begins at bar 5, leaving two bars of breathing room
+  after each phrase.
 - **Motivic identity**: Each seed selects one syncopated rhythm and one pitch contour.
   Later calls retain the rhythm while changing register or one interior tone, making
   the melody recognizable without becoming a static loop.
@@ -73,8 +85,11 @@ Melodies are phrase-based with rests in between:
 - **Harmony and range**: Phrase starts and endings snap to scale degrees related to the
   current chord. Constrained register movement spans octaves 4-5, with stepwise motion,
   controlled thirds/fourths, and no jump larger than one octave.
+- **Articulation**: Lead notes are limited to `16n` and `8n`; the short pluck envelope
+  prevents adjacent pitches from turning into held-note drones.
 - **Velocities & Complexity Gate**: Notes have a complexity gate parameter (`gate` in `[0, 1]`) and a trigger velocity. During playback, the scheduler gates notes by checking `if (event.gate <= state.music.melody)`.
-  - **Structural notes** have low gate values and a velocity of `0.42–0.55`.
+  - **Seven structural notes per phrase** use `gate = 0`, so even a low melody setting
+    preserves a recognizable phrase instead of reducing it to isolated tones.
   - **Decorative notes** have progressively higher gate values and a velocity of `0.24–0.48`.
   - Decorative notes are quieter than core notes, and all velocities are safely clamped to avoid sudden spikes.
 - **Sleep Presets** generate zero melody events.

@@ -20,15 +20,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Hardened Delivery**: Upgraded CI and container builds to Node.js 22, pinned every
   GitHub Action to an immutable commit SHA, and added hash-based SvelteKit CSP output
   plus stricter production security headers.
-- **Generator Version 4**: Added seeded two-bar melody motifs with reusable rhythm,
-  pitch contour, call-and-response transformation, register variation, harmonic
-  phrase anchors, and complexity-aware structural notes.
+- **Generator Version 6**: Added immediate 13-note call-and-response melodies,
+  reusable syncopated rhythm, pitch contour, register variation, harmonic phrase
+  anchors, seven always-audible structural notes per phrase, distinct lo-fi and
+  electronic drum patterns, and active four- or five-note bass grooves per bar.
 - **Melody Structure Tests**: Added regression coverage for pitch range, distinct
   pitches, repeated rhythmic identity, controlled variation, multi-bar phrases, and
   bounded melodic intervals.
 
 ### Fixed
 
+- **Held-Note Playback**: Removed the 24-bar lead delay and sparse density behavior
+  that reduced low-melody presets to isolated tones. Shortened lead, bass, and chord
+  envelopes and limited melodic durations to articulated sixteenth/eighth notes.
+- **Lofi Instrument Character**: Replaced sine-pad chord drones with short FM
+  electric-piano comping and tightened bass articulation.
+- **Audible Bass Range**: Corrected bass passing tones from chord thirds to actual
+  fifths, added syncopated root/fifth/octave motion, and replaced the sub-only
+  triangle voice with a filtered saw voice carrying audible midrange harmonics.
+- **Electro / Lo-Fi Identity**: High-energy states now use four-on-the-floor kicks,
+  backbeats, offbeat hats, and a driving five-note bass pattern. Lower-energy states
+  retain swung boom-bap drums with a fixed syncopated ghost kick.
 - **Effects Routing**: Converted delay and reverb into fully wet send effects so
   parallel buses no longer duplicate and overload the dry signal.
 - **Melody Filter Control**: Centered LFO movement on the focus-controlled cutoff
