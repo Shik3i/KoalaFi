@@ -12,11 +12,14 @@ export class MasterEffectsPipeline {
 	saturationNode: Tone.Distortion;
 
 	// Auxiliary spatial effects
+	fxSendFilter: Tone.Filter;
 	delayNode: Tone.FeedbackDelay;
 	reverbNode: Tone.Reverb;
 
 	// Sub buses
 	musicBus: Tone.Volume;
+	bassBus: Tone.Volume;
+	drumsBus: Tone.Volume;
 	ambienceBus: Tone.Volume;
 	ambienceWidener: Tone.StereoWidener;
 
@@ -49,25 +52,35 @@ export class MasterEffectsPipeline {
 		this.saturationNode.connect(this.compressor);
 
 		// 2. Aux sends
+		this.fxSendFilter = new Tone.Filter({
+			type: 'highpass',
+			frequency: 220,
+			Q: 0.7
+		});
+
 		this.delayNode = new Tone.FeedbackDelay({
 			delayTime: '8n.',
-			feedback: 0.35,
-			wet: 0.15
+			feedback: 0.24,
+			wet: 0.12
 		});
 		this.delayNode.connect(this.compressor);
 
 		this.reverbNode = new Tone.Reverb({
-			decay: 2.2,
-			wet: 0.25
+			decay: 1.6,
+			wet: 0.18
 		});
 		this.reverbNode.connect(this.compressor);
 
 		// 3. Sub buses
-		// Music bus routes through saturation before compressor
+		// Harmony/melody gets lofi glue plus filtered space; bass and drums stay dry and punchy.
 		this.musicBus = new Tone.Volume(0);
 		this.musicBus.connect(this.saturationNode);
-		this.musicBus.connect(this.delayNode);
-		this.musicBus.connect(this.reverbNode);
+		this.musicBus.connect(this.fxSendFilter);
+		this.fxSendFilter.connect(this.delayNode);
+		this.fxSendFilter.connect(this.reverbNode);
+
+		this.bassBus = new Tone.Volume(-1).connect(this.compressor);
+		this.drumsBus = new Tone.Volume(-1).connect(this.saturationNode);
 
 		// Ambience bus bypasses delay/reverb and saturation to stay clear
 		// We add a StereoWidener with 60% width to make the ambient environment feel wide and immersive
@@ -134,9 +147,12 @@ export class MasterEffectsPipeline {
 		this.limiter.dispose();
 		this.saturationNode.dispose();
 		this.mainVolume.dispose();
+		this.fxSendFilter.dispose();
 		this.delayNode.dispose();
 		this.reverbNode.dispose();
 		this.musicBus.dispose();
+		this.bassBus.dispose();
+		this.drumsBus.dispose();
 		this.ambienceBus.dispose();
 		this.ambienceWidener.dispose();
 	}

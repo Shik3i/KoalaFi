@@ -99,7 +99,7 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 				currentChordNotes[2] = note.slice(0, -1) + (octave - 1);
 			}
 
-			// If sleepy preset active or in outro, keep it as slow long pads
+			// If sleepy preset active, keep it as slow long pads
 			if (musicState.sleepy > 0.6) {
 				if (bar % 2 === 0) {
 					chords.push({
@@ -110,30 +110,59 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 					});
 				}
 			} else if (musicState.focus > 0.6) {
-				// Focus preset: sparse chords (single stab on beat 0)
+				// Focus preset: sparse but rhythmic chord stabs
 				chords.push({
 					time: `${bar}:0:0`,
 					notes: currentChordNotes,
-					duration: '2n',
+					duration: '4n',
 					velocity: rng.range(0.32, 0.4)
 				});
+				if (section !== 'intro' && section !== 'outro') {
+					chords.push({
+						time: `${bar}:2:2`,
+						notes: currentChordNotes,
+						duration: '8n',
+						velocity: rng.range(0.24, 0.32)
+					});
+				}
+				if (section !== 'intro' && section !== 'outro' && rng.next() > 0.72) {
+					chords.push({
+						time: `${bar}:3:2`,
+						notes: currentChordNotes,
+						duration: '8n',
+						velocity: rng.range(0.2, 0.28)
+					});
+				}
 			} else {
-				// General / Dusty Café comping: chord stab on beat 0:0, soft repeat on beat 1:2 or 2:2
-				const repeatTime = bar % 2 === 0 ? '1:2' : '2:2'; // & of 2 vs & of 3
-				// Main stab on beat 0:0
+				const lightSection = section === 'intro' || section === 'outro';
 				chords.push({
 					time: `${bar}:0:0`,
 					notes: currentChordNotes,
-					duration: '2n',
+					duration: '4n',
 					velocity: rng.range(0.42, 0.5)
 				});
-				// Soft repeat
-				if (rng.next() > 0.3) {
+				if (!lightSection || rng.next() > 0.45) {
 					chords.push({
-						time: `${bar}:${repeatTime}`,
+						time: `${bar}:${bar % 2 === 0 ? '1:2' : '2:2'}`,
 						notes: currentChordNotes,
-						duration: '4n',
+						duration: '8n',
 						velocity: rng.range(0.28, 0.35)
+					});
+				}
+				if (!lightSection && rng.next() > 0.5) {
+					chords.push({
+						time: `${bar}:2:0`,
+						notes: currentChordNotes,
+						duration: '8n',
+						velocity: rng.range(0.3, 0.38)
+					});
+				}
+				if (!lightSection && rng.next() > 0.68) {
+					chords.push({
+						time: `${bar}:3:2`,
+						notes: currentChordNotes,
+						duration: '8n',
+						velocity: rng.range(0.22, 0.3)
 					});
 				}
 			}
@@ -159,54 +188,44 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 					});
 				}
 			} else {
-				// Main groove bassline: short notes with rests!
-				// Hit root near kick at beat 0:0
 				bassline.push({
 					time: `${bar}:0:0`,
 					note: bassRoot,
-					duration: '4n', // short note
+					duration: '8n',
 					velocity: rng.range(0.55, 0.65)
 				});
 
-				// Deterministic passing notes with rests (gaps)
-				// Occasional fifth/octave passing note
-				const bassPatternType = bar % 2;
-				if (bassPatternType === 0) {
-					// Bar 1: root . . fifth . octave . .
-					if (rng.next() > 0.4) {
-						bassline.push({
-							time: `${bar}:2:0`,
-							note: bassFifth,
-							duration: '8n',
-							velocity: rng.range(0.45, 0.55)
-						});
-					}
-					if (rng.next() > 0.5) {
-						bassline.push({
-							time: `${bar}:3:0`,
-							note: bassOctave,
-							duration: '8n',
-							velocity: rng.range(0.4, 0.5)
-						});
-					}
-				} else {
-					// Bar 2: root . . . fifth . . .
-					if (rng.next() > 0.4) {
-						bassline.push({
-							time: `${bar}:2:0`,
-							note: bassFifth,
-							duration: '8n',
-							velocity: rng.range(0.45, 0.55)
-						});
-					}
-					if (rng.next() > 0.7) {
-						bassline.push({
-							time: `${bar}:3:2`,
-							note: bassRoot,
-							duration: '8n',
-							velocity: rng.range(0.4, 0.5)
-						});
-					}
+				if (section !== 'intro' && section !== 'outro' && rng.next() > 0.35) {
+					bassline.push({
+						time: `${bar}:0:3`,
+						note: bassRoot,
+						duration: '16n',
+						velocity: rng.range(0.38, 0.48)
+					});
+				}
+				if (rng.next() > 0.25) {
+					bassline.push({
+						time: `${bar}:2:0`,
+						note: bassFifth,
+						duration: '8n',
+						velocity: rng.range(0.45, 0.55)
+					});
+				}
+				if (section !== 'intro' && section !== 'outro' && rng.next() > 0.45) {
+					bassline.push({
+						time: `${bar}:2:3`,
+						note: bar % 2 === 0 ? bassOctave : bassRoot,
+						duration: '16n',
+						velocity: rng.range(0.36, 0.48)
+					});
+				}
+				if (rng.next() > 0.55) {
+					bassline.push({
+						time: `${bar}:3:2`,
+						note: bar % 2 === 0 ? bassOctave : bassRoot,
+						duration: '8n',
+						velocity: rng.range(0.38, 0.5)
+					});
 				}
 			}
 		}
@@ -281,56 +300,49 @@ export function generatePattern(seedStr: string, musicState: KoalaFiState['music
 		}
 
 		// D. Generate Melody Phrases
-		const melodyActiveSection =
-			section === 'melody1' ||
-			section === 'dropout' ||
-			section === 'groove2' ||
-			section === 'outro';
-		const barInBlock = bar % 8;
-		const isPhraseBar = barInBlock === 2 || barInBlock === 3;
-		const isAnswerBar = barInBlock === 6 || barInBlock === 7;
+		const melodyActiveSection = section !== 'intro' && section !== 'outro';
+		const barInBlock = bar % 4;
+		const isHookBar = barInBlock === 1 || barInBlock === 2;
+		const isTurnaroundBar = barInBlock === 3 && section !== 'dropout';
 
 		const playMelody =
-			hasMelody && melodyActiveSection && (isPhraseBar || (isAnswerBar && section !== 'outro'));
+			hasMelody &&
+			melodyActiveSection &&
+			(isHookBar || isTurnaroundBar || (section === 'groove2' && rng.next() > 0.55));
 
 		if (playMelody) {
-			const isCorePhrase = isPhraseBar;
-			const notesCount = isCorePhrase ? rng.intRange(2, 3) : rng.intRange(1, 2);
+			const notesCount =
+				section === 'dropout'
+					? rng.intRange(2, 3)
+					: isTurnaroundBar
+						? rng.intRange(2, 3)
+						: rng.intRange(3, 5);
 			const possibleBeats = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5];
 			const selectedBeats = rng.shuffle(possibleBeats).slice(0, notesCount).sort();
+			const motifSteps = isTurnaroundBar ? [-1, 1, 2, -2] : [0, 1, 2, 1, -1];
 
 			selectedBeats.forEach((beat, idx) => {
 				const beatInt = Math.floor(beat);
 				const sixteenth = beat % 1 === 0.5 ? 2 : 0;
 				const targetTime = `${bar}:${beatInt}:${sixteenth}`;
 
-				// Stepwise scale movement (mostly stepwise, occasional leap)
-				const moveRnd = rng.next();
-				let step: number;
-				if (moveRnd < 0.8) {
-					step = rng.choice([-1, 0, 1]); // stepwise
-				} else if (moveRnd < 0.95) {
-					step = rng.choice([-2, 2]); // small leap
-				} else {
-					step = rng.choice([-3, 3, -4, 4]); // larger leap
-				}
+				const variation = rng.next() > 0.82 ? rng.choice([-1, 1]) : 0;
+				const step = motifSteps[(idx + barInBlock) % motifSteps.length] + variation;
 
 				let nextIndex = lastMelodyIndex + step;
 				nextIndex = Math.max(0, Math.min(melodyScaleNotes.length - 1, nextIndex));
 				lastMelodyIndex = nextIndex;
 
 				const note = melodyScaleNotes[nextIndex];
-				const duration = rng.choice(['4n', '8n', '8n.']);
-
-				// Priority complexity gate
-				const gate = rng.next();
+				const duration = idx === 0 && rng.next() > 0.45 ? '4n' : rng.choice(['8n', '8n.', '16n']);
 
 				// Clamped velocity for playback:
 				// core melody velocity: 0.35–0.55
 				// decorative velocity: 0.18–0.32
 				// The first note of a phrase is always core. Subsequent notes can be decorative.
-				const isCoreNote = idx === 0 || rng.next() > 0.4;
+				const isCoreNote = idx < 2 || rng.next() > 0.4;
 				const velocity = isCoreNote ? rng.range(0.35, 0.55) : rng.range(0.18, 0.32);
+				const gate = isCoreNote ? rng.range(0, 0.2) : rng.range(0.15, 0.75);
 
 				melody.push({
 					time: targetTime,

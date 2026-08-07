@@ -23,10 +23,12 @@ describe('AudioScheduler Deterministic Swing and Humanization', () => {
 
 		const delayOffbeat1 = scheduler['getSwingDelay']('0:1:1'); // 16th off-beat
 		const delayOffbeat2 = scheduler['getSwingDelay']('0:1:3'); // 16th off-beat
+		const delayEighthOffbeat = scheduler['getSwingDelay']('0:1:2'); // eighth-note off-beat
 		const delayOnbeat = scheduler['getSwingDelay']('0:1:0'); // On-beat
 
 		expect(delayOffbeat1).toBeGreaterThan(0);
 		expect(delayOffbeat2).toBeGreaterThan(0);
+		expect(delayEighthOffbeat).toBeGreaterThan(0);
 		expect(delayOnbeat).toBe(0);
 
 		// Verify determinism: same input must yield same delay

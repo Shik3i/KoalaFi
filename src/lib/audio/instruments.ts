@@ -5,6 +5,7 @@ export class ChordsInstrument {
 	filter: Tone.Filter;
 	gain: Tone.Volume;
 	private vibrato: Tone.Vibrato;
+	private chorus: Tone.Chorus;
 
 	constructor(output: Tone.InputNode) {
 		this.gain = new Tone.Volume(-12).connect(output);
@@ -18,13 +19,13 @@ export class ChordsInstrument {
 			voice: Tone.Synth,
 			options: {
 				oscillator: {
-					type: 'sine' // Soft rhodes keys tone
+					type: 'triangle'
 				},
 				envelope: {
-					attack: 0.15, // Softer attack
-					decay: 1.2, // Longer decay
-					sustain: 0.5,
-					release: 1.8 // Longer release for warm sustain
+					attack: 0.035,
+					decay: 0.55,
+					sustain: 0.28,
+					release: 0.42
 				}
 			}
 		});
@@ -35,8 +36,17 @@ export class ChordsInstrument {
 			depth: 0.12 // Gentle pitch drift depth
 		});
 
+		this.chorus = new Tone.Chorus({
+			frequency: 0.35,
+			delayTime: 2.8,
+			depth: 0.28,
+			wet: 0.16,
+			spread: 120
+		}).start();
+
 		this.synth.connect(this.vibrato);
-		this.vibrato.connect(this.filter);
+		this.vibrato.connect(this.chorus);
+		this.chorus.connect(this.filter);
 	}
 
 	trigger(notes: string[], duration: string, time: number, velocity: number) {
@@ -54,6 +64,7 @@ export class ChordsInstrument {
 		// Jazzy level scales tape wow & flutter pitch vibrato depth
 		const targetDepth = 0.04 + jazzyLevel * 0.16;
 		this.vibrato.depth.setTargetAtTime(targetDepth, Tone.now(), 0.1);
+		this.chorus.wet.setTargetAtTime(0.08 + jazzyLevel * 0.12, Tone.now(), 0.1);
 
 		// Scale volume
 		const vol = chordsLevel === 0 ? -96 : Tone.gainToDb(chordsLevel) - 6;
@@ -65,6 +76,7 @@ export class ChordsInstrument {
 	}
 
 	dispose() {
+		this.chorus.dispose();
 		this.vibrato.dispose();
 		this.synth.dispose();
 		this.filter.dispose();
@@ -84,22 +96,22 @@ export class BassInstrument {
 			},
 			filter: {
 				type: 'lowpass',
-				frequency: 200,
+				frequency: 260,
 				Q: 0.8
 			},
 			envelope: {
-				attack: 0.18, // Slower attack for gentle sub swell
-				decay: 0.5,
-				sustain: 0.85,
-				release: 1.0
+				attack: 0.025,
+				decay: 0.18,
+				sustain: 0.38,
+				release: 0.22
 			},
 			filterEnvelope: {
-				attack: 0.08,
-				decay: 0.15,
-				sustain: 0.6,
-				release: 0.6,
-				baseFrequency: 150,
-				octaves: 1.2
+				attack: 0.01,
+				decay: 0.12,
+				sustain: 0.25,
+				release: 0.18,
+				baseFrequency: 180,
+				octaves: 1.4
 			}
 		}).connect(this.gain);
 	}
@@ -148,10 +160,10 @@ export class MelodyInstrument {
 				type: 'triangle' // Gentle plucks
 			},
 			envelope: {
-				attack: 0.08, // Softer attack
-				decay: 0.35, // Longer decay
+				attack: 0.025,
+				decay: 0.24,
 				sustain: 0.2,
-				release: 1.2 // Dreamy release trail
+				release: 0.36
 			}
 		}).connect(this.filter);
 

@@ -16,6 +16,7 @@ export class KoalaFiEngine {
 	private bpm = 75;
 	private key = '';
 	private scale = '';
+	private patternSignature = '';
 
 	private effects: MasterEffectsPipeline | null = null;
 	private chords: ChordsInstrument | null = null;
@@ -47,11 +48,11 @@ export class KoalaFiEngine {
 
 				// Create instruments routed to the music bus
 				this.chords = new ChordsInstrument(this.effects.musicBus);
-				this.bass = new BassInstrument(this.effects.musicBus);
+				this.bass = new BassInstrument(this.effects.bassBus);
 				this.melody = new MelodyInstrument(this.effects.musicBus);
 
-				// Create drums routed to the music bus
-				this.drums = new DrumsInstrument(this.effects.musicBus);
+				// Create drums routed to the dry rhythm bus
+				this.drums = new DrumsInstrument(this.effects.drumsBus);
 
 				// Create ambience generator routed to the ambience bus
 				this.ambience = new AmbienceGenerator(this.effects.ambienceBus);
@@ -125,19 +126,16 @@ export class KoalaFiEngine {
 
 	/**
 	 * Applies the full application state to the audio engine.
-	 * Regenerates patterns only if seed, generatorVersion, key, or scale changes.
+	 * Regenerates patterns when any generator-relevant setting changes.
 	 */
 	applyState(inputState: KoalaFiState) {
 		if (!this.initialized) return;
 		const state = migrateState(inputState);
 
-		// 1. Detect if sequence needs to be regenerated
-		const seedChanged = this.seed !== state.seed;
-		const versionChanged = this.generatorVersion !== state.generatorVersion;
-		const keyChanged = this.key !== state.music.key;
-		const scaleChanged = this.scale !== state.music.scale;
+		const patternSignature = getPatternSignature(state);
 
-		if (seedChanged || versionChanged || keyChanged || scaleChanged || this.chords === null) {
+		if (this.patternSignature !== patternSignature || this.chords === null) {
+			this.patternSignature = patternSignature;
 			this.seed = state.seed;
 			this.generatorVersion = state.generatorVersion;
 			this.key = state.music.key;
@@ -183,8 +181,11 @@ export class KoalaFiEngine {
 
 		await this.initializeAudio();
 
-		if (!wasInitialized && safeState.sync.mode === 'rough-clock') {
-			this.setPlayheadFromRoughSync(safeState);
+		if (this.playbackState !== 'started') {
+			this.applyState(safeState);
+			if (!wasInitialized && safeState.sync.mode === 'rough-clock') {
+				this.setPlayheadFromRoughSync(safeState);
+			}
 		}
 
 		this.toggle();
@@ -252,4 +253,19 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string)
 	return Promise.race([promise, timeout]).finally(() => {
 		if (timeoutId) clearTimeout(timeoutId);
 	});
+}
+
+function getPatternSignature(state: KoalaFiState): string {
+	const { music } = state;
+	return [
+		state.seed,
+		state.generatorVersion,
+		music.key,
+		music.scale,
+		music.focus > 0.6 ? 'focus' : 'open',
+		music.sleepy > 0.6 ? 'sleep' : 'groove',
+		music.melody > 0.05 ? 'melody' : 'no-melody',
+		music.drums > 0.05 ? 'drums' : 'no-drums',
+		music.bass > 0.05 ? 'bass' : 'no-bass'
+	].join('|');
 }

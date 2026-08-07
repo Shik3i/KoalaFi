@@ -95,7 +95,7 @@ export function migrateState(rawState: unknown): KoalaFiState {
 
 	return {
 		schemaVersion: 1,
-		generatorVersion: 3,
+		generatorVersion: 4,
 		seed,
 		presetId,
 		title,

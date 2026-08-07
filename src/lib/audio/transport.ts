@@ -40,9 +40,6 @@ export class AudioScheduler {
 				event.time,
 				event.notes[0] || 'C4'
 			);
-			console.log(
-				`[AUDIO SCHEDULER] Triggering Chord: ${event.notes.join(',')} at time ${time + delay} (duration: ${event.duration}, velocity: ${vel})`
-			);
 			this.chordsInst.trigger(event.notes, event.duration, time + delay, vel);
 		}, pattern.chords);
 		this.chordsPart.loop = true;
@@ -53,9 +50,6 @@ export class AudioScheduler {
 		this.bassPart = new Tone.Part((time, event) => {
 			const delay = this.getSwingDelay(event.time);
 			const vel = this.getHumanizedVelocity(event.velocity || 0.6, event.time, event.note);
-			console.log(
-				`[AUDIO SCHEDULER] Triggering Bass: ${event.note} at time ${time + delay} (duration: ${event.duration}, velocity: ${vel})`
-			);
 			this.bassInst.trigger(event.note, event.duration, time + delay, vel);
 		}, pattern.bassline);
 		this.bassPart.loop = true;
@@ -66,9 +60,6 @@ export class AudioScheduler {
 		this.drumsPart = new Tone.Part((time, event) => {
 			const delay = this.getSwingDelay(event.time);
 			const vel = this.getHumanizedVelocity(event.velocity || 0.8, event.time, event.type);
-			console.log(
-				`[AUDIO SCHEDULER] Triggering Drum: ${event.type} at time ${time + delay} (velocity: ${vel})`
-			);
 			if (event.type === 'kick') {
 				this.drumsInst.triggerKick(time + delay, vel);
 			} else if (event.type === 'snare') {
@@ -87,14 +78,7 @@ export class AudioScheduler {
 			if (gateVal <= this.melodyComplexity) {
 				const delay = this.getSwingDelay(event.time);
 				const vel = this.getHumanizedVelocity(event.velocity || 0.4, event.time, event.note);
-				console.log(
-					`[AUDIO SCHEDULER] Triggering Melody pluck: ${event.note} at time ${time + delay} (duration: ${event.duration}, velocity: ${vel})`
-				);
 				this.leadInst.trigger(event.note, event.duration, time + delay, vel);
-			} else {
-				console.log(
-					`[AUDIO SCHEDULER] Melody pluck gated out (complexity limit: ${this.melodyComplexity}, note gate: ${gateVal})`
-				);
 			}
 		}, pattern.melody);
 		this.melodyPart.loop = true;
@@ -119,11 +103,10 @@ export class AudioScheduler {
 		const parts = timeString.split(':');
 		if (parts.length < 3) return 0;
 
-		const beat = parseInt(parts[1], 10);
 		const sixteenth = parseInt(parts[2], 10);
 
-		// Swing off-beat sixteenth positions (1, 3) and off-beat eighths (2)
-		const isOffbeat = sixteenth === 1 || sixteenth === 3 || (sixteenth === 2 && beat % 2 === 0);
+		// Swing all off-grid sixteenth positions, including every eighth-note "&".
+		const isOffbeat = sixteenth === 1 || sixteenth === 2 || sixteenth === 3;
 		if (!isOffbeat) return 0;
 
 		const bpm = Tone.Transport.bpm?.value || 120;

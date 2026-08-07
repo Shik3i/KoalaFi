@@ -1,6 +1,6 @@
 export type KoalaFiState = {
 	schemaVersion: 1;
-	generatorVersion: 3;
+	generatorVersion: 4;
 
 	seed: string;
 	presetId?: string;

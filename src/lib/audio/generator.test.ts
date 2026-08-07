@@ -3,7 +3,16 @@ import { generatePattern } from './generator';
 import { DEFAULT_STATE } from '../state/defaults';
 import { BUILT_IN_PRESETS } from '../state/presets';
 
-describe('Seeded Pattern Generator v3', () => {
+const DURATION_BEATS: Record<string, number> = {
+	'16n': 0.25,
+	'8n': 0.5,
+	'8n.': 0.75,
+	'4n': 1,
+	'2n': 2,
+	'2m': 8
+};
+
+describe('Seeded Pattern Generator v4', () => {
 	it('should generate identical patterns for the same seed and state', () => {
 		const first = generatePattern('test-seed-xyz', DEFAULT_STATE.music);
 		const second = generatePattern('test-seed-xyz', DEFAULT_STATE.music);
@@ -41,6 +50,26 @@ describe('Seeded Pattern Generator v3', () => {
 				expect(event.velocity).toBeLessThanOrEqual(1.0);
 			}
 		});
+	});
+
+	it('should keep non-sleep lofi notes short enough to groove', () => {
+		const neonCoast = BUILT_IN_PRESETS.find((p) => p.id === 'neon-coast')!;
+		const pattern = generatePattern(neonCoast.state.seed, neonCoast.state.music);
+		const noteEvents = [...pattern.bassline, ...pattern.melody, ...pattern.chords];
+
+		noteEvents.forEach((event) => {
+			expect(DURATION_BEATS[event.duration]).toBeLessThanOrEqual(1);
+		});
+	});
+
+	it('should generate dense enough musical material for lofi playback', () => {
+		const neonCoast = BUILT_IN_PRESETS.find((p) => p.id === 'neon-coast')!;
+		const pattern = generatePattern(neonCoast.state.seed, neonCoast.state.music);
+
+		expect(pattern.drums.length).toBeGreaterThan(320);
+		expect(pattern.bassline.length).toBeGreaterThan(130);
+		expect(pattern.chords.length).toBeGreaterThan(110);
+		expect(pattern.melody.length).toBeGreaterThan(90);
 	});
 
 	it('should generate drums, bass, and chords for music-enabled presets', () => {
@@ -103,7 +132,7 @@ describe('Seeded Pattern Generator v3', () => {
 
 		// Intro (bars 0-7): minimal beat (soft kick/snare, no hats), no melody
 		const intro = countEvents(0, 8);
-		// Main groove (bars 8-23): full groove, no melody
+		// Main groove (bars 8-23): full groove with light hook phrases
 		const groove1 = countEvents(8, 24);
 		// Melody enters (bars 24-31): full groove + melody
 		const melody1 = countEvents(24, 32);
@@ -113,9 +142,9 @@ describe('Seeded Pattern Generator v3', () => {
 		// Assertions:
 		// Groove 1 has more drum events than intro because of hi-hats
 		expect(groove1.drumCount).toBeGreaterThan(intro.drumCount);
-		// Melody 1 has melody notes, Groove 1 has zero melody notes
+		// Melody starts after the intro and becomes part of the groove.
 		expect(melody1.melodyCount).toBeGreaterThan(0);
-		expect(groove1.melodyCount).toBe(0);
+		expect(groove1.melodyCount).toBeGreaterThan(0);
 		// Dropout section has fewer drum events than Melody 1 (no kick)
 		expect(dropout.drumCount).toBeLessThan(melody1.drumCount);
 		expect(dropout.drumCount).toBeGreaterThan(0); // Still has hats/snare

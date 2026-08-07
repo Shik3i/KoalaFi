@@ -1,4 +1,4 @@
-# Procedural Generation - KoalaFi (Generator Version 3)
+# Procedural Generation - KoalaFi (Generator Version 4)
 
 ## Deterministic Seeding Strategy
 
@@ -17,7 +17,7 @@ Music sequences are structured over a deterministic 64-bar layout divided into d
 
 The arrangement loops cleanly after bar 63.
 
-## Music Theory Constraints (Version 3)
+## Music Theory Constraints (Version 4)
 
 ### 1. Spaced Open Chord Voicings
 
