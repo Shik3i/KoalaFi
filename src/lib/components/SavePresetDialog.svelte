@@ -5,10 +5,13 @@
 	import X from 'phosphor-svelte/lib/X';
 
 	// Svelte 5 component props
-	let { isOpen = $bindable(false), onSaved } = $props<{
-		isOpen: boolean;
+	let {
+		isOpen = $bindable(false),
+		onSaved
+	}: {
+		isOpen?: boolean;
 		onSaved: () => void;
-	}>();
+	} = $props();
 
 	let presetName = $state('');
 	let category = $state<'focus' | 'relax' | 'sleep' | 'ambient' | 'synthwave'>('focus');

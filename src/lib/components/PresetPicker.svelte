@@ -9,10 +9,13 @@
 	import type { KoalaFiState } from '../state/koalaFiState';
 
 	// Svelte 5 component props
-	let { onSelect, layout = 'grid' } = $props<{
+	let {
+		onSelect,
+		layout = 'grid'
+	}: {
 		onSelect: (state: KoalaFiState) => void;
 		layout?: 'grid' | 'horizontal';
-	}>();
+	} = $props();
 
 	let userPresets = $state<UserPresetRecord[]>([]);
 

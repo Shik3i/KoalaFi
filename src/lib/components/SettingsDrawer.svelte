@@ -9,10 +9,13 @@
 	import type { KoalaFiState } from '../state/koalaFiState';
 
 	// Svelte 5 props
-	let { isOpen = $bindable(false), onSelectVibe } = $props<{
-		isOpen: boolean;
+	let {
+		isOpen = $bindable(false),
+		onSelectVibe
+	}: {
+		isOpen?: boolean;
 		onSelectVibe: (state: KoalaFiState) => void;
-	}>();
+	} = $props();
 
 	let recentVibes = $state<RecentVibeRecord[]>([]);
 

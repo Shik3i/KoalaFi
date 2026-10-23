@@ -20,12 +20,12 @@
 		onOpenPanel,
 		onPresetSaved,
 		isZen = $bindable(false)
-	} = $props<{
+	}: {
 		onOpenSettings: () => void;
 		onOpenPanel: (panel: 'vibes' | 'tune') => void;
 		onPresetSaved: () => void;
 		isZen?: boolean;
-	}>();
+	} = $props();
 
 	let errorMessage = $state<string | null>(null);
 	let isShareOpen = $state(false);

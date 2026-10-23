@@ -5,7 +5,7 @@
 	import Copy from 'phosphor-svelte/lib/Copy';
 	import X from 'phosphor-svelte/lib/X';
 
-	let { isOpen = $bindable(false) } = $props<{ isOpen: boolean }>();
+	let { isOpen = $bindable(false) }: { isOpen?: boolean } = $props();
 
 	let dialogElement = $state<HTMLDialogElement | null>(null);
 	let copyStatusNormal = $state(false);
