@@ -90,7 +90,7 @@
 					<h4>About KoalaFi</h4>
 				</div>
 				<div class="info-card">
-					<p><strong>KoalaFi v0.1.0</strong></p>
+					<p><strong>KoalaFi v0.1.1</strong></p>
 					<p class="tagline">“Endless procedural lofi & ambient noise in your browser.”</p>
 					<p>
 						100% offline-first, client-side procedural synthesis. No accounts, no user tracking, and
